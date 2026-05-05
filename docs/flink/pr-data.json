@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-05T06:54:57Z",
+  "lastUpdated": "2026-05-05T06:58:48Z",
   "githubUser": "FeatZhang",
   "repositories": [
     {
@@ -534,7 +534,7 @@
           "url": "https://github.com/apache/flink-connector-http/pull/30",
           "status": "changes-requested",
           "isDraft": false,
-          "updatedAt": "2026-05-04",
+          "updatedAt": "2026-05-05",
           "discussions": 5,
           "flips": [
             "changes-requested",
