@@ -1,137 +1,126 @@
 {
   "lastUpdated": "2026-05-05T14:17:47+08:00",
-  "generatedBy": "flink-pr-todo skill",
   "githubUser": "featzhang",
-  "stats": {
-    "totalOpen": 37,
-    "actionRequired": 11,
-    "ciSuccess": 26
-  },
-  "prSections": [
+  "repositories": [
     {
-      "title": "Action Required",
-      "badge": 11,
-      "groups": [
+      "name": "apache/flink",
+      "url": "https://github.com/apache/flink",
+      "pullRequests": [
         {
-          "repo": "apache/flink",
-          "prs": [
-            {
-              "number": 28096,
-              "title": "[FLINK-39042][webui] Make watermark timestamps timezone-aware and configurable",
-              "url": "https://github.com/apache/flink/pull/28096",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [{"type": "failure", "label": "CI FAILURE"}],
-              "updated": "2026-05-05"
-            },
-            {
-              "number": 28048,
-              "title": "[FLINK-39401][formats] Port raw line-delimiter option to release-1.15",
-              "url": "https://github.com/apache/flink/pull/28048",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [{"type": "failure", "label": "CI FAILURE"}],
-              "updated": "2026-05-05"
-            },
-            {
-              "number": 27715,
-              "title": "[FLINK-39176][Runtime] Add expiration cleanup scheduler for NodeHealthManager",
-              "url": "https://github.com/apache/flink/pull/27715",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [
-                {"type": "draft", "label": "DRAFT"},
-                {"type": "failure", "label": "CI FAILURE"}
-              ],
-              "updated": "2026-04-26"
-            },
-            {
-              "number": 27691,
-              "title": "[FLINK-39170][Table/SQL] Add async batch lookup join optimization for temporal table joins",
-              "url": "https://github.com/apache/flink/pull/27691",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [
-                {"type": "draft", "label": "DRAFT"},
-                {"type": "failure", "label": "CI FAILURE"}
-              ],
-              "updated": "2026-05-04"
-            },
-            {
-              "number": 27614,
-              "title": "[FLINK-39096][table-planner] Enhance EXPLAIN output to display detailed estimated rowcount and cost information",
-              "url": "https://github.com/apache/flink/pull/27614",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [
-                {"type": "draft", "label": "DRAFT"},
-                {"type": "failure", "label": "CI FAILURE"}
-              ],
-              "updated": "2026-05-04"
-            },
-            {
-              "number": 27609,
-              "title": "[FLINK-39089][SQL] Enhanced projection field alias display",
-              "url": "https://github.com/apache/flink/pull/27609",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [{"type": "failure", "label": "CI FAILURE"}],
-              "updated": "2026-05-04"
-            },
-            {
-              "number": 27361,
-              "title": "[FLINK-38825][python] Add Python DataStream API integration for AsyncBatchFunction",
-              "url": "https://github.com/apache/flink/pull/27361",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [{"type": "failure", "label": "CI FAILURE"}],
-              "updated": "2026-04-25"
-            },
-            {
-              "number": 27360,
-              "title": "[FLINK-38825][table] Add SQL/Table API integration for AsyncBatch inference",
-              "url": "https://github.com/apache/flink/pull/27360",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [
-                {"type": "draft", "label": "DRAFT"},
-                {"type": "failure", "label": "CI FAILURE"}
-              ],
-              "updated": "2026-04-25"
-            },
-            {
-              "number": 27359,
-              "title": "[FLINK-38825][streaming] Implement retry and timeout strategies for AsyncBatchWaitOperator",
-              "url": "https://github.com/apache/flink/pull/27359",
-              "status": "failure",
-              "statusIcon": "❌",
-              "tags": [{"type": "failure", "label": "CI FAILURE"}],
-              "updated": "2026-04-26"
-            }
-          ]
+          "number": 28096,
+          "title": "Make watermark timestamps timezone-aware and configurable",
+          "issueId": "FLINK-39042",
+          "module": "webui",
+          "url": "https://github.com/apache/flink/pull/28096",
+          "status": "ci-failure",
+          "isDraft": false,
+          "updatedAt": "2026-05-05"
         },
         {
-          "repo": "apache/flink-connector-http",
-          "prs": [
-            {
-              "number": 34,
-              "title": "[FLINK-39368][connector-http] Add User-Agent configuration support for HTTP sink and lookup",
-              "url": "https://github.com/apache/flink-connector-http/pull/34",
-              "status": "changes",
-              "statusIcon": "🔄",
-              "tags": [{"type": "changes", "label": "CHANGES REQUESTED"}],
-              "updated": "2026-05-04"
-            },
-            {
-              "number": 30,
-              "title": "[FLINK-39361][connector-http] Improve README with SQL examples",
-              "url": "https://github.com/apache/flink-connector-http/pull/30",
-              "status": "changes",
-              "statusIcon": "🔄",
-              "tags": [{"type": "changes", "label": "CHANGES REQUESTED"}],
-              "updated": "2026-05-04"
-            }
-          ]
+          "number": 28048,
+          "title": "Port raw line-delimiter option to release-1.15",
+          "issueId": "FLINK-39401",
+          "module": "formats",
+          "url": "https://github.com/apache/flink/pull/28048",
+          "status": "ci-failure",
+          "isDraft": false,
+          "updatedAt": "2026-05-05"
+        },
+        {
+          "number": 27715,
+          "title": "Add expiration cleanup scheduler for NodeHealthManager",
+          "issueId": "FLINK-39176",
+          "module": "Runtime",
+          "url": "https://github.com/apache/flink/pull/27715",
+          "status": "ci-failure",
+          "isDraft": true,
+          "updatedAt": "2026-04-26"
+        },
+        {
+          "number": 27691,
+          "title": "Add async batch lookup join optimization for temporal table joins",
+          "issueId": "FLINK-39170",
+          "module": "Table/SQL",
+          "url": "https://github.com/apache/flink/pull/27691",
+          "status": "ci-failure",
+          "isDraft": true,
+          "updatedAt": "2026-05-04"
+        },
+        {
+          "number": 27614,
+          "title": "Enhance EXPLAIN output to display detailed estimated rowcount and cost information",
+          "issueId": "FLINK-39096",
+          "module": "table-planner",
+          "url": "https://github.com/apache/flink/pull/27614",
+          "status": "ci-failure",
+          "isDraft": true,
+          "updatedAt": "2026-05-04"
+        },
+        {
+          "number": 27609,
+          "title": "Enhanced projection field alias display",
+          "issueId": "FLINK-39089",
+          "module": "SQL",
+          "url": "https://github.com/apache/flink/pull/27609",
+          "status": "ci-failure",
+          "isDraft": false,
+          "updatedAt": "2026-05-04"
+        },
+        {
+          "number": 27361,
+          "title": "Add Python DataStream API integration for AsyncBatchFunction",
+          "issueId": "FLINK-38825",
+          "module": "python",
+          "url": "https://github.com/apache/flink/pull/27361",
+          "status": "ci-failure",
+          "isDraft": false,
+          "updatedAt": "2026-04-25"
+        },
+        {
+          "number": 27360,
+          "title": "Add SQL/Table API integration for AsyncBatch inference",
+          "issueId": "FLINK-38825",
+          "module": "table",
+          "url": "https://github.com/apache/flink/pull/27360",
+          "status": "ci-failure",
+          "isDraft": true,
+          "updatedAt": "2026-04-25"
+        },
+        {
+          "number": 27359,
+          "title": "Implement retry and timeout strategies for AsyncBatchWaitOperator",
+          "issueId": "FLINK-38825",
+          "module": "streaming",
+          "url": "https://github.com/apache/flink/pull/27359",
+          "status": "ci-failure",
+          "isDraft": false,
+          "updatedAt": "2026-04-26"
+        }
+      ]
+    },
+    {
+      "name": "apache/flink-connector-http",
+      "url": "https://github.com/apache/flink-connector-http",
+      "pullRequests": [
+        {
+          "number": 34,
+          "title": "Add User-Agent configuration support for HTTP sink and lookup",
+          "issueId": "FLINK-39368",
+          "module": "connector-http",
+          "url": "https://github.com/apache/flink-connector-http/pull/34",
+          "status": "changes-requested",
+          "isDraft": false,
+          "updatedAt": "2026-05-04"
+        },
+        {
+          "number": 30,
+          "title": "Improve README with SQL examples",
+          "issueId": "FLINK-39361",
+          "module": "connector-http",
+          "url": "https://github.com/apache/flink-connector-http/pull/30",
+          "status": "changes-requested",
+          "isDraft": false,
+          "updatedAt": "2026-05-04"
         }
       ]
     }
