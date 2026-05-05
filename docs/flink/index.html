@@ -326,74 +326,128 @@
             }
         }
 
-        /* 超小屏手机优化 (≤ 480px) */
+        /* 超小屏手机高信息密度优化 (≤ 480px) */
         @media (max-width: 480px) {
             body {
-                padding: 8px;
+                padding: 6px;
             }
             header {
-                padding: 16px 0;
+                padding: 10px 0 12px 0;
+                margin-bottom: 10px;
             }
             header h1 {
-                font-size: 1.25em;
+                font-size: 1.1em;
             }
             header p {
-                font-size: 0.85em;
+                font-size: 0.75em;
+                margin-top: 4px;
             }
+            /* 统计卡片：单行紧凑展示 */
             .stats {
-                gap: 10px;
+                display: flex;
+                gap: 6px;
+                margin-bottom: 12px;
             }
             .stat-card {
-                padding: 12px;
-                border-radius: 8px;
+                flex: 1;
+                padding: 6px 4px;
+                border-radius: 6px;
             }
             .stat-card .number {
-                font-size: 1.6em;
+                font-size: 1.3em;
+                margin-bottom: 2px;
             }
             .stat-card .label {
-                font-size: 0.65em;
-                letter-spacing: 0.5px;
+                font-size: 0.55em;
+                letter-spacing: 0.3px;
+            }
+            /* 分区标题更紧凑 */
+            .section {
+                margin-bottom: 16px;
             }
             .section h2 {
-                font-size: 1.05em;
+                font-size: 0.9em;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid var(--border);
             }
             .section h2 .badge {
-                font-size: 0.55em;
-                padding: 3px 8px;
+                font-size: 0.6em;
+                padding: 2px 6px;
             }
             .repo-section {
-                margin-bottom: 20px;
+                margin-bottom: 12px;
             }
             .repo-section h3 {
-                font-size: 0.9em;
+                font-size: 0.8em;
+                padding-left: 6px;
+                margin-bottom: 6px;
             }
+            /* PR卡片：简化为一行布局 */
             .pr-card {
-                padding: 12px;
-                border-radius: 8px;
-                gap: 8px;
+                padding: 8px 10px;
+                border-radius: 6px;
+                gap: 0;
+                flex-direction: row;
+                align-items: center;
+            }
+            /* 状态图标：缩小并与meta合并 */
+            .pr-card .status-icon {
+                display: none;
+            }
+            .pr-content {
+                flex: 1;
+                min-width: 0;
+            }
+            /* PR头部：单行，编号和标签放一起 */
+            .pr-header {
+                flex-direction: row;
+                align-items: center;
+                gap: 0;
+                margin-bottom: 0;
+                flex-wrap: nowrap;
             }
             .pr-number {
-                font-size: 0.75em;
-                padding: 1px 6px;
+                font-size: 0.68em;
+                padding: 0 4px;
+                border-radius: 3px;
+                flex-shrink: 0;
+                margin-right: 6px;
             }
+            /* 标题：允许换行但保持紧凑 */
             .pr-title {
-                font-size: 0.9em;
+                font-size: 0.82em;
+                font-weight: 500;
+                line-height: 1.4;
+                white-space: normal;
+                word-break: break-word;
             }
+            /* 标签：行内显示，紧贴标题 */
             .pr-tags {
-                gap: 4px;
+                display: inline;
+                margin-left: 4px;
+                gap: 2px;
             }
             .tag {
-                font-size: 0.65em;
-                padding: 2px 6px;
-                border-radius: 10px;
+                font-size: 0.55em;
+                padding: 1px 4px;
+                border-radius: 8px;
+                letter-spacing: 0.2px;
             }
+            /* Meta信息：单行，更紧凑 */
             .pr-meta {
-                font-size: 0.7em;
-                margin-top: 6px;
+                font-size: 0.62em;
+                margin-top: 3px;
+                line-height: 1.3;
             }
+            .pr-meta span {
+                margin-right: 8px;
+            }
+            /* Footer极简 */
             footer {
-                padding: 20px 0;
-                font-size: 0.75em;
+                padding: 12px 0;
+                font-size: 0.65em;
+                margin-top: 8px;
             }
         }
 
