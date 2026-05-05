@@ -146,6 +146,7 @@
         .tag.draft { color: var(--warning); border-color: var(--warning); }
         .tag.failure { color: var(--failure); border-color: var(--failure); }
         .tag.changes { color: var(--warning); border-color: var(--warning); }
+        .tag.discuss { color: var(--accent); border-color: var(--accent); background: rgba(88, 166, 255, 0.1); }
 
         .pr-meta { color: var(--text-muted); font-size: 0.85em; margin-top: 8px; }
         .pr-meta span { margin-right: 16px; }
@@ -390,9 +391,34 @@
             if (pr.isDraft) {
                 tags.push({ class: UI_CONFIG.draftTag.tagClass, label: UI_CONFIG.draftTag.tagLabel });
             }
-            tags.push({ class: config.tagClass, label: config.tagLabel });
+            // Show discussions count if present
+            if (pr.discussions && pr.discussions > 0) {
+                tags.push({ class: 'discuss', label: `💬 ${pr.discussions}` });
+            }
+            // Show flip tags (pending actions)
+            if (pr.flips && pr.flips.length > 0) {
+                pr.flips.forEach(flip => {
+                    if (flip.startsWith('discussions:')) {
+                        // Already shown above as discuss tag
+                    } else if (flip.startsWith('gha-fail:')) {
+                        tags.push({ class: 'failure', label: `⚠️ ${flip.replace('gha-fail:', '')}` });
+                    } else if (flip === 'ci-failure') {
+                        tags.push({ class: config.tagClass, label: config.tagLabel });
+                    } else if (flip === 'changes-requested') {
+                        tags.push({ class: 'changes', label: 'CHANGES' });
+                    } else {
+                        tags.push({ class: 'warning', label: flip });
+                    }
+                });
+            } else {
+                // Default status tag if no flips
+                tags.push({ class: config.tagClass, label: config.tagLabel });
+            }
             return tags;
         }
+
+        // Add discuss styling
+        .tag.discuss { color: var(--accent); border-color: var(--accent); background: rgba(88, 166, 255, 0.1); }
 
         function renderFooter(lastUpdated) {
             return `
