@@ -258,223 +258,75 @@
             text-decoration: none;
         }
 
+        /* 错误/加载提示 */
+        .loading, .error {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .error {
+            color: var(--failure);
+        }
+
         @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-            header {
-                padding: 24px 0;
-                margin-bottom: 20px;
-            }
-            header h1 {
-                font-size: 1.5em;
-            }
-            header p {
-                font-size: 0.95em;
-            }
-            .stat-card {
-                padding: 16px;
-            }
-            .stat-card .number {
-                font-size: 2em;
-            }
-            .stat-card .label {
-                font-size: 0.75em;
-            }
-            .section h2 {
-                font-size: 1.2em;
-                margin-bottom: 12px;
-            }
-            .repo-section h3 {
-                font-size: 1em;
-                padding-left: 8px;
-            }
-            .pr-card {
-                padding: 14px;
-                flex-direction: column;
-                gap: 10px;
-            }
-            .pr-card .status-icon {
-                font-size: 1.3em;
-                margin-top: 0;
-            }
-            .pr-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
-            }
-            .pr-number {
-                font-size: 0.8em;
-            }
-            .pr-title {
-                font-size: 1em;
-                white-space: normal;
-                line-height: 1.5;
-            }
-            .tag {
-                font-size: 0.7em;
-                padding: 2px 8px;
-            }
-            .pr-meta {
-                font-size: 0.75em;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4px;
-            }
-            .pr-meta span {
-                margin-right: 8px;
-            }
+            body { padding: 12px; }
+            header { padding: 24px 0; margin-bottom: 20px; }
+            header h1 { font-size: 1.5em; }
+            header p { font-size: 0.95em; }
+            .stat-card { padding: 16px; }
+            .stat-card .number { font-size: 2em; }
+            .stat-card .label { font-size: 0.75em; }
+            .section h2 { font-size: 1.2em; margin-bottom: 12px; }
+            .repo-section h3 { font-size: 1em; padding-left: 8px; }
+            .pr-card { padding: 14px; flex-direction: column; gap: 10px; }
+            .pr-card .status-icon { font-size: 1.3em; margin-top: 0; }
+            .pr-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .pr-number { font-size: 0.8em; }
+            .pr-title { font-size: 1em; white-space: normal; line-height: 1.5; }
+            .tag { font-size: 0.7em; padding: 2px 8px; }
+            .pr-meta { font-size: 0.75em; display: flex; flex-wrap: wrap; gap: 4px; }
+            .pr-meta span { margin-right: 8px; }
         }
 
         /* 超小屏手机高信息密度优化 (≤ 480px) */
         @media (max-width: 480px) {
-            body {
-                padding: 6px;
-            }
-            header {
-                padding: 10px 0 12px 0;
-                margin-bottom: 10px;
-            }
-            header h1 {
-                font-size: 1.1em;
-            }
-            header p {
-                font-size: 0.75em;
-                margin-top: 4px;
-            }
-            /* 统计卡片：单行紧凑展示 */
-            .stats {
-                display: flex;
-                gap: 6px;
-                margin-bottom: 12px;
-            }
-            .stat-card {
-                flex: 1;
-                padding: 6px 4px;
-                border-radius: 6px;
-            }
-            .stat-card .number {
-                font-size: 1.3em;
-                margin-bottom: 2px;
-            }
-            .stat-card .label {
-                font-size: 0.55em;
-                letter-spacing: 0.3px;
-            }
-            /* 分区标题更紧凑 */
-            .section {
-                margin-bottom: 16px;
-            }
-            .section h2 {
-                font-size: 0.9em;
-                margin-bottom: 8px;
-                padding-bottom: 6px;
-                border-bottom: 1px solid var(--border);
-            }
-            .section h2 .badge {
-                font-size: 0.6em;
-                padding: 2px 6px;
-            }
-            .repo-section {
-                margin-bottom: 12px;
-            }
-            .repo-section h3 {
-                font-size: 0.8em;
-                padding-left: 6px;
-                margin-bottom: 6px;
-            }
-            /* PR卡片：简化为一行布局 */
-            .pr-card {
-                padding: 8px 10px;
-                border-radius: 6px;
-                gap: 0;
-                flex-direction: row;
-                align-items: center;
-            }
-            /* 状态图标：缩小并与meta合并 */
-            .pr-card .status-icon {
-                display: none;
-            }
-            .pr-content {
-                flex: 1;
-                min-width: 0;
-            }
-            /* PR头部：单行，编号和标签放一起 */
-            .pr-header {
-                flex-direction: row;
-                align-items: center;
-                gap: 0;
-                margin-bottom: 0;
-                flex-wrap: nowrap;
-            }
-            .pr-number {
-                font-size: 0.68em;
-                padding: 0 4px;
-                border-radius: 3px;
-                flex-shrink: 0;
-                margin-right: 6px;
-            }
-            /* 标题：允许换行但保持紧凑 */
-            .pr-title {
-                font-size: 0.82em;
-                font-weight: 500;
-                line-height: 1.4;
-                white-space: normal;
-                word-break: break-word;
-            }
-            /* 标签：行内显示，紧贴标题 */
-            .pr-tags {
-                display: inline;
-                margin-left: 4px;
-                gap: 2px;
-            }
-            .tag {
-                font-size: 0.55em;
-                padding: 1px 4px;
-                border-radius: 8px;
-                letter-spacing: 0.2px;
-            }
-            /* Meta信息：单行，更紧凑 */
-            .pr-meta {
-                font-size: 0.62em;
-                margin-top: 3px;
-                line-height: 1.3;
-            }
-            .pr-meta span {
-                margin-right: 8px;
-            }
-            /* Footer极简 */
-            footer {
-                padding: 12px 0;
-                font-size: 0.65em;
-                margin-top: 8px;
-            }
+            body { padding: 6px; }
+            header { padding: 10px 0 12px 0; margin-bottom: 10px; }
+            header h1 { font-size: 1.1em; }
+            header p { font-size: 0.75em; margin-top: 4px; }
+            .stats { display: flex; gap: 6px; margin-bottom: 12px; }
+            .stat-card { flex: 1; padding: 6px 4px; border-radius: 6px; }
+            .stat-card .number { font-size: 1.3em; margin-bottom: 2px; }
+            .stat-card .label { font-size: 0.55em; letter-spacing: 0.3px; }
+            .section { margin-bottom: 16px; }
+            .section h2 { font-size: 0.9em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+            .section h2 .badge { font-size: 0.6em; padding: 2px 6px; }
+            .repo-section { margin-bottom: 12px; }
+            .repo-section h3 { font-size: 0.8em; padding-left: 6px; margin-bottom: 6px; }
+            .pr-card { padding: 8px 10px; border-radius: 6px; gap: 0; flex-direction: row; align-items: center; }
+            .pr-card .status-icon { display: none; }
+            .pr-content { flex: 1; min-width: 0; }
+            .pr-header { flex-direction: row; align-items: center; gap: 0; margin-bottom: 0; flex-wrap: nowrap; }
+            .pr-number { font-size: 0.68em; padding: 0 4px; border-radius: 3px; flex-shrink: 0; margin-right: 6px; }
+            .pr-title { font-size: 0.82em; font-weight: 500; line-height: 1.4; white-space: normal; word-break: break-word; }
+            .pr-tags { display: inline; margin-left: 4px; gap: 2px; }
+            .tag { font-size: 0.55em; padding: 1px 4px; border-radius: 8px; letter-spacing: 0.2px; }
+            .pr-meta { font-size: 0.62em; margin-top: 3px; line-height: 1.3; }
+            .pr-meta span { margin-right: 8px; }
+            footer { padding: 12px 0; font-size: 0.65em; margin-top: 8px; }
         }
 
-        /* 中等屏幕平板优化 (769px - 1024px) */
         @media (min-width: 769px) and (max-width: 1024px) {
-            .pr-card {
-                padding: 18px;
-            }
-            .pr-title {
-                font-size: 1em;
-            }
+            .pr-card { padding: 18px; }
+            .pr-title { font-size: 1em; }
         }
 
-        /* 大屏幕优化 (≥ 1440px) */
         @media (min-width: 1440px) {
-            .container {
-                max-width: 1400px;
-            }
-            .stats {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .container { max-width: 1400px; }
+            .stats { grid-template-columns: repeat(3, 1fr); }
         }
 
-        /* 防止横向滚动 */
-        html, body {
-            overflow-x: hidden;
-        }
+        html, body { overflow-x: hidden; }
     </style>
 </head>
 <body>
@@ -484,233 +336,126 @@
             <p>Open PRs requiring action by <a href="https://github.com/featzhang" target="_blank">@FeatZhang</a></p>
         </header>
 
-        <div class="stats">
-            <div class="stat-card open">
-                <div class="number">37</div>
-                <div class="label">Total Open PRs</div>
-            </div>
-            <div class="stat-card action">
-                <div class="number">11</div>
-                <div class="label">Action Required</div>
-            </div>
-            <div class="stat-card success">
-                <div class="number">26</div>
-                <div class="label">CI Success</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>
-                Action Required
-                <span class="badge">11</span>
-            </h2>
-
-            <div class="repo-section">
-                <h3>apache/flink</h3>
-                <div class="pr-grid">
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#28096</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/28096" target="_blank">[FLINK-39042][webui] Make watermark timestamps timezone-aware and configurable</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-05-05</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#28048</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/28048" target="_blank">[FLINK-39401][formats] Port raw line-delimiter option to release-1.15</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-05-05</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27715</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27715" target="_blank">[FLINK-39176][Runtime] Add expiration cleanup scheduler for NodeHealthManager</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag draft">DRAFT</span>
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-04-26</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27691</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27691" target="_blank">[FLINK-39170][Table/SQL] Add async batch lookup join optimization for temporal table joins</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag draft">DRAFT</span>
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-05-04</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27614</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27614" target="_blank">[FLINK-39096][table-planner] Enhance EXPLAIN output to display detailed estimated rowcount and cost information</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag draft">DRAFT</span>
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-05-04</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27609</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27609" target="_blank">[FLINK-39089][SQL] Enhanced projection field alias display</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-05-04</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27361</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27361" target="_blank">[FLINK-38825][python] Add Python DataStream API integration for AsyncBatchFunction</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-04-25</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27360</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27360" target="_blank">[FLINK-38825][table] Add SQL/Table API integration for AsyncBatch inference</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag draft">DRAFT</span>
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-04-25</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card failure">
-                        <div class="status-icon">&#10060;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#27359</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27359" target="_blank">[FLINK-38825][streaming] Implement retry and timeout strategies for AsyncBatchWaitOperator</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag failure">CI FAILURE</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink</span>
-                                <span>Updated: 2026-04-26</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="repo-section">
-                <h3>apache/flink-connector-http</h3>
-                <div class="pr-grid">
-                    <div class="pr-card changes">
-                        <div class="status-icon">&#128260;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#34</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink-connector-http/pull/34" target="_blank">[FLINK-39368][connector-http] Add User-Agent configuration support for HTTP sink and lookup</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag changes">CHANGES REQUESTED</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink-connector-http</span>
-                                <span>Updated: 2026-05-04</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pr-card changes">
-                        <div class="status-icon">&#128260;</div>
-                        <div class="pr-content">
-                            <div class="pr-header">
-                                <span class="pr-number">#30</span>
-                                <span class="pr-title"><a href="https://github.com/apache/flink-connector-http/pull/30" target="_blank">[FLINK-39361][connector-http] Improve README with SQL examples</a></span>
-                            </div>
-                            <div class="pr-tags">
-                                <span class="tag changes">CHANGES REQUESTED</span>
-                            </div>
-                            <div class="pr-meta">
-                                <span class="repo">apache/flink-connector-http</span>
-                                <span>Updated: 2026-05-04</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <footer>
-            <p>Last updated: 2026-05-05T14:17:47+08:00</p>
-            <p>Auto-generated by flink-pr-todo skill</p>
-        </footer>
+        <div id="loading" class="loading">Loading PR data...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="content" style="display: none;"></div>
     </div>
+
+    <script>
+        async function loadPRData() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const content = document.getElementById('content');
+
+            try {
+                const response = await fetch('pr-data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                renderPage(data);
+                loading.style.display = 'none';
+                content.style.display = 'block';
+            } catch (e) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = 'Failed to load PR data: ' + e.message;
+            }
+        }
+
+        function renderPage(data) {
+            const content = document.getElementById('content');
+            content.innerHTML = '';
+
+            // Render stats
+            const statsHtml = renderStats(data.stats);
+            content.innerHTML += statsHtml;
+
+            // Render PR sections
+            const sectionsHtml = data.prSections.map(section => renderSection(section)).join('');
+            content.innerHTML += sectionsHtml;
+
+            // Render footer
+            content.innerHTML += renderFooter(data.lastUpdated, data.generatedBy);
+        }
+
+        function renderStats(stats) {
+            return `
+                <div class="stats">
+                    <div class="stat-card open">
+                        <div class="number">${stats.totalOpen}</div>
+                        <div class="label">Total Open PRs</div>
+                    </div>
+                    <div class="stat-card action">
+                        <div class="number">${stats.actionRequired}</div>
+                        <div class="label">Action Required</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="number">${stats.ciSuccess}</div>
+                        <div class="label">CI Success</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSection(section) {
+            const groupsHtml = section.groups.map(group => renderGroup(group)).join('');
+            return `
+                <div class="section">
+                    <h2>
+                        ${section.title}
+                        <span class="badge">${section.badge}</span>
+                    </h2>
+                    ${groupsHtml}
+                </div>
+            `;
+        }
+
+        function renderGroup(group) {
+            const prsHtml = group.prs.map(pr => renderPRCard(pr, group.repo)).join('');
+            return `
+                <div class="repo-section">
+                    <h3>${group.repo}</h3>
+                    <div class="pr-grid">
+                        ${prsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPRCard(pr, repo) {
+            const tagsHtml = pr.tags.map(tag => `<span class="tag ${tag.type}">${tag.label}</span>`).join('');
+            return `
+                <div class="pr-card ${pr.status}">
+                    <div class="status-icon">${pr.statusIcon}</div>
+                    <div class="pr-content">
+                        <div class="pr-header">
+                            <span class="pr-number">#${pr.number}</span>
+                            <span class="pr-title"><a href="${pr.url}" target="_blank">${pr.title}</a></span>
+                        </div>
+                        <div class="pr-tags">
+                            ${tagsHtml}
+                        </div>
+                        <div class="pr-meta">
+                            <span class="repo">${repo}</span>
+                            <span>Updated: ${pr.updated}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFooter(lastUpdated, generatedBy) {
+            return `
+                <footer>
+                    <p>Last updated: ${lastUpdated}</p>
+                    <p>Auto-generated by ${generatedBy}</p>
+                </footer>
+            `;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadPRData);
+    </script>
 </body>
 </html>
