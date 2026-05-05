@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flink PR Todo - FeatZhang</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --failure: #f85149;
+            --success: #3fb950;
+            --warning: #d29922;
+            --tag-bg: #21262d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--accent), #a371f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-card.open .number { color: var(--accent); }
+        .stat-card.action .number { color: var(--failure); }
+        .stat-card.success .number { color: var(--success); }
+
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2 .badge {
+            background: var(--failure);
+            color: white;
+            font-size: 0.6em;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .pr-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .pr-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+
+        .pr-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1);
+        }
+
+        .pr-card .status-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .pr-card.failure .status-icon { color: var(--failure); }
+        .pr-card.changes .status-icon { color: var(--warning); }
+
+        .pr-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pr-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pr-number {
+            font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+            font-size: 0.85em;
+            background: var(--tag-bg);
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: var(--accent);
+        }
+
+        .pr-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pr-title a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .pr-title a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .pr-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .tag {
+            font-size: 0.75em;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: var(--tag-bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .tag.draft {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .tag.failure {
+            color: var(--failure);
+            border-color: var(--failure);
+        }
+
+        .tag.changes {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .pr-meta {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+
+        .pr-meta span {
+            margin-right: 16px;
+        }
+
+        .pr-meta .repo {
+            color: var(--accent);
+        }
+
+        .repo-section {
+            margin-bottom: 30px;
+        }
+
+        .repo-section h3 {
+            font-size: 1.2em;
+            margin-bottom: 16px;
+            color: var(--accent);
+            padding-left: 12px;
+            border-left: 3px solid var(--accent);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            .pr-card {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .pr-title {
+                white-space: normal;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Apache Flink PR Todo</h1>
+            <p>Open PRs requiring action by <a href="https://github.com/featzhang" target="_blank">@FeatZhang</a></p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card open">
+                <div class="number">37</div>
+                <div class="label">Total Open PRs</div>
+            </div>
+            <div class="stat-card action">
+                <div class="number">11</div>
+                <div class="label">Action Required</div>
+            </div>
+            <div class="stat-card success">
+                <div class="number">26</div>
+                <div class="label">CI Success</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>
+                Action Required
+                <span class="badge">11</span>
+            </h2>
+
+            <div class="repo-section">
+                <h3>apache/flink</h3>
+                <div class="pr-grid">
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#28096</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/28096" target="_blank">[FLINK-39042][webui] Make watermark timestamps timezone-aware and configurable</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-05-05</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#28048</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/28048" target="_blank">[FLINK-39401][formats] Port raw line-delimiter option to release-1.15</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-05-05</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27715</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27715" target="_blank">[FLINK-39176][Runtime] Add expiration cleanup scheduler for NodeHealthManager</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag draft">DRAFT</span>
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-04-26</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27691</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27691" target="_blank">[FLINK-39170][Table/SQL] Add async batch lookup join optimization for temporal table joins</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag draft">DRAFT</span>
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-05-04</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27614</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27614" target="_blank">[FLINK-39096][table-planner] Enhance EXPLAIN output to display detailed estimated rowcount and cost information</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag draft">DRAFT</span>
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-05-04</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27609</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27609" target="_blank">[FLINK-39089][SQL] Enhanced projection field alias display</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-05-04</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27361</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27361" target="_blank">[FLINK-38825][python] Add Python DataStream API integration for AsyncBatchFunction</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-04-25</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27360</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27360" target="_blank">[FLINK-38825][table] Add SQL/Table API integration for AsyncBatch inference</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag draft">DRAFT</span>
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-04-25</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card failure">
+                        <div class="status-icon">&#10060;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#27359</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink/pull/27359" target="_blank">[FLINK-38825][streaming] Implement retry and timeout strategies for AsyncBatchWaitOperator</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag failure">CI FAILURE</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink</span>
+                                <span>Updated: 2026-04-26</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="repo-section">
+                <h3>apache/flink-connector-http</h3>
+                <div class="pr-grid">
+                    <div class="pr-card changes">
+                        <div class="status-icon">&#128260;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#34</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink-connector-http/pull/34" target="_blank">[FLINK-39368][connector-http] Add User-Agent configuration support for HTTP sink and lookup</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag changes">CHANGES REQUESTED</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink-connector-http</span>
+                                <span>Updated: 2026-05-04</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pr-card changes">
+                        <div class="status-icon">&#128260;</div>
+                        <div class="pr-content">
+                            <div class="pr-header">
+                                <span class="pr-number">#30</span>
+                                <span class="pr-title"><a href="https://github.com/apache/flink-connector-http/pull/30" target="_blank">[FLINK-39361][connector-http] Improve README with SQL examples</a></span>
+                            </div>
+                            <div class="pr-tags">
+                                <span class="tag changes">CHANGES REQUESTED</span>
+                            </div>
+                            <div class="pr-meta">
+                                <span class="repo">apache/flink-connector-http</span>
+                                <span>Updated: 2026-05-04</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Last updated: 2026-05-05T14:17:47+08:00</p>
+            <p>Auto-generated by flink-pr-todo skill</p>
+        </footer>
+    </div>
+</body>
+</html>
