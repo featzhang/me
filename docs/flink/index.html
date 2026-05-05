@@ -254,6 +254,50 @@
         .loading, .error { text-align: center; padding: 40px 20px; color: var(--text-muted); }
         .error { color: var(--failure); }
 
+        .ci-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 6px 0 8px;
+            font-size: 0.8em;
+        }
+        .ci-status {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        .ci-status.ci-success {
+            color: #2e7d32;
+            background: rgba(46, 125, 50, 0.1);
+        }
+        .ci-status.ci-failure {
+            color: #c62828;
+            background: rgba(198, 40, 40, 0.1);
+        }
+        .ci-status.ci-pending {
+            color: #f9a825;
+            background: rgba(249, 168, 37, 0.1);
+        }
+        .discuss-count {
+            color: var(--accent);
+            font-weight: 500;
+            font-size: 0.85em;
+        }
+        .pr-card.need-follow {
+            border-left: 4px solid #ff5252;
+        }
+        .tag.discuss {
+            background: rgba(77, 171, 247, 0.2);
+            color: #4dabf7;
+            font-weight: 600;
+        }
+        .tag.changes {
+            background: rgba(255, 183, 77, 0.2);
+            color: #ffb74d;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             body { padding: 12px; }
             header { padding: 24px 0; margin-bottom: 20px; }
@@ -336,8 +380,13 @@
         let globalData = null;
         let activeFilter = {
             type: 'all',      // all | pr | discuss
-            prStatus: 'all'   // all | ci-failure | changes-requested | success | draft
+            prStatus: 'all',   // all | ci-failure | changes-requested | success | draft
+            followUp: 'all'    // all | need-follow | no-follow
         };
+
+        function needFollowUp(pr) {
+            return pr.status === 'ci-failure' || pr.status === 'changes-requested';
+        }
 
         // 展示配置：所有展示信息由页面控制，而非数据文件
         const UI_CONFIG = {
@@ -406,14 +455,24 @@
 
         function getFilteredRepos(repos) {
             const statusFilter = activeFilter.prStatus;
+            const followUpFilter = activeFilter.followUp;
             const result = repos.map(repo => ({
                 ...repo,
                 pullRequests: repo.pullRequests.filter(pr => {
-                    if (statusFilter === 'all') return true;
-                    if (statusFilter === 'draft') return pr.isDraft;
-                    if (statusFilter === 'ci-failure') return pr.status === 'ci-failure';
-                    if (statusFilter === 'changes-requested') return pr.status === 'changes-requested';
-                    if (statusFilter === 'success') return pr.status === 'success';
+                    // Status filter
+                    if (statusFilter !== 'all') {
+                        if (statusFilter === 'draft') {
+                            if (!pr.isDraft) return false;
+                        } else if (pr.status !== statusFilter) {
+                            return false;
+                        }
+                    }
+                    // Follow-up filter
+                    if (followUpFilter !== 'all') {
+                        const needsFollow = needFollowUp(pr);
+                        if (followUpFilter === 'need-follow' && !needsFollow) return false;
+                        if (followUpFilter === 'no-follow' && needsFollow) return false;
+                    }
                     return true;
                 })
             })).filter(repo => repo.pullRequests.length > 0);
@@ -435,6 +494,12 @@
                 { key: 'success', label: '✅ Success' }
             ];
 
+            const followUpBtns = [
+                { key: 'all', label: 'All' },
+                { key: 'need-follow', label: '🔔 Need Follow' },
+                { key: 'no-follow', label: '✅ OK' }
+            ];
+
             return `
                 <div class="filter-bar" id="filter-bar">
                     <div class="filter-group">
@@ -445,6 +510,11 @@
                     <div class="filter-group">
                         <span class="filter-label">PR Status:</span>
                         ${statusBtns.map(btn => `<button class="filter-btn ${activeFilter.prStatus === btn.key ? 'active' : ''}" data-filter="status" data-value="${btn.key}">${btn.label}</button>`).join('')}
+                    </div>
+                    <div class="filter-divider"></div>
+                    <div class="filter-group">
+                        <span class="filter-label">Follow Up:</span>
+                        ${followUpBtns.map(btn => `<button class="filter-btn ${activeFilter.followUp === btn.key ? 'active' : ''}" data-filter="followUp" data-value="${btn.key}">${btn.label}</button>`).join('')}
                     </div>
                 </div>
             `;
@@ -460,6 +530,8 @@
                         activeFilter.type = filterValue;
                     } else if (filterType === 'status') {
                         activeFilter.prStatus = filterValue;
+                    } else if (filterType === 'followUp') {
+                        activeFilter.followUp = filterValue;
                     }
                     applyFilter();
                 });
@@ -550,9 +622,33 @@
             const config = UI_CONFIG.status[pr.status] || UI_CONFIG.status['ci-failure'];
             const tagsHtml = buildTags(pr, config).map(t => `<span class="tag ${t.class}">${t.label}</span>`).join('');
 
+            // CI Pipeline status indicator
+            let ciIndicator = '';
+            if (pr.azureStatus) {
+                const ciClass = pr.azureStatus === 'SUCCESS' ? 'ci-success' : (pr.azureStatus === 'FAILURE' ? 'ci-failure' : 'ci-pending');
+                const ciIcon = pr.azureStatus === 'SUCCESS' ? '✅' : (pr.azureStatus === 'FAILURE' ? '❌' : '🔄');
+                const ciText = pr.azureStatus === 'SUCCESS' ? 'PASSED' : (pr.azureStatus === 'FAILURE' ? 'FAILED' : pr.azureStatus);
+                ciIndicator = `<span class="ci-status ${ciClass}">${ciIcon} CI ${ciText}</span>`;
+            }
+
+            // Discussion count
+            let discussIndicator = '';
+            if (pr.discussions > 0 || (pr.flips && pr.flips.some(f => f.startsWith('discussions:')))) {
+                const discCount = pr.discussions > 0 ? pr.discussions : (pr.flips.find(f => f.startsWith('discussions:')) || '').replace('discussions:', '');
+                discussIndicator = `<span class="discuss-count">💬 ${discCount} comments</span>`;
+            }
+
+            // Follow-up indicator
+            const needsFollow = needFollowUp(pr);
+            const followIcon = needsFollow ? '🔔' : '';
+            const followClass = needsFollow ? 'need-follow' : '';
+
+            // Calculate creation time from PR number or fall back to updatedAt
+            const createdAt = pr.createdAt || pr.updatedAt;
+
             return `
-                <div class="pr-card ${config.cardClass}">
-                    <div class="status-icon">${config.icon}</div>
+                <div class="pr-card ${config.cardClass} ${followClass}">
+                    <div class="status-icon">${followIcon || config.icon}</div>
                     <div class="pr-content">
                         <div class="pr-header">
                             <span class="pr-number">#${pr.number}</span>
@@ -561,9 +657,14 @@
                         <div class="pr-tags">
                             ${tagsHtml}
                         </div>
+                        <div class="ci-line">
+                            ${ciIndicator}
+                            ${discussIndicator}
+                        </div>
                         <div class="pr-meta">
                             <span class="repo">${repoName}</span>
-                            <span>Updated: ${pr.updatedAt}</span>
+                            <span>📅 ${createdAt}</span>
+                            <span>📝 Updated: ${pr.updatedAt}</span>
                         </div>
                     </div>
                 </div>
@@ -575,21 +676,18 @@
             if (pr.isDraft) {
                 tags.push({ class: UI_CONFIG.draftTag.tagClass, label: UI_CONFIG.draftTag.tagLabel });
             }
-            // Show discussions count if present
-            if (pr.discussions && pr.discussions > 0) {
-                tags.push({ class: 'discuss', label: `💬 ${pr.discussions}` });
-            }
-            // Show flip tags (pending actions)
+            // Show pending discussions/comments count if present
             if (pr.flips && pr.flips.length > 0) {
                 pr.flips.forEach(flip => {
                     if (flip.startsWith('discussions:')) {
-                        // Already shown above as discuss tag
+                        const count = flip.replace('discussions:', '');
+                        tags.push({ class: 'discuss', label: `💬 ${count}` });
                     } else if (flip.startsWith('gha-fail:')) {
                         tags.push({ class: 'failure', label: `⚠️ ${flip.replace('gha-fail:', '')}` });
                     } else if (flip === 'ci-failure') {
                         tags.push({ class: config.tagClass, label: config.tagLabel });
                     } else if (flip === 'changes-requested') {
-                        tags.push({ class: 'changes', label: 'CHANGES' });
+                        tags.push({ class: 'changes', label: '🔄 CHANGES' });
                     } else {
                         tags.push({ class: 'warning', label: flip });
                     }
