@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-05-05T14:17:47+08:00",
-  "githubUser": "featzhang",
+  "lastUpdated": "2026-05-05T06:50:11Z",
+  "githubUser": "FeatZhang",
   "repositories": [
     {
       "name": "apache/flink",
@@ -14,7 +14,33 @@
           "url": "https://github.com/apache/flink/pull/28096",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-05"
+          "updatedAt": "2026-05-05",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74768"
+        },
+        {
+          "number": 28092,
+          "title": "Port timezone-aware watermark timestamps to release-2.1",
+          "issueId": "FLINK-39042",
+          "module": "webui",
+          "url": "https://github.com/apache/flink/pull/28092",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-05",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74743"
+        },
+        {
+          "number": 28082,
+          "title": "Port raw line-delimiter option to release-2.1",
+          "issueId": "FLINK-39401",
+          "module": "formats",
+          "url": "https://github.com/apache/flink/pull/28082",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-05",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74693"
         },
         {
           "number": 28048,
@@ -24,7 +50,57 @@
           "url": "https://github.com/apache/flink/pull/28048",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-05"
+          "updatedAt": "2026-05-05",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74590"
+        },
+        {
+          "number": 27984,
+          "title": "Add APPLY_WATERMARK built-in function for flexible watermark assignment",
+          "issueId": "FLINK-39062",
+          "module": "table",
+          "url": "https://github.com/apache/flink/pull/27984",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-29",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74505"
+        },
+        {
+          "number": 27954,
+          "title": "Fix flaky WindowDistinctAggregateITCase#testCumulateWindow_GroupingSets",
+          "issueId": "FLINK-39481",
+          "module": "tests",
+          "url": "https://github.com/apache/flink/pull/27954",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-05",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74214"
+        },
+        {
+          "number": 27774,
+          "title": "Add Top N Metrics Dashboard",
+          "issueId": "FLINK-39489",
+          "module": "Web Dashboard",
+          "url": "https://github.com/apache/flink/pull/27774",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-05",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74742"
+        },
+        {
+          "number": 27772,
+          "title": "Add Diagnosis Advisor to Flink Web UI",
+          "issueId": "FLINK-39079",
+          "module": "Web Frontend",
+          "url": "https://github.com/apache/flink/pull/27772",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-03-20",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73290"
         },
         {
           "number": 27715,
@@ -34,7 +110,45 @@
           "url": "https://github.com/apache/flink/pull/27715",
           "status": "ci-failure",
           "isDraft": true,
-          "updatedAt": "2026-04-26"
+          "updatedAt": "2026-04-26",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74522"
+        },
+        {
+          "number": 27714,
+          "title": "Add configuration support for management node quarantine",
+          "issueId": "FLINK-39176",
+          "module": "runtime",
+          "url": "https://github.com/apache/flink/pull/27714",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-03-13",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=72942"
+        },
+        {
+          "number": 27711,
+          "title": "Integrate NodeHealthManager with Slot Filtering",
+          "issueId": "FLINK-39176",
+          "module": "runtime",
+          "url": "https://github.com/apache/flink/pull/27711",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-03-04",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=72940"
+        },
+        {
+          "number": 27701,
+          "title": "Introduce NodeHealthManager abstraction",
+          "issueId": "FLINK-39176",
+          "module": "runtime",
+          "url": "https://github.com/apache/flink/pull/27701",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-03-04",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=72939"
         },
         {
           "number": 27691,
@@ -44,7 +158,9 @@
           "url": "https://github.com/apache/flink/pull/27691",
           "status": "ci-failure",
           "isDraft": true,
-          "updatedAt": "2026-05-04"
+          "updatedAt": "2026-05-04",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74809"
         },
         {
           "number": 27614,
@@ -54,7 +170,45 @@
           "url": "https://github.com/apache/flink/pull/27614",
           "status": "ci-failure",
           "isDraft": true,
-          "updatedAt": "2026-05-04"
+          "updatedAt": "2026-05-04",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74805"
+        },
+        {
+          "number": 27612,
+          "title": "Document EXPLAIN CHANGELOG_MODE for streaming queries",
+          "issueId": "FLINK-39095",
+          "module": "docs",
+          "url": "https://github.com/apache/flink/pull/27612",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-03",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74755"
+        },
+        {
+          "number": 27611,
+          "title": "Enhance EXPLAIN plan to display watermark specification",
+          "issueId": "FLINK-39092",
+          "module": "SQL",
+          "url": "https://github.com/apache/flink/pull/27611",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-03",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74757"
+        },
+        {
+          "number": 27610,
+          "title": "Enhance structured condition display of Explain output",
+          "issueId": "FLINK-39090",
+          "module": "SQL",
+          "url": "https://github.com/apache/flink/pull/27610",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-03-18",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73311"
         },
         {
           "number": 27609,
@@ -64,7 +218,81 @@
           "url": "https://github.com/apache/flink/pull/27609",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-04"
+          "updatedAt": "2026-05-04",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74806"
+        },
+        {
+          "number": 27593,
+          "title": "Display slot sharing group in operator nodes",
+          "issueId": "FLINK-39076",
+          "module": "Web UI",
+          "url": "https://github.com/apache/flink/pull/27593",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-22",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74347"
+        },
+        {
+          "number": 27583,
+          "title": "Support saving and exporting SQL execution history",
+          "issueId": "FLINK-39069",
+          "module": "SQL Client",
+          "url": "https://github.com/apache/flink/pull/27583",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-03-17",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73298"
+        },
+        {
+          "number": 27568,
+          "title": "Add HTTP connection pool management for Triton inference",
+          "issueId": "FLINK-38857",
+          "module": "models",
+          "url": "https://github.com/apache/flink/pull/27568",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-05",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74571"
+        },
+        {
+          "number": 27562,
+          "title": "Add sequence ID auto-increment support for Triton inference",
+          "issueId": "FLINK-38857",
+          "module": "model",
+          "url": "https://github.com/apache/flink/pull/27562",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-25",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74499"
+        },
+        {
+          "number": 27561,
+          "title": "Add retry with default value fallback for triton inference failures",
+          "issueId": "FLINK-39225",
+          "module": "model",
+          "url": "https://github.com/apache/flink/pull/27561",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-27",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74565"
+        },
+        {
+          "number": 27560,
+          "title": "Add unified metrics support to AsyncPredictFunction and PredictFunction",
+          "issueId": "FLINK-39059",
+          "module": "table",
+          "url": "https://github.com/apache/flink/pull/27560",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-05",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74534"
         },
         {
           "number": 27361,
@@ -74,7 +302,9 @@
           "url": "https://github.com/apache/flink/pull/27361",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-04-25"
+          "updatedAt": "2026-04-25",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74510"
         },
         {
           "number": 27360,
@@ -84,7 +314,9 @@
           "url": "https://github.com/apache/flink/pull/27360",
           "status": "ci-failure",
           "isDraft": true,
-          "updatedAt": "2026-04-25"
+          "updatedAt": "2026-04-25",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74511"
         },
         {
           "number": 27359,
@@ -94,7 +326,69 @@
           "url": "https://github.com/apache/flink/pull/27359",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-04-26"
+          "updatedAt": "2026-04-26",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74519"
+        },
+        {
+          "number": 27358,
+          "title": "Add inference-oriented metrics to AsyncBatchWaitOperator",
+          "issueId": "FLINK-38825",
+          "module": "streaming",
+          "url": "https://github.com/apache/flink/pull/27358",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-01",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73773"
+        },
+        {
+          "number": 27357,
+          "title": "Add ordered async batch support for AsyncBatchWaitOperator",
+          "issueId": "FLINK-38825",
+          "module": "streaming",
+          "url": "https://github.com/apache/flink/pull/27357",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-02",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73205"
+        },
+        {
+          "number": 27356,
+          "title": "Add time-based batch triggering for AsyncBatchWaitOperator",
+          "issueId": "FLINK-38825",
+          "module": null,
+          "url": "https://github.com/apache/flink/pull/27356",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-02",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73261"
+        },
+        {
+          "number": 27355,
+          "title": "Introduce AsyncBatchFunction and AsyncBatchWaitOperator",
+          "issueId": "FLINK-38825",
+          "module": null,
+          "url": "https://github.com/apache/flink/pull/27355",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-02",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73110"
+        },
+        {
+          "number": 27351,
+          "title": "Introduce URL_DECODE_RECURSIVE function for recursive URL decoding",
+          "issueId": "FLINK-38822",
+          "module": null,
+          "url": "https://github.com/apache/flink/pull/27351",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-05-02",
+          "azureStatus": "SUCCESS",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74237"
         }
       ]
     },
@@ -102,6 +396,16 @@
       "name": "apache/flink-connector-http",
       "url": "https://github.com/apache/flink-connector-http",
       "pullRequests": [
+        {
+          "number": 35,
+          "title": "Add configurable error logging with detailed context",
+          "issueId": "FLINK-39367",
+          "module": "connector-http",
+          "url": "https://github.com/apache/flink-connector-http/pull/35",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-25"
+        },
         {
           "number": 34,
           "title": "Add User-Agent configuration support for HTTP sink and lookup",
@@ -111,6 +415,26 @@
           "status": "changes-requested",
           "isDraft": false,
           "updatedAt": "2026-05-04"
+        },
+        {
+          "number": 33,
+          "title": "Add retry support with exponential backoff for HTTP Sink",
+          "issueId": "FLINK-39366",
+          "module": "connector-http",
+          "url": "https://github.com/apache/flink-connector-http/pull/33",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-22"
+        },
+        {
+          "number": 32,
+          "title": "Support custom HTTP headers via ConfigOption",
+          "issueId": "FLINK-39365",
+          "module": "connector-http",
+          "url": "https://github.com/apache/flink-connector-http/pull/32",
+          "status": "success",
+          "isDraft": false,
+          "updatedAt": "2026-04-22"
         },
         {
           "number": 30,
