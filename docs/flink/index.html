@@ -241,6 +241,31 @@
             background: var(--border);
             margin: 0 4px;
         }
+        .search-group {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 180px;
+            max-width: 320px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.85em;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+        }
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
 
         footer {
             text-align: center;
@@ -318,6 +343,8 @@
             .pr-meta span { margin-right: 8px; }
             .filter-bar { padding: 12px; gap: 12px; }
             .filter-divider { display: none; }
+            .search-group { min-width: 100%; max-width: none; margin-top: 4px; }
+            .search-input { font-size: 0.9em; padding: 8px 12px; }
         }
 
         @media (max-width: 480px) {
@@ -348,6 +375,8 @@
             .filter-bar { padding: 8px; gap: 8px; }
             .filter-label { display: none; }
             .filter-btn { padding: 4px 10px; font-size: 0.7em; }
+            .search-group { min-width: 100%; max-width: none; margin-top: 2px; }
+            .search-input { font-size: 0.75em; padding: 6px 10px; }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
@@ -379,9 +408,10 @@
         // 全局数据缓存和筛选状态
         let globalData = null;
         let activeFilter = {
-            type: 'all',      // all | pr | discuss
-            prStatus: 'all',   // all | ci-failure | changes-requested | success | draft
-            followUp: 'all'    // all | need-follow | no-follow
+            type: 'all',
+            prStatus: 'all',
+            followUp: 'all',
+            searchKeyword: ''
         };
 
         function needFollowUp(pr) {
@@ -451,11 +481,20 @@
 
             content.innerHTML += renderFooter(globalData.lastUpdated);
             bindFilterEvents();
+
+            // Re-focus search input after re-render to keep typing continuity
+            const searchInput = document.getElementById('pr-search');
+            if (searchInput && activeFilter.searchKeyword) {
+                searchInput.focus();
+                const len = searchInput.value.length;
+                searchInput.setSelectionRange(len, len);
+            }
         }
 
         function getFilteredRepos(repos) {
             const statusFilter = activeFilter.prStatus;
             const followUpFilter = activeFilter.followUp;
+            const keyword = activeFilter.searchKeyword.trim().toLowerCase();
             const result = repos.map(repo => ({
                 ...repo,
                 pullRequests: repo.pullRequests.filter(pr => {
@@ -472,6 +511,11 @@
                         const needsFollow = needFollowUp(pr);
                         if (followUpFilter === 'need-follow' && !needsFollow) return false;
                         if (followUpFilter === 'no-follow' && needsFollow) return false;
+                    }
+                    // Keyword search (filter)
+                    if (keyword) {
+                        const searchText = (pr.title + ' ' + pr.issueId + ' #' + pr.number).toLowerCase();
+                        if (!searchText.includes(keyword)) return false;
                     }
                     return true;
                 })
@@ -516,6 +560,10 @@
                         <span class="filter-label">Follow Up:</span>
                         ${followUpBtns.map(btn => `<button class="filter-btn ${activeFilter.followUp === btn.key ? 'active' : ''}" data-filter="followUp" data-value="${btn.key}">${btn.label}</button>`).join('')}
                     </div>
+                    <div class="filter-divider"></div>
+                    <div class="search-group">
+                        <input type="text" class="search-input" id="pr-search" placeholder="🔍 Search by title, issue ID..." value="${activeFilter.searchKeyword}">
+                    </div>
                 </div>
             `;
         }
@@ -536,6 +584,26 @@
                     applyFilter();
                 });
             });
+
+            // Search input with debounce
+            const searchInput = document.getElementById('pr-search');
+            if (searchInput) {
+                let debounceTimer;
+                searchInput.addEventListener('input', function(e) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        activeFilter.searchKeyword = e.target.value;
+                        applyFilter();
+                    }, 200);
+                });
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        clearTimeout(debounceTimer);
+                        activeFilter.searchKeyword = e.target.value;
+                        applyFilter();
+                    }
+                });
+            }
         }
 
         function computeStats(repos) {
