@@ -161,6 +161,35 @@
             border-left: 3px solid var(--accent);
         }
 
+        .discuss-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+        .discuss-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1); }
+        .discuss-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        .discuss-content { flex: 1; min-width: 0; }
+        .discuss-subject {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .discuss-subject a { color: var(--text); text-decoration: none; }
+        .discuss-subject a:hover { color: var(--accent); text-decoration: underline; }
+        .discuss-meta { color: var(--text-muted); font-size: 0.85em; }
+        .discuss-meta span { margin-right: 16px; }
+        .discuss-meta .replies { color: var(--accent); }
+        .discuss-grid { display: grid; gap: 16px; }
+
         footer {
             text-align: center;
             padding: 30px 0;
@@ -286,6 +315,11 @@
             // 构建展示分组（数据层无 section 概念）
             const section = buildActionRequiredSection(data.repositories);
             content.innerHTML += renderSection(section);
+
+            // 渲染社区讨论板块
+            if (data.discussions && data.discussions.length > 0) {
+                content.innerHTML += renderDiscussionsSection(data.discussions);
+            }
 
             // 渲染页脚
             content.innerHTML += renderFooter(data.lastUpdated);
@@ -416,6 +450,39 @@
                 tags.push({ class: config.tagClass, label: config.tagLabel });
             }
             return tags;
+        }
+
+        function renderDiscussionsSection(discussions) {
+            const cardsHtml = discussions.map(d => renderDiscussCard(d)).join('');
+            return `
+                <div class="section">
+                    <h2>
+                        💬 Community Discussions
+                        <span class="badge">${discussions.length}</span>
+                    </h2>
+                    <div class="discuss-grid">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDiscussCard(discuss) {
+            const repliesText = discuss.replies > 0 ? `${discuss.replies} replies` : 'No replies yet';
+            return `
+                <div class="discuss-card">
+                    <div class="discuss-icon">💬</div>
+                    <div class="discuss-content">
+                        <div class="discuss-subject">
+                            <a href="${discuss.url}" target="_blank">${discuss.subject}</a>
+                        </div>
+                        <div class="discuss-meta">
+                            <span>📅 ${discuss.date}</span>
+                            <span class="replies">💬 ${repliesText}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderFooter(lastUpdated) {

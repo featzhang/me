@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-05T06:58:48Z",
+  "lastUpdated": "2026-05-05T07:27:00Z",
   "githubUser": "FeatZhang",
   "repositories": [
     {
@@ -542,6 +542,32 @@
           ]
         }
       ]
+    }
+  ],
+  "discussions": [
+    {
+      "subject": "[DISCUSS] FLIP-XXX: Top-N Job Health Dashboard in the Web UI",
+      "url": "https://lists.apache.org/thread/l3ly9o9p1nkm8l0rggq86fw0zf5o7wph",
+      "date": "2026-05-02",
+      "replies": 0
+    },
+    {
+      "subject": "[DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause",
+      "url": "https://lists.apache.org/thread/sk3lzsqq66wbtbrb5l1fk2k3mg5sb5m3",
+      "date": "2026-04-24",
+      "replies": 3
+    },
+    {
+      "subject": "[DISCUSS] FLIP-XXX: Support Watermark Definition in SQL Views",
+      "url": "https://lists.apache.org/thread/sf43oz4ozy8p50djb5713d963f1mnwgj",
+      "date": "2026-04-21",
+      "replies": 0
+    },
+    {
+      "subject": "[DISCUSS] FLIP: Streaming-native AI Inference Runtime for Flink",
+      "url": "https://lists.apache.org/thread/rn8r7pqfgncd2k3tmy9qfxs6xcslr7lf",
+      "date": "2026-04-18",
+      "replies": 4
     }
   ]
 }
