@@ -259,16 +259,167 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            header {
+                padding: 24px 0;
+                margin-bottom: 20px;
+            }
             header h1 {
-                font-size: 1.8em;
+                font-size: 1.5em;
+            }
+            header p {
+                font-size: 0.95em;
+            }
+            .stat-card {
+                padding: 16px;
+            }
+            .stat-card .number {
+                font-size: 2em;
+            }
+            .stat-card .label {
+                font-size: 0.75em;
+            }
+            .section h2 {
+                font-size: 1.2em;
+                margin-bottom: 12px;
+            }
+            .repo-section h3 {
+                font-size: 1em;
+                padding-left: 8px;
             }
             .pr-card {
+                padding: 14px;
                 flex-direction: column;
-                gap: 12px;
+                gap: 10px;
+            }
+            .pr-card .status-icon {
+                font-size: 1.3em;
+                margin-top: 0;
+            }
+            .pr-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .pr-number {
+                font-size: 0.8em;
             }
             .pr-title {
+                font-size: 1em;
                 white-space: normal;
+                line-height: 1.5;
             }
+            .tag {
+                font-size: 0.7em;
+                padding: 2px 8px;
+            }
+            .pr-meta {
+                font-size: 0.75em;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .pr-meta span {
+                margin-right: 8px;
+            }
+        }
+
+        /* 超小屏手机优化 (≤ 480px) */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            header {
+                padding: 16px 0;
+            }
+            header h1 {
+                font-size: 1.25em;
+            }
+            header p {
+                font-size: 0.85em;
+            }
+            .stats {
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 12px;
+                border-radius: 8px;
+            }
+            .stat-card .number {
+                font-size: 1.6em;
+            }
+            .stat-card .label {
+                font-size: 0.65em;
+                letter-spacing: 0.5px;
+            }
+            .section h2 {
+                font-size: 1.05em;
+            }
+            .section h2 .badge {
+                font-size: 0.55em;
+                padding: 3px 8px;
+            }
+            .repo-section {
+                margin-bottom: 20px;
+            }
+            .repo-section h3 {
+                font-size: 0.9em;
+            }
+            .pr-card {
+                padding: 12px;
+                border-radius: 8px;
+                gap: 8px;
+            }
+            .pr-number {
+                font-size: 0.75em;
+                padding: 1px 6px;
+            }
+            .pr-title {
+                font-size: 0.9em;
+            }
+            .pr-tags {
+                gap: 4px;
+            }
+            .tag {
+                font-size: 0.65em;
+                padding: 2px 6px;
+                border-radius: 10px;
+            }
+            .pr-meta {
+                font-size: 0.7em;
+                margin-top: 6px;
+            }
+            footer {
+                padding: 20px 0;
+                font-size: 0.75em;
+            }
+        }
+
+        /* 中等屏幕平板优化 (769px - 1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .pr-card {
+                padding: 18px;
+            }
+            .pr-title {
+                font-size: 1em;
+            }
+        }
+
+        /* 大屏幕优化 (≥ 1440px) */
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 1400px;
+            }
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* 防止横向滚动 */
+        html, body {
+            overflow-x: hidden;
         }
     </style>
 </head>
