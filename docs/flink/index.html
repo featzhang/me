@@ -304,26 +304,7 @@
             color: #f9a825;
             background: rgba(249, 168, 37, 0.1);
         }
-        /* === 双栏布局: 大屏左右分栏 === */
-        .main-columns {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-        .main-columns .col-left {
-            flex: 1;
-            min-width: 0;
-        }
-        .main-columns .col-right {
-            flex: 1;
-            min-width: 0;
-        }
-        .col-right .section h2 {
-            color: var(--accent);
-        }
-        .col-right .discuss-card {
-            border-left: 3px solid var(--accent);
-        }
+        .discuss-count {
             color: var(--accent);
             font-weight: 500;
             font-size: 0.85em;
@@ -336,9 +317,9 @@
             color: #4dabf7;
             font-weight: 600;
         }
-        .tag.discuss {
-            background: rgba(77, 171, 247, 0.2);
-            color: #4dabf7;
+        .tag.changes {
+            background: rgba(255, 183, 77, 0.2);
+            color: #ffb74d;
             font-weight: 600;
         }
 
@@ -364,8 +345,6 @@
             .filter-divider { display: none; }
             .search-group { min-width: 100%; max-width: none; margin-top: 4px; }
             .search-input { font-size: 0.9em; padding: 8px 12px; }
-            /* 移动端双栏堆叠 */
-            .main-columns { flex-direction: column; }
         }
 
         @media (max-width: 480px) {
@@ -398,7 +377,6 @@
             .filter-btn { padding: 4px 10px; font-size: 0.7em; }
             .search-group { min-width: 100%; max-width: none; margin-top: 2px; }
             .search-input { font-size: 0.75em; padding: 6px 10px; }
-            .main-columns { flex-direction: column; gap: 10px; }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
@@ -484,34 +462,22 @@
             let showPRs = activeFilter.type === 'all' || activeFilter.type === 'pr';
             let showDiscuss = activeFilter.type === 'all' || activeFilter.type === 'discuss';
 
-            // 开始双栏容器
-            let mainHtml = '<div class="main-columns">';
-
-            // 左栏：PR 内容
-            let leftHtml = '<div class="col-left">';
             if (showPRs) {
                 const filteredRepos = getFilteredRepos(globalData.repositories);
                 if (filteredRepos.length > 0) {
                     const stats = computeStats(filteredRepos);
-                    leftHtml += renderStats(stats);
+                    content.innerHTML += renderStats(stats);
 
                     const section = buildActionRequiredSection(filteredRepos);
                     if (section.groups.length > 0) {
-                        leftHtml += renderSection(section);
+                        content.innerHTML += renderSection(section);
                     }
                 }
             }
-            leftHtml += '</div>';
 
-            // 右栏：Discussions 内容
-            let rightHtml = '<div class="col-right">';
             if (showDiscuss && globalData.discussions && globalData.discussions.length > 0) {
-                rightHtml += renderDiscussionsSection(globalData.discussions);
+                content.innerHTML += renderDiscussionsSection(globalData.discussions);
             }
-            rightHtml += '</div>';
-
-            mainHtml += leftHtml + rightHtml + '</div>';
-            content.innerHTML += mainHtml;
 
             content.innerHTML += renderFooter(globalData.lastUpdated);
             bindFilterEvents();
