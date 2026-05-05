@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-05T06:50:11Z",
+  "lastUpdated": "2026-05-05T06:54:57Z",
   "githubUser": "FeatZhang",
   "repositories": [
     {
@@ -16,7 +16,10 @@
           "isDraft": false,
           "updatedAt": "2026-05-05",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74768"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74768",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 28092,
@@ -52,7 +55,10 @@
           "isDraft": false,
           "updatedAt": "2026-05-05",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74590"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74590",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27984,
@@ -76,7 +82,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-05",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74214"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74214",
+          "discussions": 4,
+          "flips": [
+            "discussions:4"
+          ]
         },
         {
           "number": 27774,
@@ -88,7 +98,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-05",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74742"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74742",
+          "discussions": 6,
+          "flips": [
+            "discussions:6"
+          ]
         },
         {
           "number": 27772,
@@ -112,7 +126,10 @@
           "isDraft": true,
           "updatedAt": "2026-04-26",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74522"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74522",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27714,
@@ -160,7 +177,10 @@
           "isDraft": true,
           "updatedAt": "2026-05-04",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74809"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74809",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27614,
@@ -172,7 +192,12 @@
           "isDraft": true,
           "updatedAt": "2026-05-04",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74805"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74805",
+          "discussions": 1,
+          "flips": [
+            "ci-failure",
+            "discussions:1"
+          ]
         },
         {
           "number": 27612,
@@ -196,7 +221,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-03",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74757"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74757",
+          "discussions": 1,
+          "flips": [
+            "discussions:1"
+          ]
         },
         {
           "number": 27610,
@@ -220,7 +249,10 @@
           "isDraft": false,
           "updatedAt": "2026-05-04",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74806"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74806",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27593,
@@ -232,7 +264,11 @@
           "isDraft": false,
           "updatedAt": "2026-04-22",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74347"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74347",
+          "discussions": 1,
+          "flips": [
+            "discussions:1"
+          ]
         },
         {
           "number": 27583,
@@ -256,7 +292,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-05",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74571"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74571",
+          "discussions": 18,
+          "flips": [
+            "discussions:18"
+          ]
         },
         {
           "number": 27562,
@@ -280,7 +320,11 @@
           "isDraft": false,
           "updatedAt": "2026-04-27",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74565"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74565",
+          "discussions": 18,
+          "flips": [
+            "discussions:18"
+          ]
         },
         {
           "number": 27560,
@@ -292,7 +336,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-05",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74534"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74534",
+          "discussions": 8,
+          "flips": [
+            "discussions:8"
+          ]
         },
         {
           "number": 27361,
@@ -304,7 +352,10 @@
           "isDraft": false,
           "updatedAt": "2026-04-25",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74510"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74510",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27360,
@@ -316,7 +367,10 @@
           "isDraft": true,
           "updatedAt": "2026-04-25",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74511"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74511",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27359,
@@ -328,7 +382,10 @@
           "isDraft": false,
           "updatedAt": "2026-04-26",
           "azureStatus": "FAILURE",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74519"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74519",
+          "flips": [
+            "ci-failure"
+          ]
         },
         {
           "number": 27358,
@@ -352,7 +409,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-02",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73205"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73205",
+          "discussions": 4,
+          "flips": [
+            "discussions:4"
+          ]
         },
         {
           "number": 27356,
@@ -364,7 +425,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-02",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73261"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73261",
+          "discussions": 6,
+          "flips": [
+            "discussions:6"
+          ]
         },
         {
           "number": 27355,
@@ -376,7 +441,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-02",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73110"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73110",
+          "discussions": 3,
+          "flips": [
+            "discussions:3"
+          ]
         },
         {
           "number": 27351,
@@ -388,7 +457,11 @@
           "isDraft": false,
           "updatedAt": "2026-05-02",
           "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74237"
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74237",
+          "discussions": 21,
+          "flips": [
+            "discussions:21"
+          ]
         }
       ]
     },
@@ -404,7 +477,11 @@
           "url": "https://github.com/apache/flink-connector-http/pull/35",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-04-25"
+          "updatedAt": "2026-04-25",
+          "discussions": 5,
+          "flips": [
+            "discussions:5"
+          ]
         },
         {
           "number": 34,
@@ -414,7 +491,12 @@
           "url": "https://github.com/apache/flink-connector-http/pull/34",
           "status": "changes-requested",
           "isDraft": false,
-          "updatedAt": "2026-05-04"
+          "updatedAt": "2026-05-04",
+          "discussions": 4,
+          "flips": [
+            "changes-requested",
+            "discussions:4"
+          ]
         },
         {
           "number": 33,
@@ -424,7 +506,11 @@
           "url": "https://github.com/apache/flink-connector-http/pull/33",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-04-22"
+          "updatedAt": "2026-04-22",
+          "discussions": 1,
+          "flips": [
+            "discussions:1"
+          ]
         },
         {
           "number": 32,
@@ -434,7 +520,11 @@
           "url": "https://github.com/apache/flink-connector-http/pull/32",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-04-22"
+          "updatedAt": "2026-04-22",
+          "discussions": 7,
+          "flips": [
+            "discussions:7"
+          ]
         },
         {
           "number": 30,
@@ -444,7 +534,12 @@
           "url": "https://github.com/apache/flink-connector-http/pull/30",
           "status": "changes-requested",
           "isDraft": false,
-          "updatedAt": "2026-05-04"
+          "updatedAt": "2026-05-04",
+          "discussions": 5,
+          "flips": [
+            "changes-requested",
+            "discussions:5"
+          ]
         }
       ]
     }
