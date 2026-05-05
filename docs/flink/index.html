@@ -190,6 +190,58 @@
         .discuss-meta .replies { color: var(--accent); }
         .discuss-grid { display: grid; gap: 16px; }
 
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-label {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .filter-btn {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--tag-bg);
+            color: var(--text-muted);
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .filter-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .filter-btn.active:hover {
+            background: #4a9eff;
+        }
+        .filter-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
         footer {
             text-align: center;
             padding: 30px 0;
@@ -220,6 +272,8 @@
             .tag { font-size: 0.7em; padding: 2px 8px; }
             .pr-meta { font-size: 0.75em; display: flex; flex-wrap: wrap; gap: 4px; }
             .pr-meta span { margin-right: 8px; }
+            .filter-bar { padding: 12px; gap: 12px; }
+            .filter-divider { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -247,6 +301,9 @@
             .pr-meta { font-size: 0.62em; margin-top: 3px; line-height: 1.3; }
             .pr-meta span { margin-right: 8px; }
             footer { padding: 12px 0; font-size: 0.65em; margin-top: 8px; }
+            .filter-bar { padding: 8px; gap: 8px; }
+            .filter-label { display: none; }
+            .filter-btn { padding: 4px 10px; font-size: 0.7em; }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
@@ -269,10 +326,19 @@
 
         <div id="loading" class="loading">Loading PR data...</div>
         <div id="error" class="error" style="display: none;"></div>
-        <div id="content" style="display: none;"></div>
+        <div id="content" style="display: none;">
+            <div id="filter-bar" class="filter-bar"></div>
+        </div>
     </div>
 
     <script>
+        // 全局数据缓存和筛选状态
+        let globalData = null;
+        let activeFilter = {
+            type: 'all',      // all | pr | discuss
+            prStatus: 'all'   // all | ci-failure | changes-requested | success | draft
+        };
+
         // 展示配置：所有展示信息由页面控制，而非数据文件
         const UI_CONFIG = {
             status: {
@@ -303,39 +369,121 @@
         }
 
         function renderPage(data) {
+            globalData = data;
+            applyFilter();
+        }
+
+        function applyFilter() {
             const content = document.getElementById('content');
             content.innerHTML = '';
 
-            // 计算统计数据
-            const stats = computeStats(data.repositories);
+            // 始终渲染筛选器
+            content.innerHTML += renderFilterBar();
 
-            // 渲染统计
-            content.innerHTML += renderStats(stats);
+            let showPRs = activeFilter.type === 'all' || activeFilter.type === 'pr';
+            let showDiscuss = activeFilter.type === 'all' || activeFilter.type === 'discuss';
 
-            // 构建展示分组（数据层无 section 概念）
-            const section = buildActionRequiredSection(data.repositories);
-            content.innerHTML += renderSection(section);
+            if (showPRs) {
+                const filteredRepos = getFilteredRepos(globalData.repositories);
+                if (filteredRepos.length > 0) {
+                    const stats = computeStats(filteredRepos);
+                    content.innerHTML += renderStats(stats);
 
-            // 渲染社区讨论板块
-            if (data.discussions && data.discussions.length > 0) {
-                content.innerHTML += renderDiscussionsSection(data.discussions);
+                    const section = buildActionRequiredSection(filteredRepos);
+                    if (section.groups.length > 0) {
+                        content.innerHTML += renderSection(section);
+                    }
+                }
             }
 
-            // 渲染页脚
-            content.innerHTML += renderFooter(data.lastUpdated);
+            if (showDiscuss && globalData.discussions && globalData.discussions.length > 0) {
+                content.innerHTML += renderDiscussionsSection(globalData.discussions);
+            }
+
+            content.innerHTML += renderFooter(globalData.lastUpdated);
+            bindFilterEvents();
+        }
+
+        function getFilteredRepos(repos) {
+            const statusFilter = activeFilter.prStatus;
+            const result = repos.map(repo => ({
+                ...repo,
+                pullRequests: repo.pullRequests.filter(pr => {
+                    if (statusFilter === 'all') return true;
+                    if (statusFilter === 'draft') return pr.isDraft;
+                    if (statusFilter === 'ci-failure') return pr.status === 'ci-failure';
+                    if (statusFilter === 'changes-requested') return pr.status === 'changes-requested';
+                    if (statusFilter === 'success') return pr.status === 'success';
+                    return true;
+                })
+            })).filter(repo => repo.pullRequests.length > 0);
+            return result;
+        }
+
+        function renderFilterBar() {
+            const typeBtns = [
+                { key: 'all', label: 'All' },
+                { key: 'pr', label: '🔧 PRs' },
+                { key: 'discuss', label: '💬 Discussions' }
+            ];
+
+            const statusBtns = [
+                { key: 'all', label: 'All' },
+                { key: 'ci-failure', label: '❌ CI Failure' },
+                { key: 'changes-requested', label: '🔄 Changes' },
+                { key: 'draft', label: '📝 Draft' },
+                { key: 'success', label: '✅ Success' }
+            ];
+
+            return `
+                <div class="filter-bar" id="filter-bar">
+                    <div class="filter-group">
+                        <span class="filter-label">Type:</span>
+                        ${typeBtns.map(btn => `<button class="filter-btn ${activeFilter.type === btn.key ? 'active' : ''}" data-filter="type" data-value="${btn.key}">${btn.label}</button>`).join('')}
+                    </div>
+                    <div class="filter-divider"></div>
+                    <div class="filter-group">
+                        <span class="filter-label">PR Status:</span>
+                        ${statusBtns.map(btn => `<button class="filter-btn ${activeFilter.prStatus === btn.key ? 'active' : ''}" data-filter="status" data-value="${btn.key}">${btn.label}</button>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function bindFilterEvents() {
+            document.querySelectorAll('#filter-bar .filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filterType = this.dataset.filter;
+                    const filterValue = this.dataset.value;
+
+                    if (filterType === 'type') {
+                        activeFilter.type = filterValue;
+                    } else if (filterType === 'status') {
+                        activeFilter.prStatus = filterValue;
+                    }
+                    applyFilter();
+                });
+            });
         }
 
         function computeStats(repos) {
             let totalOpen = 0;
             let actionRequired = 0;
+            let ciSuccess = 0;
             repos.forEach(repo => {
                 totalOpen += repo.pullRequests.length;
-                actionRequired += repo.pullRequests.length;
+                repo.pullRequests.forEach(pr => {
+                    if (pr.status === 'success') {
+                        ciSuccess++;
+                    } else {
+                        actionRequired++;
+                    }
+                });
             });
             return {
                 totalOpen: totalOpen,
                 actionRequired: actionRequired,
-                ciSuccess: Math.max(0, totalOpen - actionRequired)
+                ciSuccess: ciSuccess
             };
         }
 
@@ -386,6 +534,7 @@
         }
 
         function renderGroup(group) {
+            if (group.prs.length === 0) return '';
             const prsHtml = group.prs.map(pr => renderPRCard(pr, group.repoName)).join('');
             return `
                 <div class="repo-section">
