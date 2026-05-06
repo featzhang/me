@@ -323,6 +323,69 @@
             font-weight: 600;
         }
 
+        .tab-nav {
+            display: flex;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 999;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 18px 24px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            text-align: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .tab-btn:hover {
+            color: var(--accent);
+            background: rgba(88, 166, 255, 0.075);
+        }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: linear-gradient(to bottom, rgba(88, 166, 255, 0.175), transparent);
+        }
+        .tab-indicator {
+            font-size: 0.875em;
+            background: var(--failure);
+            color: white;
+            border-radius: 5555px;
+            padding: 2px 8px;
+            margin-left: 8px;
+            vertical-align: middle;
+            font-weight: 700;
+        }
+        .tab-btn:nth-child(1) .tab-indicator { background: #388e3c; } /* PR总数绿色 */
+        .tab-btn:nth-child(2) .tab-indicator { background: var(--failure); } /* Action红色 */
+        .tab-btn:nth-child(3) .tab-indicator { background: #2196f3; } /* 讨论蓝色 */
+        
+        .tab-pane {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0 0 12px 12px;
+            padding: 36px 32px;
+            box-shadow: 0 10px 38px rgba(0, 0, 0, 0.428);
+        }
+        @media (max-width: 540px) {
+            .tab-btn { padding: 13px 16px; font-size: 0.89em; }
+            .tab-pane { padding: 21px 18px; }
+        }
+        @media (max-width: 375px) {
+            .tab-btn { padding: 9px 8px; font-size: 0.78em; }
+            .tab-pane { padding: 14px 8px; }
+        }
+
         @media (max-width: 768px) {
             body { padding: 12px; }
             header { padding: 24px 0; margin-bottom: 20px; }
@@ -408,7 +471,7 @@
         // 全局数据缓存和筛选状态
         let globalData = null;
         let activeFilter = {
-            type: 'all',
+            type: 'pr',
             prStatus: 'all',
             followUp: 'all',
             searchKeyword: ''
@@ -456,30 +519,54 @@
             const content = document.getElementById('content');
             content.innerHTML = '';
 
-            // 始终渲染筛选器
-            content.innerHTML += renderFilterBar();
+            // 计算Tab的数量徽章
+            const totalPRs = globalData.repositories.reduce((sum, r) => sum + r.pullRequests.length, 0);
+            const needFollowCount = globalData.repositories.reduce((sum, r) =>
+                sum + r.pullRequests.filter(pr => needFollowUp(pr)).length, 0);
+            const discussCount = (globalData.discussions || []).length;
 
-            let showPRs = activeFilter.type === 'all' || activeFilter.type === 'pr';
-            let showDiscuss = activeFilter.type === 'all' || activeFilter.type === 'discuss';
+            // 渲染Tab导航栏
+            content.innerHTML += renderTabNav(totalPRs, needFollowCount, discussCount);
 
-            if (showPRs) {
-                const filteredRepos = getFilteredRepos(globalData.repositories);
+            // Tab内容区域
+            let tabContent = '';
+
+            if (activeFilter.type === 'pr' || activeFilter.type === 'follow') {
+                // 保留筛选器和搜索（仅PR相关tab显示）
+                tabContent += renderFilterBar();
+
+                let filteredRepos = getFilteredRepos(globalData.repositories);
+
+                // Follow Up Tab 自动应用需要跟进过滤
+                if (activeFilter.type === 'follow') {
+                    filteredRepos = filteredRepos.map(repo => ({
+                        ...repo,
+                        pullRequests: repo.pullRequests.filter(pr => needFollowUp(pr))
+                    })).filter(repo => repo.pullRequests.length > 0);
+                }
+
                 if (filteredRepos.length > 0) {
                     const stats = computeStats(filteredRepos);
-                    content.innerHTML += renderStats(stats);
+                    tabContent += renderStats(stats);
 
                     const section = buildActionRequiredSection(filteredRepos);
                     if (section.groups.length > 0) {
-                        content.innerHTML += renderSection(section);
+                        tabContent += renderSection(section);
                     }
+                } else {
+                    tabContent += '<div class="loading">No PRs match the current filters.</div>';
+                }
+            } else if (activeFilter.type === 'discuss') {
+                if (globalData.discussions && globalData.discussions.length > 0) {
+                    tabContent += renderDiscussionsSection(globalData.discussions);
+                } else {
+                    tabContent += '<div class="loading">No community discussions available.</div>';
                 }
             }
 
-            if (showDiscuss && globalData.discussions && globalData.discussions.length > 0) {
-                content.innerHTML += renderDiscussionsSection(globalData.discussions);
-            }
-
+            content.innerHTML += `<div class="tab-pane">${tabContent}</div>`;
             content.innerHTML += renderFooter(globalData.lastUpdated);
+            bindTabEvents();
             bindFilterEvents();
 
             // Re-focus search input after re-render to keep typing continuity
@@ -524,12 +611,6 @@
         }
 
         function renderFilterBar() {
-            const typeBtns = [
-                { key: 'all', label: 'All' },
-                { key: 'pr', label: '🔧 PRs' },
-                { key: 'discuss', label: '💬 Discussions' }
-            ];
-
             const statusBtns = [
                 { key: 'all', label: 'All' },
                 { key: 'ci-failure', label: '❌ CI Failure' },
@@ -538,28 +619,29 @@
                 { key: 'success', label: '✅ Success' }
             ];
 
+            // Follow Up 筛选仅在 All PRs Tab 显示（Need Follow Tab 本身已过滤）
+            const showFollowFilter = activeFilter.type === 'pr';
             const followUpBtns = [
                 { key: 'all', label: 'All' },
                 { key: 'need-follow', label: '🔔 Need Follow' },
                 { key: 'no-follow', label: '✅ OK' }
             ];
 
+            const followUpGroup = showFollowFilter ? `
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <span class="filter-label">Follow Up:</span>
+                    ${followUpBtns.map(btn => `<button class="filter-btn ${activeFilter.followUp === btn.key ? 'active' : ''}" data-filter="followUp" data-value="${btn.key}">${btn.label}</button>`).join('')}
+                </div>
+            ` : '';
+
             return `
                 <div class="filter-bar" id="filter-bar">
-                    <div class="filter-group">
-                        <span class="filter-label">Type:</span>
-                        ${typeBtns.map(btn => `<button class="filter-btn ${activeFilter.type === btn.key ? 'active' : ''}" data-filter="type" data-value="${btn.key}">${btn.label}</button>`).join('')}
-                    </div>
-                    <div class="filter-divider"></div>
                     <div class="filter-group">
                         <span class="filter-label">PR Status:</span>
                         ${statusBtns.map(btn => `<button class="filter-btn ${activeFilter.prStatus === btn.key ? 'active' : ''}" data-filter="status" data-value="${btn.key}">${btn.label}</button>`).join('')}
                     </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-label">Follow Up:</span>
-                        ${followUpBtns.map(btn => `<button class="filter-btn ${activeFilter.followUp === btn.key ? 'active' : ''}" data-filter="followUp" data-value="${btn.key}">${btn.label}</button>`).join('')}
-                    </div>
+                    ${followUpGroup}
                     <div class="filter-divider"></div>
                     <div class="search-group">
                         <input type="text" class="search-input" id="pr-search" placeholder="🔍 Search by title, issue ID..." value="${activeFilter.searchKeyword}">
@@ -568,15 +650,40 @@
             `;
         }
 
+        function renderTabNav(totalPRs, needFollowCount, discussCount) {
+            const tabs = [
+                { key: 'pr', label: '🔧 All PRs', count: totalPRs },
+                { key: 'follow', label: '🔔 Need Follow', count: needFollowCount },
+                { key: 'discuss', label: '💬 Discussions', count: discussCount }
+            ];
+            return `
+                <div class="tab-nav" id="tab-nav">
+                    ${tabs.map(t => `
+                        <button class="tab-btn ${activeFilter.type === t.key ? 'active' : ''}" data-tab="${t.key}">
+                            ${t.label}
+                            <span class="tab-indicator">${t.count}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function bindTabEvents() {
+            document.querySelectorAll('#tab-nav .tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    activeFilter.type = this.dataset.tab;
+                    applyFilter();
+                });
+            });
+        }
+
         function bindFilterEvents() {
             document.querySelectorAll('#filter-bar .filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const filterType = this.dataset.filter;
                     const filterValue = this.dataset.value;
 
-                    if (filterType === 'type') {
-                        activeFilter.type = filterValue;
-                    } else if (filterType === 'status') {
+                    if (filterType === 'status') {
                         activeFilter.prStatus = filterValue;
                     } else if (filterType === 'followUp') {
                         activeFilter.followUp = filterValue;
