@@ -891,12 +891,20 @@
 
         function renderDiscussCard(discuss) {
             const repliesText = discuss.replies > 0 ? `${discuss.replies} replies` : 'No replies yet';
+            const roleBadge = discuss.role === 'starter'
+                ? '<span class="tag discuss">🆕 STARTED</span>'
+                : (discuss.role === 'participant'
+                    ? '<span class="tag changes">💬 PARTICIPATED</span>'
+                    : '');
             return `
                 <div class="discuss-card">
-                    <div class="discuss-icon">💬</div>
+                    <div class="discuss-icon">${discuss.role === 'starter' ? '🆕' : '💬'}</div>
                     <div class="discuss-content">
                         <div class="discuss-subject">
                             <a href="${discuss.url}" target="_blank">${discuss.subject}</a>
+                        </div>
+                        <div class="pr-tags" style="margin: 6px 0;">
+                            ${roleBadge}
                         </div>
                         <div class="discuss-meta">
                             <span>📅 ${discuss.date}</span>
