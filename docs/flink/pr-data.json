@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-05T17:26:01Z",
+  "lastUpdated": "2026-05-06T01:20:11Z",
   "githubUser": "FeatZhang",
   "repositories": [
     {
@@ -14,7 +14,7 @@
           "url": "https://github.com/apache/flink/pull/28096",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-06",
           "azureStatus": "FAILURE",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74768",
           "flips": [
@@ -29,7 +29,7 @@
           "url": "https://github.com/apache/flink/pull/28092",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-06",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74743"
         },
@@ -41,7 +41,7 @@
           "url": "https://github.com/apache/flink/pull/28082",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-06",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74693"
         },
