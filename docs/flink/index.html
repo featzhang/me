@@ -797,16 +797,7 @@
             const config = UI_CONFIG.status[pr.status] || UI_CONFIG.status['ci-failure'];
             const tagsHtml = buildTags(pr, config).map(t => `<span class="tag ${t.class}">${t.label}</span>`).join('');
 
-            // CI Pipeline status indicator
-            let ciIndicator = '';
-            if (pr.azureStatus) {
-                const ciClass = pr.azureStatus === 'SUCCESS' ? 'ci-success' : (pr.azureStatus === 'FAILURE' ? 'ci-failure' : 'ci-pending');
-                const ciIcon = pr.azureStatus === 'SUCCESS' ? '✅' : (pr.azureStatus === 'FAILURE' ? '❌' : '🔄');
-                const ciText = pr.azureStatus === 'SUCCESS' ? 'PASSED' : (pr.azureStatus === 'FAILURE' ? 'FAILED' : pr.azureStatus);
-                ciIndicator = `<span class="ci-status ${ciClass}">${ciIcon} CI ${ciText}</span>`;
-            }
-
-            // Discussion count
+            // Discussion count (CI status is rendered once via buildTags -> pr-tags)
             let discussIndicator = '';
             if (pr.discussions > 0 || (pr.flips && pr.flips.some(f => f.startsWith('discussions:')))) {
                 const discCount = pr.discussions > 0 ? pr.discussions : (pr.flips.find(f => f.startsWith('discussions:')) || '').replace('discussions:', '');
@@ -832,10 +823,7 @@
                         <div class="pr-tags">
                             ${tagsHtml}
                         </div>
-                        <div class="ci-line">
-                            ${ciIndicator}
-                            ${discussIndicator}
-                        </div>
+                        ${discussIndicator ? `<div class="ci-line">${discussIndicator}</div>` : ''}
                         <div class="pr-meta">
                             <span class="repo">${repoName}</span>
                             <span>📅 ${createdAt}</span>
@@ -851,7 +839,9 @@
             if (pr.isDraft) {
                 tags.push({ class: UI_CONFIG.draftTag.tagClass, label: UI_CONFIG.draftTag.tagLabel });
             }
-            // Show pending discussions/comments count if present
+            // Track whether any CI/review status tag was emitted from flips;
+            // if not, we still need to show the default status tag (e.g. CI SUCCESS)
+            let hasStatusTag = false;
             if (pr.flips && pr.flips.length > 0) {
                 pr.flips.forEach(flip => {
                     if (flip.startsWith('discussions:')) {
@@ -859,16 +849,21 @@
                         tags.push({ class: 'discuss', label: `💬 ${count}` });
                     } else if (flip.startsWith('gha-fail:')) {
                         tags.push({ class: 'failure', label: `⚠️ ${flip.replace('gha-fail:', '')}` });
+                        hasStatusTag = true;
                     } else if (flip === 'ci-failure') {
                         tags.push({ class: config.tagClass, label: config.tagLabel });
+                        hasStatusTag = true;
                     } else if (flip === 'changes-requested') {
                         tags.push({ class: 'changes', label: '🔄 CHANGES' });
+                        hasStatusTag = true;
                     } else {
                         tags.push({ class: 'warning', label: flip });
+                        hasStatusTag = true;
                     }
                 });
-            } else {
-                // Default status tag if no flips
+            }
+            if (!hasStatusTag) {
+                // Default status tag (e.g. ✅ CI SUCCESS) when flips carried no explicit status
                 tags.push({ class: config.tagClass, label: config.tagLabel });
             }
             return tags;
