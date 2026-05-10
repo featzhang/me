@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-06T01:20:11Z",
+  "lastUpdated": "2026-05-10T11:49:27Z",
   "githubUser": "FeatZhang",
   "repositories": [
     {
@@ -8,13 +8,13 @@
       "pullRequests": [
         {
           "number": 28096,
-          "title": "Make watermark timestamps timezone-aware and configurable",
+          "title": "Make watermark timestamps timezone-aware and configurable (backport 1.20)",
           "issueId": "FLINK-39042",
           "module": "webui",
           "url": "https://github.com/apache/flink/pull/28096",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-06",
+          "updatedAt": "2026-05-10",
           "azureStatus": "FAILURE",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74768",
           "flips": [
@@ -29,7 +29,7 @@
           "url": "https://github.com/apache/flink/pull/28092",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-06",
+          "updatedAt": "2026-05-10",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74743"
         },
@@ -41,7 +41,7 @@
           "url": "https://github.com/apache/flink/pull/28082",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-06",
+          "updatedAt": "2026-05-10",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74693"
         },
@@ -53,7 +53,7 @@
           "url": "https://github.com/apache/flink/pull/28048",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-10",
           "azureStatus": "FAILURE",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74590",
           "flips": [
@@ -66,11 +66,11 @@
           "issueId": "FLINK-39062",
           "module": "table",
           "url": "https://github.com/apache/flink/pull/27984",
-          "status": "success",
+          "status": "pending",
           "isDraft": false,
-          "updatedAt": "2026-04-29",
-          "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74505"
+          "updatedAt": "2026-05-10",
+          "azureStatus": "PENDING",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74969"
         },
         {
           "number": 27954,
@@ -80,7 +80,7 @@
           "url": "https://github.com/apache/flink/pull/27954",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-10",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74214",
           "discussions": 4,
@@ -96,7 +96,7 @@
           "url": "https://github.com/apache/flink/pull/27774",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-10",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74742",
           "discussions": 6,
@@ -285,12 +285,12 @@
         {
           "number": 27568,
           "title": "Add HTTP connection pool management for Triton inference",
-          "issueId": "FLINK-38857",
+          "issueId": "FLINK-39612",
           "module": "models",
           "url": "https://github.com/apache/flink/pull/27568",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-10",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74571",
           "discussions": 18,
@@ -301,29 +301,16 @@
         {
           "number": 27562,
           "title": "Add sequence ID auto-increment support for Triton inference",
-          "issueId": "FLINK-38857",
+          "issueId": "FLINK-39611",
           "module": "model",
           "url": "https://github.com/apache/flink/pull/27562",
-          "status": "success",
+          "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-04-25",
-          "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74499"
-        },
-        {
-          "number": 27561,
-          "title": "Add retry with default value fallback for triton inference failures",
-          "issueId": "FLINK-39225",
-          "module": "model",
-          "url": "https://github.com/apache/flink/pull/27561",
-          "status": "success",
-          "isDraft": false,
-          "updatedAt": "2026-04-27",
-          "azureStatus": "SUCCESS",
-          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74565",
-          "discussions": 18,
+          "updatedAt": "2026-05-09",
+          "azureStatus": "FAILURE",
+          "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74944",
           "flips": [
-            "discussions:18"
+            "ci-failure"
           ]
         },
         {
@@ -334,7 +321,7 @@
           "url": "https://github.com/apache/flink/pull/27560",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-05",
+          "updatedAt": "2026-05-10",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74534",
           "discussions": 8,
@@ -407,7 +394,7 @@
           "url": "https://github.com/apache/flink/pull/27357",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-02",
+          "updatedAt": "2026-05-08",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73205",
           "discussions": 4,
@@ -423,7 +410,7 @@
           "url": "https://github.com/apache/flink/pull/27356",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-02",
+          "updatedAt": "2026-05-08",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73261",
           "discussions": 6,
@@ -439,7 +426,7 @@
           "url": "https://github.com/apache/flink/pull/27355",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-02",
+          "updatedAt": "2026-05-08",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=73110",
           "discussions": 3,
@@ -455,7 +442,7 @@
           "url": "https://github.com/apache/flink/pull/27351",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-05-02",
+          "updatedAt": "2026-05-07",
           "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74237",
           "discussions": 21,
@@ -506,7 +493,7 @@
           "url": "https://github.com/apache/flink-connector-http/pull/33",
           "status": "success",
           "isDraft": false,
-          "updatedAt": "2026-04-22",
+          "updatedAt": "2026-05-08",
           "discussions": 1,
           "flips": [
             "discussions:1"
@@ -547,9 +534,30 @@
   "discussions": [
     {
       "subject": "[DISCUSS] FLIP-577: AI-Native Flink — An Umbrella Proposal for Multimodal Data Processing",
-      "url": "https://lists.apache.org/thread/4hmopjo7nyqxtlrsz7o9pz8dv2rklyj8",
-      "date": "2026-05-05",
+      "url": "https://lists.apache.org/thread/mbxfwyrk4fohnpp5q592lyvpd3xywf2q",
+      "date": "2026-05-10",
+      "replies": 7,
+      "role": "participant"
+    },
+    {
+      "subject": "[VOTE] FLIP-570: Support Runtime Data Sampling for Operators with WebUI Visualization",
+      "url": "https://lists.apache.org/thread/1jqp75pddychy6v4x330l4q6rfffprdq",
+      "date": "2026-05-10",
       "replies": 1,
+      "role": "participant"
+    },
+    {
+      "subject": "[DISCUSS] FLIP-XXX: Support Watermark Definition in SQL Views",
+      "url": "https://lists.apache.org/thread/oonylk4h8dnsom40g8rr5k52zf3tz64v",
+      "date": "2026-05-09",
+      "replies": 9,
+      "role": "participant"
+    },
+    {
+      "subject": "[DISCUSS] FLIP-577: AI-Native Flink — An Umbrella Proposal for Multimodal Data Processing",
+      "url": "https://lists.apache.org/thread/4hmopjo7nyqxtlrsz7o9pz8dv2rklyj8",
+      "date": "2026-05-06",
+      "replies": 3,
       "role": "participant"
     },
     {
@@ -571,13 +579,6 @@
       "url": "https://lists.apache.org/thread/rn8r7pqfgncd2k3tmy9qfxs6xcslr7lf",
       "date": "2026-04-25",
       "replies": 4,
-      "role": "participant"
-    },
-    {
-      "subject": "[DISCUSS] FLIP-XXX: Support Watermark Definition in SQL Views",
-      "url": "https://lists.apache.org/thread/oonylk4h8dnsom40g8rr5k52zf3tz64v",
-      "date": "2026-04-21",
-      "replies": 6,
       "role": "participant"
     },
     {
