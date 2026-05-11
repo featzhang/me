@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-05-10T11:49:27Z",
+  "lastUpdated": "2026-05-11T06:16:57Z",
   "githubUser": "FeatZhang",
   "repositories": [
     {
@@ -53,7 +53,7 @@
           "url": "https://github.com/apache/flink/pull/28048",
           "status": "ci-failure",
           "isDraft": false,
-          "updatedAt": "2026-05-10",
+          "updatedAt": "2026-05-11",
           "azureStatus": "FAILURE",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74590",
           "flips": [
@@ -62,14 +62,14 @@
         },
         {
           "number": 27984,
-          "title": "Add APPLY_WATERMARK built-in function for flexible watermark assignment",
+          "title": "Support watermark definition in SQL views via APPLY_WATERMARK PTF",
           "issueId": "FLINK-39062",
           "module": "table",
           "url": "https://github.com/apache/flink/pull/27984",
-          "status": "pending",
+          "status": "success",
           "isDraft": false,
           "updatedAt": "2026-05-10",
-          "azureStatus": "PENDING",
+          "azureStatus": "SUCCESS",
           "azureUrl": "https://dev.azure.com/apache-flink/98463496-1af2-4620-8eab-a2ecc1a2e6fe/_build/results?buildId=74969"
         },
         {
@@ -533,10 +533,24 @@
   ],
   "discussions": [
     {
+      "subject": "[DISCUSS] FLIP-XXX: Support Watermark Definition in SQL Views",
+      "url": "https://lists.apache.org/thread/oonylk4h8dnsom40g8rr5k52zf3tz64v",
+      "date": "2026-05-11",
+      "replies": 10,
+      "role": "participant"
+    },
+    {
+      "subject": "[DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool",
+      "url": "https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2",
+      "date": "2026-05-11",
+      "replies": 1,
+      "role": "participant"
+    },
+    {
       "subject": "[DISCUSS] FLIP-577: AI-Native Flink — An Umbrella Proposal for Multimodal Data Processing",
       "url": "https://lists.apache.org/thread/mbxfwyrk4fohnpp5q592lyvpd3xywf2q",
       "date": "2026-05-10",
-      "replies": 7,
+      "replies": 8,
       "role": "participant"
     },
     {
@@ -544,13 +558,6 @@
       "url": "https://lists.apache.org/thread/1jqp75pddychy6v4x330l4q6rfffprdq",
       "date": "2026-05-10",
       "replies": 1,
-      "role": "participant"
-    },
-    {
-      "subject": "[DISCUSS] FLIP-XXX: Support Watermark Definition in SQL Views",
-      "url": "https://lists.apache.org/thread/oonylk4h8dnsom40g8rr5k52zf3tz64v",
-      "date": "2026-05-09",
-      "replies": 9,
       "role": "participant"
     },
     {
