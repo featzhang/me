@@ -50,12 +50,12 @@ def fetch(url, timeout=30):
 
 
 def collect_emails(thread_id):
-    """Walk the thread tree and return a flat list of {from,time,subject,mid,body}."""
+    """Walk the thread tree and return a flat list of {from,time,subject,mid,body,in_reply_to}."""
     raw = fetch(API_THREAD.format(tid=thread_id))
     root = json.loads(raw)
     out = []
 
-    def walk(node):
+    def walk(node, parent_mid=None):
         if not isinstance(node, dict):
             return
         mid = node.get('mid') or node.get('message-id-hash')
@@ -76,6 +76,7 @@ def collect_emails(thread_id):
                     'subject': str(msg['Subject'] or node.get('subject') or ''),
                     'mid': mid,
                     'body': body,
+                    'in_reply_to': parent_mid,
                 })
             except Exception as e:
                 out.append({
@@ -85,9 +86,10 @@ def collect_emails(thread_id):
                     'subject': node.get('subject', ''),
                     'mid': mid,
                     'body': f'[failed to fetch source: {e}]',
+                    'in_reply_to': parent_mid,
                 })
         for ch in node.get('children', []) or []:
-            walk(ch)
+            walk(ch, mid)
 
     if 'thread' in root:
         walk(root['thread'])
@@ -158,7 +160,16 @@ def render_orig_block(b):
         else:
             inner.append(f'<span class="qd qd-{depth}">{linkify(ln)}</span>')
     nlines = len(b['lines'])
-    summary = f'Quoted ({nlines} lines, depth {depth})'
+    # preview: first non-empty line, truncated
+    preview = ''
+    for ln in b['lines']:
+        if ln.strip():
+            preview = ln.strip()
+            break
+    if len(preview) > 80:
+        preview = preview[:78] + '…'
+    preview_html = f' <span class="qpreview">{html.escape(preview)}</span>' if preview else ''
+    summary = f'📎 Quoted · {nlines} lines · depth {depth}{preview_html}'
     return (f'<details class="quote-block"><summary>{summary}</summary>'
             f'<div class="quoted">{"".join(inner)}</div></details>')
 
@@ -180,7 +191,7 @@ def render_trans_block(orig_block, trans_block):
     return '<div class="text-block trans-pending"><em>pending translation</em></div>'
 
 
-def render_email(idx, m, trans_for_mid):
+def render_email(idx, m, trans_for_mid, idx_by_mid):
     blocks = split_blocks(m['body'] or '')
     if not blocks:
         blocks = [{'kind': 'text', 'depth': 0, 'lines': ['(empty body)']}]
@@ -201,12 +212,23 @@ def render_email(idx, m, trans_for_mid):
             orig_html_parts.append(render_orig_block(b))
             trans_html_parts.append(render_trans_block(b, tb))
 
+    parent_mid = m.get('in_reply_to')
+    parent_idx = idx_by_mid.get(parent_mid) if parent_mid else None
+    if parent_idx:
+        reply_to_html = (
+            f'<div class="reply-to">↩ In reply to '
+            f'<a href="#m{parent_idx}">#{parent_idx}</a></div>'
+        )
+    else:
+        reply_to_html = ''
+
     email_html = EMAIL_TPL.format(
         idx=idx,
         frm=html.escape(m['from'] or '(unknown)'),
         time=html.escape(m['time'] or ''),
         subj=html.escape(m['subject'] or ''),
         mid=html.escape(m['mid'] or ''),
+        reply_to_html=reply_to_html,
         orig_html=''.join(orig_html_parts) or '<div class="text-block">(empty body)</div>',
         trans_html=''.join(trans_html_parts) or '<div class="text-block trans-pending"><em>pending translation</em></div>',
     )
@@ -214,98 +236,173 @@ def render_email(idx, m, trans_for_mid):
 
 
 PAGE_TPL = """<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <title>{title}</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{{--bg:#fff;--fg:#1f2328;--muted:#57606a;--card:#f6f8fa;--accent:#0969da;--border:#d0d7de;--quote-bg:#fbfbfd;--trans-bg:#fafbff}}
-body.dark{{--bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--card:#161b22;--accent:#58a6ff;--border:#30363d;--quote-bg:#0b0e13;--trans-bg:#0f1320}}
+:root{{
+  --bg:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--border-soft:#e4e7eb;
+  --accent:#1f6feb;--accent-soft:#ddf4ff;--card:#fff;--header-bg:#f6f8fa;
+  --quote-bg:#f6f8fa;--quote-fg:#6e7781;--trans-bg:#fbfdff;--tag-bg:#f3f4f6;--hover:#f0f3f6;
+}}
+body.dark{{
+  --bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--border:#30363d;--border-soft:#21262d;
+  --accent:#58a6ff;--accent-soft:#1f3a5f;--card:#0d1117;--header-bg:#161b22;
+  --quote-bg:#0b0e13;--quote-fg:#8b949e;--trans-bg:#0f1622;--tag-bg:#161b22;--hover:#161b22;
+}}
 *{{box-sizing:border-box}}
 html,body{{background:var(--bg);color:var(--fg)}}
-body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;max-width:none;margin:0;padding:0 32px 64px}}
-.toolbar{{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}}
-.toolbar h1{{font-size:18px;margin:0;flex:1 1 auto;min-width:240px}}
-.toolbar .status{{color:var(--muted);font-size:12px}}
-.toolbar button, .toolbar a.btn{{font-size:12px;padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}}
-.toolbar button:hover, .toolbar a.btn:hover{{border-color:var(--accent);color:var(--accent)}}
-.email{{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px}}
-.email>header{{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:10px;font-size:12px;color:var(--muted)}}
-.email .from{{font-weight:600;color:var(--fg)}}
-.email .subj{{flex:1 1 100%;font-weight:500;color:var(--fg);font-size:13px}}
-.email .mid{{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}}
-.body-grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}}
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.6;margin:0;padding:24px 32px 64px;max-width:none}}
+h1{{border-bottom:2px solid var(--accent);padding-bottom:8px;font-size:22px;margin:0 0 8px}}
+.meta{{color:var(--muted);font-size:13px;margin-bottom:18px}}
+.meta code{{background:var(--tag-bg);padding:2px 6px;border-radius:3px}}
+.meta a{{color:var(--accent);text-decoration:none}}
+.meta a:hover{{text-decoration:underline}}
+
+.toolbar{{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px}}
+.toolbar button,.toolbar a.btn{{background:var(--header-bg);border:1px solid var(--border);padding:5px 12px;border-radius:5px;cursor:pointer;color:var(--fg);font-size:12px;text-decoration:none;display:inline-block}}
+.toolbar button:hover,.toolbar a.btn:hover{{background:var(--hover);border-color:var(--accent);color:var(--accent)}}
+.toolbar .stat{{color:var(--muted);font-size:12px;margin-left:auto}}
+
+.toc{{background:var(--header-bg);border:1px solid var(--border);border-radius:6px;padding:12px 18px;margin-bottom:24px}}
+.toc strong{{display:block;margin-bottom:8px;font-size:13px}}
+.toc-list{{list-style:none;padding-left:0;margin:0}}
+.toc-list li{{padding:3px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}}
+.toc-list li:last-child{{border-bottom:none}}
+.toc-list a{{color:var(--accent);text-decoration:none}}
+.toc-list a:hover{{text-decoration:underline}}
+.toc-list .lvl{{display:inline-block;color:var(--muted);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px}}
+
+.summary-card{{background:linear-gradient(135deg,rgba(31,111,235,.06),rgba(130,80,223,.04));border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:18px;font-size:13px}}
+.summary-card h2{{font-size:13px;margin:0 0 6px;color:var(--accent)}}
+.summary-card ul{{margin:6px 0 0 18px;padding:0;color:var(--fg)}}
+.summary-card li{{margin:2px 0}}
+.summary-card a{{color:var(--accent)}}
+
+.email{{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;margin:18px 0;padding:0;background:var(--card);scroll-margin-top:64px;transition:box-shadow .35s ease}}
+.email.flash{{box-shadow:0 0 0 3px var(--accent-soft)}}
+.email-header{{background:var(--header-bg);padding:12px 18px;border-bottom:1px solid var(--border);border-radius:5px 5px 0 0;position:relative}}
+.email-header .top-line{{display:flex;flex-wrap:wrap;align-items:center;gap:8px}}
+.email-header .num{{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;font-weight:bold;font-size:13px;flex-shrink:0}}
+.email-header .from{{font-weight:600;color:var(--fg)}}
+.email-header .time{{color:var(--muted);font-size:12px}}
+.email-header .reply-to{{margin-top:6px;font-size:12px;color:var(--muted)}}
+.email-header .reply-to a{{color:var(--accent);text-decoration:none}}
+.email-header .reply-to a:hover{{text-decoration:underline}}
+.email-header .subject{{margin-top:6px;font-size:13px;color:var(--fg);font-weight:500}}
+.email-header .mid{{color:var(--muted);font-size:11px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;word-break:break-all;margin-top:4px}}
+.anchor-link{{position:absolute;top:10px;right:14px;color:var(--muted);font-size:14px;text-decoration:none}}
+.anchor-link:hover{{color:var(--accent)}}
+
+.body-grid{{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;padding:14px 20px}}
 .orig{{min-width:0}}
-.trans{{min-width:0;background:var(--trans-bg);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px}}
-.trans-label{{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.85}}
+.trans{{min-width:0;border-left:1px dashed var(--border);padding-left:18px;position:relative;background:var(--trans-bg);border-radius:0 4px 4px 0;padding:8px 12px 8px 18px}}
+.trans::before{{content:"中文翻译";position:absolute;top:-9px;left:12px;background:var(--card);color:var(--accent);font-size:10px;font-weight:600;padding:0 6px;letter-spacing:.08em;border-radius:3px}}
 body.hide-trans .body-grid{{grid-template-columns:1fr}}
 body.hide-trans .trans{{display:none}}
-@media (max-width:860px){{.body-grid{{grid-template-columns:1fr}}.trans{{border-left:none;border-top:3px solid var(--accent);border-radius:0 0 6px 6px}}}}
+@media (max-width:860px){{.body-grid{{grid-template-columns:1fr}}.trans{{border-left:none;border-top:1px dashed var(--border);padding-left:0;padding-top:18px;margin-top:6px}}.trans::before{{top:2px;left:0}}}}
+
 .body-font{{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}}
-.trans .body-font, .trans-body{{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13px}}
-.text-block{{white-space:pre-wrap;word-wrap:break-word;margin:6px 0}}
+.trans .body-font{{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13.5px;line-height:1.7}}
+.text-block{{margin:0 0 8px;white-space:pre-wrap;word-wrap:break-word;line-height:1.55}}
+.text-block:last-child{{margin-bottom:0}}
+.text-block a{{color:var(--accent)}}
 .trans-pending{{color:var(--muted);font-style:italic;font-size:12px}}
 .trans-quote-placeholder{{margin:6px 0;min-height:1.4em;opacity:0}}
-details.quote-block{{margin:6px 0;border-left:3px solid var(--border);background:var(--quote-bg);padding:4px 8px;border-radius:0 4px 4px 0}}
-details.quote-block summary{{cursor:pointer;color:var(--muted);font-size:11px;user-select:none;padding:2px 0;list-style:none}}
-details.quote-block summary::-webkit-details-marker{{display:none}}
-details.quote-block summary::before{{content:'▶ ';display:inline-block;transition:transform .12s;margin-right:4px}}
+
+details.quote-block{{margin:8px 0;border:1px solid var(--border-soft);border-radius:5px;background:var(--quote-bg)}}
+details.quote-block>summary{{cursor:pointer;padding:6px 12px;font-size:12px;color:var(--muted);list-style:none;user-select:none;outline:none;border-radius:5px}}
+details.quote-block>summary::-webkit-details-marker{{display:none}}
+details.quote-block>summary::before{{content:"▶";display:inline-block;margin-right:6px;transition:transform .15s ease;font-size:10px}}
 details.quote-block[open]>summary::before{{transform:rotate(90deg)}}
-.quoted{{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;margin-top:6px}}
-.qd{{display:block;white-space:pre-wrap;padding-left:8px;border-left:2px solid;margin:1px 0}}
-.qd-1{{border-color:#0969da;color:var(--fg)}}
-.qd-2{{border-color:#1a7f37;color:var(--fg);opacity:.95}}
-.qd-3{{border-color:#bf8700;color:var(--fg);opacity:.9}}
-.qd-4{{border-color:#cf222e;color:var(--fg);opacity:.85}}
-.qd-5{{border-color:#8250df;color:var(--fg);opacity:.8}}
-.qd-empty{{display:block;min-height:.5em;border-left:none;padding:0}}
-a{{color:var(--accent);text-decoration:none}}
+details.quote-block>summary:hover{{background:var(--hover)}}
+details.quote-block .qpreview{{font-style:italic;opacity:.75;margin-left:8px}}
+details.quote-block .quoted{{padding:8px 12px;border-top:1px solid var(--border-soft);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;color:var(--quote-fg);word-wrap:break-word}}
+.qd{{display:block;white-space:pre-wrap;word-wrap:break-word;min-height:1em}}
+.qd-empty{{min-height:.5em;border-left-color:transparent !important}}
+.qd-1{{border-left:3px solid #c8d1da;padding-left:8px}}
+.qd-2{{border-left:3px solid #d8b4fe;padding-left:8px;margin-left:12px}}
+.qd-3{{border-left:3px solid #fdba74;padding-left:8px;margin-left:24px}}
+.qd-4{{border-left:3px solid #86efac;padding-left:8px;margin-left:36px}}
+.qd-5{{border-left:3px solid #fda4af;padding-left:8px;margin-left:48px}}
+
+a{{color:var(--accent)}}
 a:hover{{text-decoration:underline}}
-.summary-card{{background:linear-gradient(135deg,rgba(9,105,218,.08),rgba(130,80,223,.05));border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px}}
-.summary-card h2{{font-size:14px;margin:0 0 6px;color:var(--accent)}}
-.summary-card p{{margin:6px 0;color:var(--muted);font-size:13px}}
-.summary-card ul{{margin:6px 0 0 18px;color:var(--fg);font-size:13px}}
+.footer{{margin-top:40px;padding-top:16px;border-top:1px solid var(--border-soft);color:var(--muted);font-size:12px;text-align:center}}
 </style>
 </head>
 <body>
+<h1>{title}</h1>
+<div class="meta">
+  Mailing list: <code>dev@flink.apache.org</code> &nbsp;|&nbsp;
+  Thread ID: <code>{tid}</code> &nbsp;|&nbsp;
+  Source: <a href="{thread_url}" target="_blank" rel="noreferrer">lists.apache.org</a> &nbsp;|&nbsp;
+  Total messages: {n_emails}
+</div>
 <div class="toolbar">
-  <h1>{title}</h1>
-  <span class="status">{n_emails} emails · {n_quotes} quote blocks · {trans_status}</span>
-  <button onclick="document.querySelectorAll('details.quote-block').forEach(d=>d.open=!d.open)">Expand / collapse quotes</button>
-  <button onclick="document.body.classList.toggle('hide-trans')">Show / hide translation</button>
-  <button onclick="document.body.classList.toggle('dark')">Dark / light</button>
-  <a class="btn" href="{thread_url}" target="_blank">↗ Open on lists.apache.org</a>
+  <button onclick="toggleAll(true)">展开所有引用</button>
+  <button onclick="toggleAll(false)">折叠所有引用</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">显示/隐藏中文翻译</button>
+  <button onclick="document.body.classList.toggle('dark')">深色 / 浅色</button>
+  <a class="btn" href="{thread_url}" target="_blank" rel="noreferrer">↗ lists.apache.org</a>
   <a class="btn" href="../index.html">← Back to dashboard</a>
+  <span class="stat" id="stat">{n_emails} emails · {n_quotes} quotes · {trans_status}</span>
+</div>
+<div class="toc">
+  <strong>📋 Index（按时间顺序，缩进表示回复层级）</strong>
+  {toc_html}
 </div>
 <div class="summary-card">
   <h2>Mailing-list thread archive</h2>
-  <p>Generated by <code>dissuss/_build.py</code> following <code>mail-thread-archiver.prompt.md</code>. Layout: left = English original (with collapsible quotes), right = Chinese translation (per spec §3.5). Use the <em>Show / hide translation</em> button to toggle the right column.</p>
   <ul>
     <li><b>Subject</b>: {title}</li>
-    <li><b>Archive</b>: {n_emails} emails, {n_quotes} quote blocks</li>
-    <li><b>Source</b>: <a href="{thread_url}" target="_blank">{thread_url}</a></li>
-    <li><b>Translation</b>: {trans_status} (drop a <code>{tid}.translation.json</code> beside this file and rebuild to fill it in)</li>
+    <li><b>Archive</b>: {n_emails} emails · {n_quotes} quote blocks · {trans_status}</li>
+    <li><b>Source</b>: <a href="{thread_url}" target="_blank" rel="noreferrer">{thread_url}</a></li>
+    <li><b>Translation file</b>: <code>{tid}.translation.json</code></li>
   </ul>
 </div>
 {emails_html}
+<div class="footer">
+  Generated by <code>dissuss/_build.py</code> from
+  <a href="{thread_url}" target="_blank" rel="noreferrer">lists.apache.org</a>
+  · Quoted content collapsed by default · Reply relationships shown via "↩ In reply to" links
+</div>
+<script>
+function toggleAll(open){{document.querySelectorAll('details.quote-block').forEach(function(d){{d.open=open}})}}
+window.addEventListener('hashchange',function(){{
+  var id=location.hash.slice(1);if(!id)return;
+  var el=document.getElementById(id);if(!el)return;
+  el.classList.add('flash');setTimeout(function(){{el.classList.remove('flash')}},1200);
+}});
+// flash on initial load if URL has hash
+window.addEventListener('DOMContentLoaded',function(){{
+  if(location.hash){{
+    var el=document.getElementById(location.hash.slice(1));
+    if(el){{el.classList.add('flash');setTimeout(function(){{el.classList.remove('flash')}},1200)}}
+  }}
+}});
+</script>
 </body>
 </html>
 """
 
 EMAIL_TPL = """<div class="email" id="m{idx}">
-  <header>
-    <span class="from">{frm}</span>
-    <span class="time">{time}</span>
-    <span class="subj">{subj}</span>
-    <span class="mid">&lt;{mid}&gt;</span>
-  </header>
+  <div class="email-header">
+    <a class="anchor-link" href="#m{idx}" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">{idx}</span>
+      <span class="from">{frm}</span>
+      <span class="time">{time}</span>
+    </div>
+    {reply_to_html}
+    <div class="subject">Subject: {subj}</div>
+    <div class="mid">Message-ID: &lt;{mid}&gt;</div>
+  </div>
   <div class="body-grid">
     <div class="orig body-font">{orig_html}</div>
-    <div class="trans">
-      <div class="trans-label">中文翻译 · Chinese translation</div>
-      <div class="trans-body body-font">{trans_html}</div>
-    </div>
+    <div class="trans"><div class="body-font">{trans_html}</div></div>
   </div>
 </div>"""
 
@@ -324,15 +421,54 @@ def load_translations(tid):
         return None, f'pending (failed to load translation file: {e})'
 
 
+def short_addr(s):
+    """Convert 'Name <user@host.com>' -> 'Name <us...@host.com>' (privacy + width)."""
+    if not s:
+        return '(unknown)'
+    m = re.match(r'^(.*?)<\s*([^@\s>]+)@([^\s>]+)\s*>\s*$', s)
+    if not m:
+        return s
+    name, local, host = m.group(1).strip(), m.group(2), m.group(3)
+    if len(local) > 2:
+        local = local[:2] + '...'
+    addr = f'{local}@{host}'
+    return f'{name} <{addr}>' if name else f'<{addr}>'
+
+
+def build_toc(emails, idx_by_mid):
+    """Return HTML <ul> of TOC ordered by epoch, indented by reply depth."""
+    # depth = chain length from root
+    depth_by_mid = {}
+    for m in emails:
+        parent = m.get('in_reply_to')
+        if parent and parent in depth_by_mid:
+            depth_by_mid[m['mid']] = depth_by_mid[parent] + 1
+        else:
+            depth_by_mid[m['mid']] = 0
+    items = []
+    for i, m in enumerate(emails, 1):
+        d = depth_by_mid.get(m['mid'], 0)
+        d = min(d, 8)  # cap visual indent
+        indent = '&nbsp;' * (d * 4) + ('└─ ' if d > 0 else '')
+        items.append(
+            f'<li><span class="lvl">{indent}</span>'
+            f'<a href="#m{i}"><strong>#{i}</strong> {html.escape(short_addr(m["from"]))} '
+            f'&mdash; {html.escape(m["time"] or "")}</a></li>'
+        )
+    return '<ul class="toc-list">' + ''.join(items) + '</ul>'
+
+
 def render_thread_html(disc, emails, tid):
     title = disc['subject']
     translations, trans_status = load_translations(tid)
+    idx_by_mid = {m['mid']: i for i, m in enumerate(emails, 1)}
     parts, total_quotes = [], 0
     for i, m in enumerate(emails, 1):
         t_for_mid = (translations or {}).get(m.get('mid')) if translations else None
-        h, q = render_email(i, m, t_for_mid)
+        h, q = render_email(i, m, t_for_mid, idx_by_mid)
         parts.append(h)
         total_quotes += q
+    toc_html = build_toc(emails, idx_by_mid)
     return PAGE_TPL.format(
         title=html.escape(title),
         n_emails=len(emails),
@@ -340,6 +476,7 @@ def render_thread_html(disc, emails, tid):
         thread_url=html.escape(disc['url']),
         tid=html.escape(tid),
         trans_status=html.escape(trans_status),
+        toc_html=toc_html,
         emails_html='\n'.join(parts),
     )
 

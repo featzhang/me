@@ -1,85 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <title>[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--bg:#fff;--fg:#1f2328;--muted:#57606a;--card:#f6f8fa;--accent:#0969da;--border:#d0d7de;--quote-bg:#fbfbfd;--trans-bg:#fafbff}
-body.dark{--bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--card:#161b22;--accent:#58a6ff;--border:#30363d;--quote-bg:#0b0e13;--trans-bg:#0f1320}
+:root{
+  --bg:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--border-soft:#e4e7eb;
+  --accent:#1f6feb;--accent-soft:#ddf4ff;--card:#fff;--header-bg:#f6f8fa;
+  --quote-bg:#f6f8fa;--quote-fg:#6e7781;--trans-bg:#fbfdff;--tag-bg:#f3f4f6;--hover:#f0f3f6;
+}
+body.dark{
+  --bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--border:#30363d;--border-soft:#21262d;
+  --accent:#58a6ff;--accent-soft:#1f3a5f;--card:#0d1117;--header-bg:#161b22;
+  --quote-bg:#0b0e13;--quote-fg:#8b949e;--trans-bg:#0f1622;--tag-bg:#161b22;--hover:#161b22;
+}
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--fg)}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;max-width:none;margin:0;padding:0 32px 64px}
-.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
-.toolbar h1{font-size:18px;margin:0;flex:1 1 auto;min-width:240px}
-.toolbar .status{color:var(--muted);font-size:12px}
-.toolbar button, .toolbar a.btn{font-size:12px;padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
-.toolbar button:hover, .toolbar a.btn:hover{border-color:var(--accent);color:var(--accent)}
-.email{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px}
-.email>header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:10px;font-size:12px;color:var(--muted)}
-.email .from{font-weight:600;color:var(--fg)}
-.email .subj{flex:1 1 100%;font-weight:500;color:var(--fg);font-size:13px}
-.email .mid{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}
-.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.6;margin:0;padding:24px 32px 64px;max-width:none}
+h1{border-bottom:2px solid var(--accent);padding-bottom:8px;font-size:22px;margin:0 0 8px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:18px}
+.meta code{background:var(--tag-bg);padding:2px 6px;border-radius:3px}
+.meta a{color:var(--accent);text-decoration:none}
+.meta a:hover{text-decoration:underline}
+
+.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px}
+.toolbar button,.toolbar a.btn{background:var(--header-bg);border:1px solid var(--border);padding:5px 12px;border-radius:5px;cursor:pointer;color:var(--fg);font-size:12px;text-decoration:none;display:inline-block}
+.toolbar button:hover,.toolbar a.btn:hover{background:var(--hover);border-color:var(--accent);color:var(--accent)}
+.toolbar .stat{color:var(--muted);font-size:12px;margin-left:auto}
+
+.toc{background:var(--header-bg);border:1px solid var(--border);border-radius:6px;padding:12px 18px;margin-bottom:24px}
+.toc strong{display:block;margin-bottom:8px;font-size:13px}
+.toc-list{list-style:none;padding-left:0;margin:0}
+.toc-list li{padding:3px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}
+.toc-list li:last-child{border-bottom:none}
+.toc-list a{color:var(--accent);text-decoration:none}
+.toc-list a:hover{text-decoration:underline}
+.toc-list .lvl{display:inline-block;color:var(--muted);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px}
+
+.summary-card{background:linear-gradient(135deg,rgba(31,111,235,.06),rgba(130,80,223,.04));border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:18px;font-size:13px}
+.summary-card h2{font-size:13px;margin:0 0 6px;color:var(--accent)}
+.summary-card ul{margin:6px 0 0 18px;padding:0;color:var(--fg)}
+.summary-card li{margin:2px 0}
+.summary-card a{color:var(--accent)}
+
+.email{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;margin:18px 0;padding:0;background:var(--card);scroll-margin-top:64px;transition:box-shadow .35s ease}
+.email.flash{box-shadow:0 0 0 3px var(--accent-soft)}
+.email-header{background:var(--header-bg);padding:12px 18px;border-bottom:1px solid var(--border);border-radius:5px 5px 0 0;position:relative}
+.email-header .top-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.email-header .num{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;font-weight:bold;font-size:13px;flex-shrink:0}
+.email-header .from{font-weight:600;color:var(--fg)}
+.email-header .time{color:var(--muted);font-size:12px}
+.email-header .reply-to{margin-top:6px;font-size:12px;color:var(--muted)}
+.email-header .reply-to a{color:var(--accent);text-decoration:none}
+.email-header .reply-to a:hover{text-decoration:underline}
+.email-header .subject{margin-top:6px;font-size:13px;color:var(--fg);font-weight:500}
+.email-header .mid{color:var(--muted);font-size:11px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;word-break:break-all;margin-top:4px}
+.anchor-link{position:absolute;top:10px;right:14px;color:var(--muted);font-size:14px;text-decoration:none}
+.anchor-link:hover{color:var(--accent)}
+
+.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;padding:14px 20px}
 .orig{min-width:0}
-.trans{min-width:0;background:var(--trans-bg);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px}
-.trans-label{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.85}
+.trans{min-width:0;border-left:1px dashed var(--border);padding-left:18px;position:relative;background:var(--trans-bg);border-radius:0 4px 4px 0;padding:8px 12px 8px 18px}
+.trans::before{content:"中文翻译";position:absolute;top:-9px;left:12px;background:var(--card);color:var(--accent);font-size:10px;font-weight:600;padding:0 6px;letter-spacing:.08em;border-radius:3px}
 body.hide-trans .body-grid{grid-template-columns:1fr}
 body.hide-trans .trans{display:none}
-@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:3px solid var(--accent);border-radius:0 0 6px 6px}}
+@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:1px dashed var(--border);padding-left:0;padding-top:18px;margin-top:6px}.trans::before{top:2px;left:0}}
+
 .body-font{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
-.trans .body-font, .trans-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13px}
-.text-block{white-space:pre-wrap;word-wrap:break-word;margin:6px 0}
+.trans .body-font{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13.5px;line-height:1.7}
+.text-block{margin:0 0 8px;white-space:pre-wrap;word-wrap:break-word;line-height:1.55}
+.text-block:last-child{margin-bottom:0}
+.text-block a{color:var(--accent)}
 .trans-pending{color:var(--muted);font-style:italic;font-size:12px}
 .trans-quote-placeholder{margin:6px 0;min-height:1.4em;opacity:0}
-details.quote-block{margin:6px 0;border-left:3px solid var(--border);background:var(--quote-bg);padding:4px 8px;border-radius:0 4px 4px 0}
-details.quote-block summary{cursor:pointer;color:var(--muted);font-size:11px;user-select:none;padding:2px 0;list-style:none}
-details.quote-block summary::-webkit-details-marker{display:none}
-details.quote-block summary::before{content:'▶ ';display:inline-block;transition:transform .12s;margin-right:4px}
+
+details.quote-block{margin:8px 0;border:1px solid var(--border-soft);border-radius:5px;background:var(--quote-bg)}
+details.quote-block>summary{cursor:pointer;padding:6px 12px;font-size:12px;color:var(--muted);list-style:none;user-select:none;outline:none;border-radius:5px}
+details.quote-block>summary::-webkit-details-marker{display:none}
+details.quote-block>summary::before{content:"▶";display:inline-block;margin-right:6px;transition:transform .15s ease;font-size:10px}
 details.quote-block[open]>summary::before{transform:rotate(90deg)}
-.quoted{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;margin-top:6px}
-.qd{display:block;white-space:pre-wrap;padding-left:8px;border-left:2px solid;margin:1px 0}
-.qd-1{border-color:#0969da;color:var(--fg)}
-.qd-2{border-color:#1a7f37;color:var(--fg);opacity:.95}
-.qd-3{border-color:#bf8700;color:var(--fg);opacity:.9}
-.qd-4{border-color:#cf222e;color:var(--fg);opacity:.85}
-.qd-5{border-color:#8250df;color:var(--fg);opacity:.8}
-.qd-empty{display:block;min-height:.5em;border-left:none;padding:0}
-a{color:var(--accent);text-decoration:none}
+details.quote-block>summary:hover{background:var(--hover)}
+details.quote-block .qpreview{font-style:italic;opacity:.75;margin-left:8px}
+details.quote-block .quoted{padding:8px 12px;border-top:1px solid var(--border-soft);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;color:var(--quote-fg);word-wrap:break-word}
+.qd{display:block;white-space:pre-wrap;word-wrap:break-word;min-height:1em}
+.qd-empty{min-height:.5em;border-left-color:transparent !important}
+.qd-1{border-left:3px solid #c8d1da;padding-left:8px}
+.qd-2{border-left:3px solid #d8b4fe;padding-left:8px;margin-left:12px}
+.qd-3{border-left:3px solid #fdba74;padding-left:8px;margin-left:24px}
+.qd-4{border-left:3px solid #86efac;padding-left:8px;margin-left:36px}
+.qd-5{border-left:3px solid #fda4af;padding-left:8px;margin-left:48px}
+
+a{color:var(--accent)}
 a:hover{text-decoration:underline}
-.summary-card{background:linear-gradient(135deg,rgba(9,105,218,.08),rgba(130,80,223,.05));border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px}
-.summary-card h2{font-size:14px;margin:0 0 6px;color:var(--accent)}
-.summary-card p{margin:6px 0;color:var(--muted);font-size:13px}
-.summary-card ul{margin:6px 0 0 18px;color:var(--fg);font-size:13px}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border-soft);color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
 <body>
+<h1>[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</h1>
+<div class="meta">
+  Mailing list: <code>dev@flink.apache.org</code> &nbsp;|&nbsp;
+  Thread ID: <code>25tgrcng4pc74r50bmwd990yn3kktg1s</code> &nbsp;|&nbsp;
+  Source: <a href="https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s" target="_blank" rel="noreferrer">lists.apache.org</a> &nbsp;|&nbsp;
+  Total messages: 2
+</div>
 <div class="toolbar">
-  <h1>[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</h1>
-  <span class="status">2 emails · 1 quote blocks · pending (no translation file)</span>
-  <button onclick="document.querySelectorAll('details.quote-block').forEach(d=>d.open=!d.open)">Expand / collapse quotes</button>
-  <button onclick="document.body.classList.toggle('hide-trans')">Show / hide translation</button>
-  <button onclick="document.body.classList.toggle('dark')">Dark / light</button>
-  <a class="btn" href="https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s" target="_blank">↗ Open on lists.apache.org</a>
+  <button onclick="toggleAll(true)">展开所有引用</button>
+  <button onclick="toggleAll(false)">折叠所有引用</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">显示/隐藏中文翻译</button>
+  <button onclick="document.body.classList.toggle('dark')">深色 / 浅色</button>
+  <a class="btn" href="https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s" target="_blank" rel="noreferrer">↗ lists.apache.org</a>
   <a class="btn" href="../index.html">← Back to dashboard</a>
+  <span class="stat" id="stat">2 emails · 1 quotes · pending (no translation file)</span>
+</div>
+<div class="toc">
+  <strong>📋 Index（按时间顺序，缩进表示回复层级）</strong>
+  <ul class="toc-list"><li><span class="lvl"></span><a href="#m1"><strong>#1</strong> FeatZhang &lt;fe...@apache.org&gt; &mdash; Wed, 04 Feb 2026 22:15:53 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m2"><strong>#2</strong> Ryan van Huuksloot via dev &lt;de...@flink.apache.org&gt; &mdash; Thu, 05 Feb 2026 11:17:41 -0500</a></li></ul>
 </div>
 <div class="summary-card">
   <h2>Mailing-list thread archive</h2>
-  <p>Generated by <code>dissuss/_build.py</code> following <code>mail-thread-archiver.prompt.md</code>. Layout: left = English original (with collapsible quotes), right = Chinese translation (per spec §3.5). Use the <em>Show / hide translation</em> button to toggle the right column.</p>
   <ul>
     <li><b>Subject</b>: [DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</li>
-    <li><b>Archive</b>: 2 emails, 1 quote blocks</li>
-    <li><b>Source</b>: <a href="https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s" target="_blank">https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s</a></li>
-    <li><b>Translation</b>: pending (no translation file) (drop a <code>25tgrcng4pc74r50bmwd990yn3kktg1s.translation.json</code> beside this file and rebuild to fill it in)</li>
+    <li><b>Archive</b>: 2 emails · 1 quote blocks · pending (no translation file)</li>
+    <li><b>Source</b>: <a href="https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s" target="_blank" rel="noreferrer">https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s</a></li>
+    <li><b>Translation file</b>: <code>25tgrcng4pc74r50bmwd990yn3kktg1s.translation.json</code></li>
   </ul>
 </div>
 <div class="email" id="m1">
-  <header>
-    <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
-    <span class="time">Wed, 04 Feb 2026 22:15:53 +0800</span>
-    <span class="subj">[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</span>
-    <span class="mid">&lt;25tgrcng4pc74r50bmwd990yn3kktg1s&gt;</span>
-  </header>
+  <div class="email-header">
+    <a class="anchor-link" href="#m1" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">1</span>
+      <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
+      <span class="time">Wed, 04 Feb 2026 22:15:53 +0800</span>
+    </div>
+    
+    <div class="subject">Subject: [DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</div>
+    <div class="mid">Message-ID: &lt;25tgrcng4pc74r50bmwd990yn3kktg1s&gt;</div>
+  </div>
   <div class="body-grid">
     <div class="orig body-font"><div class="text-block">[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput
 Inference Workloads
@@ -266,19 +324,21 @@ Looking forward to your feedback and suggestions!
 
 *Best regards,*
 Feat Zhang</div></div>
-    <div class="trans">
-      <div class="trans-label">中文翻译 · Chinese translation</div>
-      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div>
-    </div>
+    <div class="trans"><div class="body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div></div>
   </div>
 </div>
 <div class="email" id="m2">
-  <header>
-    <span class="from">Ryan van Huuksloot via dev &lt;dev@flink.apache.org&gt;</span>
-    <span class="time">Thu, 05 Feb 2026 11:17:41 -0500</span>
-    <span class="subj">Re: [DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</span>
-    <span class="mid">&lt;ddc8s9551bns78y8mll6p83hk50f6q9k&gt;</span>
-  </header>
+  <div class="email-header">
+    <a class="anchor-link" href="#m2" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">2</span>
+      <span class="from">Ryan van Huuksloot via dev &lt;dev@flink.apache.org&gt;</span>
+      <span class="time">Thu, 05 Feb 2026 11:17:41 -0500</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m1">#1</a></div>
+    <div class="subject">Subject: Re: [DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput Inference Workloads</div>
+    <div class="mid">Message-ID: &lt;ddc8s9551bns78y8mll6p83hk50f6q9k&gt;</div>
+  </div>
   <div class="body-grid">
     <div class="orig body-font"><div class="text-block">Hello,
 
@@ -297,12 +357,29 @@ Staff Engineer, Infrastructure | Streaming Platform
 &lt;<a href="https://www.shopify.com/?utm_medium=salessignatures&amp;utm_source=hs_email&gt;" target="_blank" rel="noopener">https://www.shopify.com/?utm_medium=salessignatures&amp;utm_source=hs_email&gt;</a>
 
 
-On Wed, Feb 4, 2026 at 9:17 AM FeatZhang &lt;featzhang@apache.org&gt; wrote:</div><details class="quote-block"><summary>Quoted (189 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput</span><span class="qd qd-1">Inference Workloads</span><span class="qd qd-empty"></span><span class="qd qd-1">Hi Flink Community,</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d like to start a discussion on *FLINK-38825*, which introduces</span><span class="qd qd-1">batch-oriented asynchronous processing capabilities to Apache Flink. This</span><span class="qd qd-1">feature is specifically designed for high-latency, high-throughput</span><span class="qd qd-1">workloads such as AI/ML model inference.</span><span class="qd qd-1">🎯 Motivation</span><span class="qd qd-empty"></span><span class="qd qd-1">Current Flink&#x27;s AsyncFunction processes one element at a time, which is</span><span class="qd qd-1">suboptimal for many modern use cases:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. *Low GPU Utilization*: ML inference frameworks (TensorFlow, PyTorch,</span><span class="qd qd-1">   ONNX) achieve optimal throughput with batched inputs, but single-element</span><span class="qd qd-1">   async calls underutilize GPUs (typically ~20% utilization)</span><span class="qd qd-1">   2. *High Overhead*: External service calls that support batch APIs incur</span><span class="qd qd-1">   unnecessary network overhead when invoked per-element</span><span class="qd qd-1">   3. *Inefficient Resource Usage*: Many systems (databases, caches,</span><span class="qd qd-1">   inference services) can process batches 3-12x more efficiently than</span><span class="qd qd-1">   individual requests</span><span class="qd qd-empty"></span><span class="qd qd-1">💡 Proposed Solution</span><span class="qd qd-empty"></span><span class="qd qd-1">We propose a new AsyncBatchFunction interface that allows users to process</span><span class="qd qd-1">multiple stream elements in a single async operation:</span><span class="qd qd-empty"></span><span class="qd qd-1">@PublicEvolving</span><span class="qd qd-1">public interface AsyncBatchFunction&lt;IN, OUT&gt; extends Function,</span><span class="qd qd-1">Serializable {</span><span class="qd qd-1">    void asyncInvokeBatch(List&lt;IN&gt; inputs, ResultFuture&lt;OUT&gt;</span><span class="qd qd-1">resultFuture) throws Exception;</span><span class="qd qd-1">}</span><span class="qd qd-empty"></span><span class="qd qd-1">*Key Features:*</span><span class="qd qd-empty"></span><span class="qd qd-1">   - ✅ *Dual Triggering*: Size-based (maxBatchSize) and time-based</span><span class="qd qd-1">   (batchTimeout) batch triggering</span><span class="qd qd-1">   - ✅ *Ordering Modes*: Both ordered and unordered processing supported</span><span class="qd qd-1">   - ✅ *Retry &amp; Timeout*: Configurable strategies (fixed delay, exponential</span><span class="qd qd-1">   backoff)</span><span class="qd qd-1">   - ✅ *Rich Metrics*: 8 inference-specific metrics (batch size,</span><span class="qd qd-1">   throughput, latency, etc.)</span><span class="qd qd-1">   - ✅ *Full Stack*: Complete integration with DataStream API, Table</span><span class="qd qd-1">   API/SQL, and PyFlink</span><span class="qd qd-empty"></span><span class="qd qd-1">📊 Performance Improvements</span><span class="qd qd-empty"></span><span class="qd qd-1">Based on our benchmarks with ML inference workloads:</span><span class="qd qd-1">Batch Size Throughput Improvement P99 Latency GPU Utilization</span><span class="qd qd-1">1 (baseline) 1x 50ms ~20%</span><span class="qd qd-1">8 3-4x 80ms ~60%</span><span class="qd qd-1">16 5-7x 120ms ~80%</span><span class="qd qd-1">32 8-12x 200ms ~95%🔧 API ExamplesJava DataStream API:</span><span class="qd qd-empty"></span><span class="qd qd-1">DataStream&lt;Prediction&gt; predictions = AsyncDataStream.unorderedWaitBatch(</span><span class="qd qd-1">    images,</span><span class="qd qd-1">    new ModelInferenceFunction(),</span><span class="qd qd-1">    32,   // maxBatchSize</span><span class="qd qd-1">    100,  // batchTimeout (ms)</span><span class="qd qd-1">    TimeUnit.MILLISECONDS</span><span class="qd qd-1">);</span><span class="qd qd-empty"></span><span class="qd qd-1">Python API (PyFlink):</span><span class="qd qd-empty"></span><span class="qd qd-1">predictions = AsyncDataStream.unordered_wait_batch(</span><span class="qd qd-1">    images,</span><span class="qd qd-1">    BatchModelInference(),</span><span class="qd qd-1">    max_batch_size=32,</span><span class="qd qd-1">    batch_timeout=100</span><span class="qd qd-1">)</span><span class="qd qd-empty"></span><span class="qd qd-1">Table API/SQL:</span><span class="qd qd-empty"></span><span class="qd qd-1">SELECT a.*, b.features</span><span class="qd qd-1">FROM input_table a</span><span class="qd qd-1">JOIN model_table FOR SYSTEM_TIME AS OF a.proc_time AS b</span><span class="qd qd-1">ON a.id = b.id</span><span class="qd qd-1">-- Automatically uses AsyncBatchLookupFunction</span><span class="qd qd-empty"></span><span class="qd qd-1">📦 Implementation Status</span><span class="qd qd-empty"></span><span class="qd qd-1">The feature has been fully implemented across *7 commits* on the</span><span class="qd qd-1">FLINK-38825-python branch:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. ✅ [5caaa843] Core AsyncBatchFunction and AsyncBatchWaitOperator (+731</span><span class="qd qd-1">   lines)</span><span class="qd qd-1">   2. ✅ [35e5398c] Time-based batch triggering (+405 lines)</span><span class="qd qd-1">   3. ✅ [7ffc0065] Ordered processing support (+1,046 lines)</span><span class="qd qd-1">   4. ✅ [0de5e881] Inference-specific metrics (+763 lines)</span><span class="qd qd-1">   5. ✅ [ebf8fee7] Retry and timeout strategies (+1,778 lines)</span><span class="qd qd-1">   6. ✅ [9baeeb0e] Table API/SQL integration (+1,139 lines)</span><span class="qd qd-1">   7. ✅ [83e10731] Python API support (+1,187 lines)</span><span class="qd qd-empty"></span><span class="qd qd-1">*Total Implementation:* 26 files, ~6,500 lines of code, ~1,886 lines of</span><span class="qd qd-1">tests</span><span class="qd qd-1">🔍 Key Design Points for Discussion</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d appreciate the community&#x27;s feedback on the following design aspects:</span><span class="qd qd-1">1. API Design</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Is the AsyncBatchFunction interface intuitive enough? Should we</span><span class="qd qd-1">provide more convenience methods?</span><span class="qd qd-empty"></span><span class="qd qd-1">The current design requires users to handle the entire batch in one call.</span><span class="qd qd-1">We considered splitting batch results, but opted for simplicity in v1.</span><span class="qd qd-1">2. Triggering Strategy</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Should we support adaptive batching based on load/latency?</span><span class="qd qd-empty"></span><span class="qd qd-1">Current design: Trigger when maxBatchSize is reached OR batchTimeout</span><span class="qd qd-1">expires</span><span class="qd qd-1">(whichever comes first). This is simple but static.</span><span class="qd qd-1">3. Timeout Semantics</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Which timeout mode should be the default?</span><span class="qd qd-empty"></span><span class="qd qd-1">We offer two modes:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - BATCH: Timeout applies to entire batch operation (default)</span><span class="qd qd-1">   - ELEMENT: Timeout per element (batch timeout = element_timeout ×</span><span class="qd qd-1">   batch_size)</span><span class="qd qd-empty"></span><span class="qd qd-1">4. Ordering Guarantees</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Should we add a &quot;best-effort ordering&quot; mode for better</span><span class="qd qd-1">performance?</span><span class="qd qd-empty"></span><span class="qd qd-1">The ordered variant (orderedWaitBatch) maintains strict order but buffers</span><span class="qd qd-1">results. A relaxed mode could improve throughput.</span><span class="qd qd-1">5. Backpressure Handling</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* How should batch accumulation interact with backpressure?</span><span class="qd qd-empty"></span><span class="qd qd-1">Current behavior: Continue accumulating until size/timeout triggers. Should</span><span class="qd qd-1">we flush partial batches under high backpressure?</span><span class="qd qd-1">6. Checkpoint Semantics</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Are the checkpoint semantics correct?</span><span class="qd qd-empty"></span><span class="qd qd-1">In-flight batches are currently buffered in operator state during</span><span class="qd qd-1">checkpointing. This ensures exactly-once but increases checkpoint size.</span><span class="qd qd-1">📚 Documentation</span><span class="qd qd-empty"></span><span class="qd qd-1">Full FLIP documents are available on the branch:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - *JIRA:* FLINK-38825 &lt;</span><span class="qd qd-1"><a href="https://issues.apache.org/jira/browse/FLINK-38825&gt;" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-38825&gt;</a></span><span class="qd qd-1">   - *Branch:* FLINK-38825-python (based on master)</span><span class="qd qd-empty"></span><span class="qd qd-1">🎯 Use Cases Beyond ML Inference</span><span class="qd qd-empty"></span><span class="qd qd-1">While designed for ML inference, this feature benefits:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - *Batch Translation APIs*: Google Translate, DeepL batch endpoints</span><span class="qd qd-1">   - *Geocoding Services*: Batch address → coordinates conversion</span><span class="qd qd-1">   - *Database Bulk Operations*: Batch inserts/updates to ClickHouse,</span><span class="qd qd-1">   Cassandra</span><span class="qd qd-1">   - *Feature Stores*: Batch feature retrieval (Feast, Tecton)</span><span class="qd qd-1">   - *Cache Warming*: Batch Redis/Memcached operations</span><span class="qd qd-empty"></span><span class="qd qd-1">🤝 Request for Feedback</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d love to hear your thoughts on:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. *API Design*: Is it intuitive? Any missing convenience methods?</span><span class="qd qd-1">   2. *Default Configuration*: What should be the default batch</span><span class="qd qd-1">   size/timeout?</span><span class="qd qd-1">   3. *Performance Trade-offs*: Acceptable latency increase for throughput</span><span class="qd qd-1">   gains?</span><span class="qd qd-1">   4. *Integration Points*: Any concerns with Table API or Python API</span><span class="qd qd-1">   design?</span><span class="qd qd-1">   5. *Testing Strategy*: Are there specific scenarios we should benchmark?</span><span class="qd qd-1">   6. *Documentation*: What additional examples would be helpful?</span><span class="qd qd-empty"></span><span class="qd qd-1">⏰ Timeline</span><span class="qd qd-empty"></span><span class="qd qd-1">If the community is supportive, I&#x27;d like to:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - *Week 1-2*: Address feedback and refine design</span><span class="qd qd-1">   - *Week 3*: Create official FLIP on Confluence</span><span class="qd qd-1">   - *Week 4+*: Code review and merge preparation</span><span class="qd qd-empty"></span><span class="qd qd-1">Looking forward to your feedback and suggestions!</span><span class="qd qd-empty"></span><span class="qd qd-1">*Best regards,*</span><span class="qd qd-1">Feat Zhang</span><span class="qd qd-empty"></span></div></details></div>
-    <div class="trans">
-      <div class="trans-label">中文翻译 · Chinese translation</div>
-      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div>
-    </div>
+On Wed, Feb 4, 2026 at 9:17 AM FeatZhang &lt;featzhang@apache.org&gt; wrote:</div><details class="quote-block"><summary>📎 Quoted · 189 lines · depth 1 <span class="qpreview">[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput</span></summary><div class="quoted"><span class="qd qd-1">[DISCUSS] FLINK-38825: Introduce AsyncBatchFunction for High-Throughput</span><span class="qd qd-1">Inference Workloads</span><span class="qd qd-empty"></span><span class="qd qd-1">Hi Flink Community,</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d like to start a discussion on *FLINK-38825*, which introduces</span><span class="qd qd-1">batch-oriented asynchronous processing capabilities to Apache Flink. This</span><span class="qd qd-1">feature is specifically designed for high-latency, high-throughput</span><span class="qd qd-1">workloads such as AI/ML model inference.</span><span class="qd qd-1">🎯 Motivation</span><span class="qd qd-empty"></span><span class="qd qd-1">Current Flink&#x27;s AsyncFunction processes one element at a time, which is</span><span class="qd qd-1">suboptimal for many modern use cases:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. *Low GPU Utilization*: ML inference frameworks (TensorFlow, PyTorch,</span><span class="qd qd-1">   ONNX) achieve optimal throughput with batched inputs, but single-element</span><span class="qd qd-1">   async calls underutilize GPUs (typically ~20% utilization)</span><span class="qd qd-1">   2. *High Overhead*: External service calls that support batch APIs incur</span><span class="qd qd-1">   unnecessary network overhead when invoked per-element</span><span class="qd qd-1">   3. *Inefficient Resource Usage*: Many systems (databases, caches,</span><span class="qd qd-1">   inference services) can process batches 3-12x more efficiently than</span><span class="qd qd-1">   individual requests</span><span class="qd qd-empty"></span><span class="qd qd-1">💡 Proposed Solution</span><span class="qd qd-empty"></span><span class="qd qd-1">We propose a new AsyncBatchFunction interface that allows users to process</span><span class="qd qd-1">multiple stream elements in a single async operation:</span><span class="qd qd-empty"></span><span class="qd qd-1">@PublicEvolving</span><span class="qd qd-1">public interface AsyncBatchFunction&lt;IN, OUT&gt; extends Function,</span><span class="qd qd-1">Serializable {</span><span class="qd qd-1">    void asyncInvokeBatch(List&lt;IN&gt; inputs, ResultFuture&lt;OUT&gt;</span><span class="qd qd-1">resultFuture) throws Exception;</span><span class="qd qd-1">}</span><span class="qd qd-empty"></span><span class="qd qd-1">*Key Features:*</span><span class="qd qd-empty"></span><span class="qd qd-1">   - ✅ *Dual Triggering*: Size-based (maxBatchSize) and time-based</span><span class="qd qd-1">   (batchTimeout) batch triggering</span><span class="qd qd-1">   - ✅ *Ordering Modes*: Both ordered and unordered processing supported</span><span class="qd qd-1">   - ✅ *Retry &amp; Timeout*: Configurable strategies (fixed delay, exponential</span><span class="qd qd-1">   backoff)</span><span class="qd qd-1">   - ✅ *Rich Metrics*: 8 inference-specific metrics (batch size,</span><span class="qd qd-1">   throughput, latency, etc.)</span><span class="qd qd-1">   - ✅ *Full Stack*: Complete integration with DataStream API, Table</span><span class="qd qd-1">   API/SQL, and PyFlink</span><span class="qd qd-empty"></span><span class="qd qd-1">📊 Performance Improvements</span><span class="qd qd-empty"></span><span class="qd qd-1">Based on our benchmarks with ML inference workloads:</span><span class="qd qd-1">Batch Size Throughput Improvement P99 Latency GPU Utilization</span><span class="qd qd-1">1 (baseline) 1x 50ms ~20%</span><span class="qd qd-1">8 3-4x 80ms ~60%</span><span class="qd qd-1">16 5-7x 120ms ~80%</span><span class="qd qd-1">32 8-12x 200ms ~95%🔧 API ExamplesJava DataStream API:</span><span class="qd qd-empty"></span><span class="qd qd-1">DataStream&lt;Prediction&gt; predictions = AsyncDataStream.unorderedWaitBatch(</span><span class="qd qd-1">    images,</span><span class="qd qd-1">    new ModelInferenceFunction(),</span><span class="qd qd-1">    32,   // maxBatchSize</span><span class="qd qd-1">    100,  // batchTimeout (ms)</span><span class="qd qd-1">    TimeUnit.MILLISECONDS</span><span class="qd qd-1">);</span><span class="qd qd-empty"></span><span class="qd qd-1">Python API (PyFlink):</span><span class="qd qd-empty"></span><span class="qd qd-1">predictions = AsyncDataStream.unordered_wait_batch(</span><span class="qd qd-1">    images,</span><span class="qd qd-1">    BatchModelInference(),</span><span class="qd qd-1">    max_batch_size=32,</span><span class="qd qd-1">    batch_timeout=100</span><span class="qd qd-1">)</span><span class="qd qd-empty"></span><span class="qd qd-1">Table API/SQL:</span><span class="qd qd-empty"></span><span class="qd qd-1">SELECT a.*, b.features</span><span class="qd qd-1">FROM input_table a</span><span class="qd qd-1">JOIN model_table FOR SYSTEM_TIME AS OF a.proc_time AS b</span><span class="qd qd-1">ON a.id = b.id</span><span class="qd qd-1">-- Automatically uses AsyncBatchLookupFunction</span><span class="qd qd-empty"></span><span class="qd qd-1">📦 Implementation Status</span><span class="qd qd-empty"></span><span class="qd qd-1">The feature has been fully implemented across *7 commits* on the</span><span class="qd qd-1">FLINK-38825-python branch:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. ✅ [5caaa843] Core AsyncBatchFunction and AsyncBatchWaitOperator (+731</span><span class="qd qd-1">   lines)</span><span class="qd qd-1">   2. ✅ [35e5398c] Time-based batch triggering (+405 lines)</span><span class="qd qd-1">   3. ✅ [7ffc0065] Ordered processing support (+1,046 lines)</span><span class="qd qd-1">   4. ✅ [0de5e881] Inference-specific metrics (+763 lines)</span><span class="qd qd-1">   5. ✅ [ebf8fee7] Retry and timeout strategies (+1,778 lines)</span><span class="qd qd-1">   6. ✅ [9baeeb0e] Table API/SQL integration (+1,139 lines)</span><span class="qd qd-1">   7. ✅ [83e10731] Python API support (+1,187 lines)</span><span class="qd qd-empty"></span><span class="qd qd-1">*Total Implementation:* 26 files, ~6,500 lines of code, ~1,886 lines of</span><span class="qd qd-1">tests</span><span class="qd qd-1">🔍 Key Design Points for Discussion</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d appreciate the community&#x27;s feedback on the following design aspects:</span><span class="qd qd-1">1. API Design</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Is the AsyncBatchFunction interface intuitive enough? Should we</span><span class="qd qd-1">provide more convenience methods?</span><span class="qd qd-empty"></span><span class="qd qd-1">The current design requires users to handle the entire batch in one call.</span><span class="qd qd-1">We considered splitting batch results, but opted for simplicity in v1.</span><span class="qd qd-1">2. Triggering Strategy</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Should we support adaptive batching based on load/latency?</span><span class="qd qd-empty"></span><span class="qd qd-1">Current design: Trigger when maxBatchSize is reached OR batchTimeout</span><span class="qd qd-1">expires</span><span class="qd qd-1">(whichever comes first). This is simple but static.</span><span class="qd qd-1">3. Timeout Semantics</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Which timeout mode should be the default?</span><span class="qd qd-empty"></span><span class="qd qd-1">We offer two modes:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - BATCH: Timeout applies to entire batch operation (default)</span><span class="qd qd-1">   - ELEMENT: Timeout per element (batch timeout = element_timeout ×</span><span class="qd qd-1">   batch_size)</span><span class="qd qd-empty"></span><span class="qd qd-1">4. Ordering Guarantees</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Should we add a &quot;best-effort ordering&quot; mode for better</span><span class="qd qd-1">performance?</span><span class="qd qd-empty"></span><span class="qd qd-1">The ordered variant (orderedWaitBatch) maintains strict order but buffers</span><span class="qd qd-1">results. A relaxed mode could improve throughput.</span><span class="qd qd-1">5. Backpressure Handling</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* How should batch accumulation interact with backpressure?</span><span class="qd qd-empty"></span><span class="qd qd-1">Current behavior: Continue accumulating until size/timeout triggers. Should</span><span class="qd qd-1">we flush partial batches under high backpressure?</span><span class="qd qd-1">6. Checkpoint Semantics</span><span class="qd qd-empty"></span><span class="qd qd-1">*Question:* Are the checkpoint semantics correct?</span><span class="qd qd-empty"></span><span class="qd qd-1">In-flight batches are currently buffered in operator state during</span><span class="qd qd-1">checkpointing. This ensures exactly-once but increases checkpoint size.</span><span class="qd qd-1">📚 Documentation</span><span class="qd qd-empty"></span><span class="qd qd-1">Full FLIP documents are available on the branch:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - *JIRA:* FLINK-38825 &lt;</span><span class="qd qd-1"><a href="https://issues.apache.org/jira/browse/FLINK-38825&gt;" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-38825&gt;</a></span><span class="qd qd-1">   - *Branch:* FLINK-38825-python (based on master)</span><span class="qd qd-empty"></span><span class="qd qd-1">🎯 Use Cases Beyond ML Inference</span><span class="qd qd-empty"></span><span class="qd qd-1">While designed for ML inference, this feature benefits:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - *Batch Translation APIs*: Google Translate, DeepL batch endpoints</span><span class="qd qd-1">   - *Geocoding Services*: Batch address → coordinates conversion</span><span class="qd qd-1">   - *Database Bulk Operations*: Batch inserts/updates to ClickHouse,</span><span class="qd qd-1">   Cassandra</span><span class="qd qd-1">   - *Feature Stores*: Batch feature retrieval (Feast, Tecton)</span><span class="qd qd-1">   - *Cache Warming*: Batch Redis/Memcached operations</span><span class="qd qd-empty"></span><span class="qd qd-1">🤝 Request for Feedback</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d love to hear your thoughts on:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. *API Design*: Is it intuitive? Any missing convenience methods?</span><span class="qd qd-1">   2. *Default Configuration*: What should be the default batch</span><span class="qd qd-1">   size/timeout?</span><span class="qd qd-1">   3. *Performance Trade-offs*: Acceptable latency increase for throughput</span><span class="qd qd-1">   gains?</span><span class="qd qd-1">   4. *Integration Points*: Any concerns with Table API or Python API</span><span class="qd qd-1">   design?</span><span class="qd qd-1">   5. *Testing Strategy*: Are there specific scenarios we should benchmark?</span><span class="qd qd-1">   6. *Documentation*: What additional examples would be helpful?</span><span class="qd qd-empty"></span><span class="qd qd-1">⏰ Timeline</span><span class="qd qd-empty"></span><span class="qd qd-1">If the community is supportive, I&#x27;d like to:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - *Week 1-2*: Address feedback and refine design</span><span class="qd qd-1">   - *Week 3*: Create official FLIP on Confluence</span><span class="qd qd-1">   - *Week 4+*: Code review and merge preparation</span><span class="qd qd-empty"></span><span class="qd qd-1">Looking forward to your feedback and suggestions!</span><span class="qd qd-empty"></span><span class="qd qd-1">*Best regards,*</span><span class="qd qd-1">Feat Zhang</span><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
   </div>
 </div>
+<div class="footer">
+  Generated by <code>dissuss/_build.py</code> from
+  <a href="https://lists.apache.org/thread/25tgrcng4pc74r50bmwd990yn3kktg1s" target="_blank" rel="noreferrer">lists.apache.org</a>
+  · Quoted content collapsed by default · Reply relationships shown via "↩ In reply to" links
+</div>
+<script>
+function toggleAll(open){document.querySelectorAll('details.quote-block').forEach(function(d){d.open=open})}
+window.addEventListener('hashchange',function(){
+  var id=location.hash.slice(1);if(!id)return;
+  var el=document.getElementById(id);if(!el)return;
+  el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1200);
+});
+// flash on initial load if URL has hash
+window.addEventListener('DOMContentLoaded',function(){
+  if(location.hash){
+    var el=document.getElementById(location.hash.slice(1));
+    if(el){el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1200)}
+  }
+});
+</script>
 </body>
 </html>

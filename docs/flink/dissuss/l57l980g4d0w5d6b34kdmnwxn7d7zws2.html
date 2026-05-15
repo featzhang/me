@@ -1,85 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <title>[DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--bg:#fff;--fg:#1f2328;--muted:#57606a;--card:#f6f8fa;--accent:#0969da;--border:#d0d7de;--quote-bg:#fbfbfd;--trans-bg:#fafbff}
-body.dark{--bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--card:#161b22;--accent:#58a6ff;--border:#30363d;--quote-bg:#0b0e13;--trans-bg:#0f1320}
+:root{
+  --bg:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--border-soft:#e4e7eb;
+  --accent:#1f6feb;--accent-soft:#ddf4ff;--card:#fff;--header-bg:#f6f8fa;
+  --quote-bg:#f6f8fa;--quote-fg:#6e7781;--trans-bg:#fbfdff;--tag-bg:#f3f4f6;--hover:#f0f3f6;
+}
+body.dark{
+  --bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--border:#30363d;--border-soft:#21262d;
+  --accent:#58a6ff;--accent-soft:#1f3a5f;--card:#0d1117;--header-bg:#161b22;
+  --quote-bg:#0b0e13;--quote-fg:#8b949e;--trans-bg:#0f1622;--tag-bg:#161b22;--hover:#161b22;
+}
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--fg)}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;max-width:none;margin:0;padding:0 32px 64px}
-.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
-.toolbar h1{font-size:18px;margin:0;flex:1 1 auto;min-width:240px}
-.toolbar .status{color:var(--muted);font-size:12px}
-.toolbar button, .toolbar a.btn{font-size:12px;padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
-.toolbar button:hover, .toolbar a.btn:hover{border-color:var(--accent);color:var(--accent)}
-.email{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px}
-.email>header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:10px;font-size:12px;color:var(--muted)}
-.email .from{font-weight:600;color:var(--fg)}
-.email .subj{flex:1 1 100%;font-weight:500;color:var(--fg);font-size:13px}
-.email .mid{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}
-.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.6;margin:0;padding:24px 32px 64px;max-width:none}
+h1{border-bottom:2px solid var(--accent);padding-bottom:8px;font-size:22px;margin:0 0 8px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:18px}
+.meta code{background:var(--tag-bg);padding:2px 6px;border-radius:3px}
+.meta a{color:var(--accent);text-decoration:none}
+.meta a:hover{text-decoration:underline}
+
+.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px}
+.toolbar button,.toolbar a.btn{background:var(--header-bg);border:1px solid var(--border);padding:5px 12px;border-radius:5px;cursor:pointer;color:var(--fg);font-size:12px;text-decoration:none;display:inline-block}
+.toolbar button:hover,.toolbar a.btn:hover{background:var(--hover);border-color:var(--accent);color:var(--accent)}
+.toolbar .stat{color:var(--muted);font-size:12px;margin-left:auto}
+
+.toc{background:var(--header-bg);border:1px solid var(--border);border-radius:6px;padding:12px 18px;margin-bottom:24px}
+.toc strong{display:block;margin-bottom:8px;font-size:13px}
+.toc-list{list-style:none;padding-left:0;margin:0}
+.toc-list li{padding:3px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}
+.toc-list li:last-child{border-bottom:none}
+.toc-list a{color:var(--accent);text-decoration:none}
+.toc-list a:hover{text-decoration:underline}
+.toc-list .lvl{display:inline-block;color:var(--muted);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px}
+
+.summary-card{background:linear-gradient(135deg,rgba(31,111,235,.06),rgba(130,80,223,.04));border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:18px;font-size:13px}
+.summary-card h2{font-size:13px;margin:0 0 6px;color:var(--accent)}
+.summary-card ul{margin:6px 0 0 18px;padding:0;color:var(--fg)}
+.summary-card li{margin:2px 0}
+.summary-card a{color:var(--accent)}
+
+.email{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;margin:18px 0;padding:0;background:var(--card);scroll-margin-top:64px;transition:box-shadow .35s ease}
+.email.flash{box-shadow:0 0 0 3px var(--accent-soft)}
+.email-header{background:var(--header-bg);padding:12px 18px;border-bottom:1px solid var(--border);border-radius:5px 5px 0 0;position:relative}
+.email-header .top-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.email-header .num{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;font-weight:bold;font-size:13px;flex-shrink:0}
+.email-header .from{font-weight:600;color:var(--fg)}
+.email-header .time{color:var(--muted);font-size:12px}
+.email-header .reply-to{margin-top:6px;font-size:12px;color:var(--muted)}
+.email-header .reply-to a{color:var(--accent);text-decoration:none}
+.email-header .reply-to a:hover{text-decoration:underline}
+.email-header .subject{margin-top:6px;font-size:13px;color:var(--fg);font-weight:500}
+.email-header .mid{color:var(--muted);font-size:11px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;word-break:break-all;margin-top:4px}
+.anchor-link{position:absolute;top:10px;right:14px;color:var(--muted);font-size:14px;text-decoration:none}
+.anchor-link:hover{color:var(--accent)}
+
+.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;padding:14px 20px}
 .orig{min-width:0}
-.trans{min-width:0;background:var(--trans-bg);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px}
-.trans-label{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.85}
+.trans{min-width:0;border-left:1px dashed var(--border);padding-left:18px;position:relative;background:var(--trans-bg);border-radius:0 4px 4px 0;padding:8px 12px 8px 18px}
+.trans::before{content:"中文翻译";position:absolute;top:-9px;left:12px;background:var(--card);color:var(--accent);font-size:10px;font-weight:600;padding:0 6px;letter-spacing:.08em;border-radius:3px}
 body.hide-trans .body-grid{grid-template-columns:1fr}
 body.hide-trans .trans{display:none}
-@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:3px solid var(--accent);border-radius:0 0 6px 6px}}
+@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:1px dashed var(--border);padding-left:0;padding-top:18px;margin-top:6px}.trans::before{top:2px;left:0}}
+
 .body-font{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
-.trans .body-font, .trans-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13px}
-.text-block{white-space:pre-wrap;word-wrap:break-word;margin:6px 0}
+.trans .body-font{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13.5px;line-height:1.7}
+.text-block{margin:0 0 8px;white-space:pre-wrap;word-wrap:break-word;line-height:1.55}
+.text-block:last-child{margin-bottom:0}
+.text-block a{color:var(--accent)}
 .trans-pending{color:var(--muted);font-style:italic;font-size:12px}
 .trans-quote-placeholder{margin:6px 0;min-height:1.4em;opacity:0}
-details.quote-block{margin:6px 0;border-left:3px solid var(--border);background:var(--quote-bg);padding:4px 8px;border-radius:0 4px 4px 0}
-details.quote-block summary{cursor:pointer;color:var(--muted);font-size:11px;user-select:none;padding:2px 0;list-style:none}
-details.quote-block summary::-webkit-details-marker{display:none}
-details.quote-block summary::before{content:'▶ ';display:inline-block;transition:transform .12s;margin-right:4px}
+
+details.quote-block{margin:8px 0;border:1px solid var(--border-soft);border-radius:5px;background:var(--quote-bg)}
+details.quote-block>summary{cursor:pointer;padding:6px 12px;font-size:12px;color:var(--muted);list-style:none;user-select:none;outline:none;border-radius:5px}
+details.quote-block>summary::-webkit-details-marker{display:none}
+details.quote-block>summary::before{content:"▶";display:inline-block;margin-right:6px;transition:transform .15s ease;font-size:10px}
 details.quote-block[open]>summary::before{transform:rotate(90deg)}
-.quoted{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;margin-top:6px}
-.qd{display:block;white-space:pre-wrap;padding-left:8px;border-left:2px solid;margin:1px 0}
-.qd-1{border-color:#0969da;color:var(--fg)}
-.qd-2{border-color:#1a7f37;color:var(--fg);opacity:.95}
-.qd-3{border-color:#bf8700;color:var(--fg);opacity:.9}
-.qd-4{border-color:#cf222e;color:var(--fg);opacity:.85}
-.qd-5{border-color:#8250df;color:var(--fg);opacity:.8}
-.qd-empty{display:block;min-height:.5em;border-left:none;padding:0}
-a{color:var(--accent);text-decoration:none}
+details.quote-block>summary:hover{background:var(--hover)}
+details.quote-block .qpreview{font-style:italic;opacity:.75;margin-left:8px}
+details.quote-block .quoted{padding:8px 12px;border-top:1px solid var(--border-soft);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;color:var(--quote-fg);word-wrap:break-word}
+.qd{display:block;white-space:pre-wrap;word-wrap:break-word;min-height:1em}
+.qd-empty{min-height:.5em;border-left-color:transparent !important}
+.qd-1{border-left:3px solid #c8d1da;padding-left:8px}
+.qd-2{border-left:3px solid #d8b4fe;padding-left:8px;margin-left:12px}
+.qd-3{border-left:3px solid #fdba74;padding-left:8px;margin-left:24px}
+.qd-4{border-left:3px solid #86efac;padding-left:8px;margin-left:36px}
+.qd-5{border-left:3px solid #fda4af;padding-left:8px;margin-left:48px}
+
+a{color:var(--accent)}
 a:hover{text-decoration:underline}
-.summary-card{background:linear-gradient(135deg,rgba(9,105,218,.08),rgba(130,80,223,.05));border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px}
-.summary-card h2{font-size:14px;margin:0 0 6px;color:var(--accent)}
-.summary-card p{margin:6px 0;color:var(--muted);font-size:13px}
-.summary-card ul{margin:6px 0 0 18px;color:var(--fg);font-size:13px}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border-soft);color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
 <body>
+<h1>[DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</h1>
+<div class="meta">
+  Mailing list: <code>dev@flink.apache.org</code> &nbsp;|&nbsp;
+  Thread ID: <code>l57l980g4d0w5d6b34kdmnwxn7d7zws2</code> &nbsp;|&nbsp;
+  Source: <a href="https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2" target="_blank" rel="noreferrer">lists.apache.org</a> &nbsp;|&nbsp;
+  Total messages: 2
+</div>
 <div class="toolbar">
-  <h1>[DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</h1>
-  <span class="status">2 emails · 1 quote blocks · pending (no translation file)</span>
-  <button onclick="document.querySelectorAll('details.quote-block').forEach(d=>d.open=!d.open)">Expand / collapse quotes</button>
-  <button onclick="document.body.classList.toggle('hide-trans')">Show / hide translation</button>
-  <button onclick="document.body.classList.toggle('dark')">Dark / light</button>
-  <a class="btn" href="https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2" target="_blank">↗ Open on lists.apache.org</a>
+  <button onclick="toggleAll(true)">展开所有引用</button>
+  <button onclick="toggleAll(false)">折叠所有引用</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">显示/隐藏中文翻译</button>
+  <button onclick="document.body.classList.toggle('dark')">深色 / 浅色</button>
+  <a class="btn" href="https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2" target="_blank" rel="noreferrer">↗ lists.apache.org</a>
   <a class="btn" href="../index.html">← Back to dashboard</a>
+  <span class="stat" id="stat">2 emails · 1 quotes · pending (no translation file)</span>
+</div>
+<div class="toc">
+  <strong>📋 Index（按时间顺序，缩进表示回复层级）</strong>
+  <ul class="toc-list"><li><span class="lvl"></span><a href="#m1"><strong>#1</strong> FeatZhang &lt;fe...@apache.org&gt; &mdash; Mon, 11 May 2026 13:30:28 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m2"><strong>#2</strong> FeatZhang &lt;fe...@apache.org&gt; &mdash; Mon, 11 May 2026 14:14:25 +0800</a></li></ul>
 </div>
 <div class="summary-card">
   <h2>Mailing-list thread archive</h2>
-  <p>Generated by <code>dissuss/_build.py</code> following <code>mail-thread-archiver.prompt.md</code>. Layout: left = English original (with collapsible quotes), right = Chinese translation (per spec §3.5). Use the <em>Show / hide translation</em> button to toggle the right column.</p>
   <ul>
     <li><b>Subject</b>: [DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</li>
-    <li><b>Archive</b>: 2 emails, 1 quote blocks</li>
-    <li><b>Source</b>: <a href="https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2" target="_blank">https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2</a></li>
-    <li><b>Translation</b>: pending (no translation file) (drop a <code>l57l980g4d0w5d6b34kdmnwxn7d7zws2.translation.json</code> beside this file and rebuild to fill it in)</li>
+    <li><b>Archive</b>: 2 emails · 1 quote blocks · pending (no translation file)</li>
+    <li><b>Source</b>: <a href="https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2" target="_blank" rel="noreferrer">https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2</a></li>
+    <li><b>Translation file</b>: <code>l57l980g4d0w5d6b34kdmnwxn7d7zws2.translation.json</code></li>
   </ul>
 </div>
 <div class="email" id="m1">
-  <header>
-    <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
-    <span class="time">Mon, 11 May 2026 13:30:28 +0800</span>
-    <span class="subj">[DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</span>
-    <span class="mid">&lt;l57l980g4d0w5d6b34kdmnwxn7d7zws2&gt;</span>
-  </header>
+  <div class="email-header">
+    <a class="anchor-link" href="#m1" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">1</span>
+      <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
+      <span class="time">Mon, 11 May 2026 13:30:28 +0800</span>
+    </div>
+    
+    <div class="subject">Subject: [DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</div>
+    <div class="mid">Message-ID: &lt;l57l980g4d0w5d6b34kdmnwxn7d7zws2&gt;</div>
+  </div>
   <div class="body-grid">
     <div class="orig body-font"><div class="text-block">Hi devs,
 
@@ -210,28 +268,47 @@ helps reviewers.
 
 Best,
 featzhang</div></div>
-    <div class="trans">
-      <div class="trans-label">中文翻译 · Chinese translation</div>
-      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div>
-    </div>
+    <div class="trans"><div class="body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div></div>
   </div>
 </div>
 <div class="email" id="m2">
-  <header>
-    <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
-    <span class="time">Mon, 11 May 2026 14:14:25 +0800</span>
-    <span class="subj">Re: [DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</span>
-    <span class="mid">&lt;1och3dtco20pvwg6m4sh3d4wnm0m33b3&gt;</span>
-  </header>
+  <div class="email-header">
+    <a class="anchor-link" href="#m2" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">2</span>
+      <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
+      <span class="time">Mon, 11 May 2026 14:14:25 +0800</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m1">#1</a></div>
+    <div class="subject">Subject: Re: [DISSCUSS] FLIP-XXX: Async MongoDB Sink with Error Classification and Shared Connection Pool</div>
+    <div class="mid">Message-ID: &lt;1och3dtco20pvwg6m4sh3d4wnm0m33b3&gt;</div>
+  </div>
   <div class="body-grid">
     <div class="orig body-font"><div class="text-block"><a href="https://docs.google.com/document/d/1p2K1tYiLz7nvaW4akTGdHDPzG_fMjXzhtzVKpSfcNC0/edit?usp=sharing" target="_blank" rel="noopener">https://docs.google.com/document/d/1p2K1tYiLz7nvaW4akTGdHDPzG_fMjXzhtzVKpSfcNC0/edit?usp=sharing</a>
 
-On Mon, May 11, 2026 at 1:30 PM FeatZhang &lt;featzhang@apache.org&gt; wrote:</div><details class="quote-block"><summary>Quoted (130 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">Hi devs,</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d like to open discussion on `Async MongoDB Sink with Error</span><span class="qd qd-1">Classification and Shared Connection Pool`, a proposal to modernize the</span><span class="qd qd-1">sink path of flink-connector-mongodb by bringing it in line with the</span><span class="qd qd-1">AsyncSink standard, adding a structured error-handling model, and</span><span class="qd qd-1">introducing a TM-shared MongoClient pool.</span><span class="qd qd-1">Motivation</span><span class="qd qd-empty"></span><span class="qd qd-1">While reviewing flink-connector-mongodb at HEAD, three recurring issues</span><span class="qd qd-1">showed up in production workloads:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1.</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoSink still extends SinkV2 directly, so it does not benefit</span><span class="qd qd-1">   from AsyncSinkBase&#x27;s in-flight rate limiting, automatic batching,</span><span class="qd qd-1">   or the standard connector metrics that Kinesis / DynamoDB /</span><span class="qd qd-1">   Firehose already expose. prepareCommit also blocks on flush, so</span><span class="qd qd-1">   barrier alignment latency is amplified by MongoDB write latency.</span><span class="qd qd-1">   2.</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoWriter.doBulkWrite catches the top-level MongoException and</span><span class="qd qd-1">   retries a fixed number of times with LINEAR backoff. That causes</span><span class="qd qd-1">   (a) permanent errors such as E11000 / E10334 / invalid-doc to be</span><span class="qd qd-1">   retried uselessly, (b) thundering-herd patterns after transient</span><span class="qd qd-1">   overload, and (c) no dead-letter path for unrecoverable records.</span><span class="qd qd-1">   This overlaps with the recent thread &quot;Optional configuration</span><span class="qd qd-1">   parameters for better performance&quot; and with FLINK-39398 (PR #66</span><span class="qd qd-1">   by Savonitar, which only covers duplicate keys).</span><span class="qd qd-1">   3.</span><span class="qd qd-empty"></span><span class="qd qd-1">   Every MongoWriter / MongoSourceReader / MongoLookupFunction</span><span class="qd qd-1">   instance opens its own MongoClient. A job with sink=4 + lookup=4</span><span class="qd qd-1">   - source=4 against the same cluster opens 3 x 4 x poolSize</span><span class="qd qd-1">      connections per TM, plus the corresponding SDAM and DNS monitor</span><span class="qd qd-1">      threads.</span><span class="qd qd-empty"></span><span class="qd qd-1">Proposal</span><span class="qd qd-empty"></span><span class="qd qd-1">Three coordinated changes, shipped as sub-tasks under a single FLIP:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1.</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoAsyncSink on top of AsyncSinkBase (FLIP-171). Public API:</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoAsyncSink.builder()</span><span class="qd qd-1">   .setConnectionOptions(...)</span><span class="qd qd-1">   .setSerializationSchema(...)</span><span class="qd qd-1">   .setErrorClassifier(...) // see (2)</span><span class="qd qd-1">   .setDeadLetterSink(...) // see (2)</span><span class="qd qd-1">   .setClientProvider(...) // see (3)</span><span class="qd qd-1">   // AsyncSinkBase options inherited as-is:</span><span class="qd qd-1">   // maxBatchSize / maxInFlightRequests / maxBufferedRequests</span><span class="qd qd-1">   // maxBatchSizeInBytes / maxTimeInBufferMS</span><span class="qd qd-1">   .build();</span><span class="qd qd-empty"></span><span class="qd qd-1">   The existing MongoSink / MongoSinkBuilder are kept for one minor</span><span class="qd qd-1">   release as @Deprecated delegates to MongoAsyncSink.</span><span class="qd qd-1">   2.</span><span class="qd qd-empty"></span><span class="qd qd-1">   A pluggable MongoErrorClassifier mapping MongoDB server error</span><span class="qd qd-1">   codes to one of:</span><span class="qd qd-empty"></span><span class="qd qd-1">   RETRY_WITH_BACKOFF | DEAD_LETTER | IGNORE | UPSERT | FAIL_JOB</span><span class="qd qd-empty"></span><span class="qd qd-1">   Default mapping (configurable):</span><span class="qd qd-empty"></span><span class="qd qd-1">   6,7,89,91,189,13435,13436 -&gt; RETRY_WITH_BACKOFF (transient)</span><span class="qd qd-1">   50 -&gt; RETRY_WITH_BACKOFF (timeout)</span><span class="qd qd-1">   11000,11001 (dup key) -&gt; DEAD_LETTER | IGNORE | UPSERT</span><span class="qd qd-1">   10334,2,14,121 (invalid doc) -&gt; DEAD_LETTER</span><span class="qd qd-1">   others -&gt; FAIL_JOB</span><span class="qd qd-empty"></span><span class="qd qd-1">   Retries use exponential backoff with jitter (via AsyncSink&#x27;s</span><span class="qd qd-1">   ResultHandler.retryForEntries). DEAD_LETTER is routed to a</span><span class="qd qd-1">   user-supplied Sink with full metadata.</span><span class="qd qd-1">   3.</span><span class="qd qd-empty"></span><span class="qd qd-1">   A TM-shared MongoClientProvider (ref-counted, keyed by canonical</span><span class="qd qd-1">   URI + credentials digest + TLS + compressors + appName). Sink,</span><span class="qd qd-1">   Source and Lookup all go through:</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoClient c = provider.acquire(options);</span><span class="qd qd-1">   ...</span><span class="qd qd-1">   provider.release(c); // underlying close() when refCount == 0</span><span class="qd qd-empty"></span><span class="qd qd-1">   Default provider: sharedPerTaskManager(). Legacy behavior is kept</span><span class="qd qd-1">   via perInstance() and a sink.client-provider=PER_INSTANCE option.</span><span class="qd qd-empty"></span><span class="qd qd-1">Backward compatibility</span><span class="qd qd-empty"></span><span class="qd qd-1">   - MongoSink / MongoSinkBuilder: @Deprecated, internally delegating.</span><span class="qd qd-1">   - Legacy ConfigOptions (sink.bulk-flush.max-actions,</span><span class="qd qd-1">   sink.bulk-flush.interval) continue to work; mapped to</span><span class="qd qd-1">   maxBatchSize / maxTimeInBufferMS at runtime with a WARN log.</span><span class="qd qd-1">   - Table DDL parameters: legacy keys kept for one minor version.</span><span class="qd qd-1">   - State schema is not binary compatible; a MongoStateMigrator tool</span><span class="qd qd-1">   is provided to replay unacked entries from an old savepoint into</span><span class="qd qd-1">   the new sink.</span><span class="qd qd-empty"></span><span class="qd qd-1">Deprecation timeline:</span><span class="qd qd-1">flink-connector-mongodb 2.0 : both exist, legacy is default</span><span class="qd qd-1">flink-connector-mongodb 2.1 : MongoAsyncSink becomes default</span><span class="qd qd-1">flink-connector-mongodb 3.0 : legacy MongoSink removed</span><span class="qd qd-1">Test plan</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Unit tests: DefaultMongoErrorClassifierTest (all branches),</span><span class="qd qd-1">   SharedMongoClientProviderTest (concurrency / ref-count),</span><span class="qd qd-1">   MongoSinkWriterTest (standard AsyncSink behaviors).</span><span class="qd qd-1">   - Integration tests with testcontainers MongoDB 6.0 / 7.0 covering</span><span class="qd qd-1">   network partition, primary step-down, oversized doc, duplicate</span><span class="qd qd-1">   key, and savepoint migration from the legacy sink.</span><span class="qd qd-1">   - JMH benchmark: 1 KB docs, parallelism 100, 5 min. Target:</span><span class="qd qd-1">   throughput &gt;= 1.2x legacy, p99 &lt;= legacy, TM heap -30% (from the</span><span class="qd qd-1">   shared client).</span><span class="qd qd-1">   - CI matrix expanded to Flink 1.20 LTS / 2.0 / 2.1.</span><span class="qd qd-empty"></span><span class="qd qd-1">Note on FLINK-36228</span><span class="qd qd-empty"></span><span class="qd qd-1">An earlier attempt (FLINK-36228) was resolved as Fixed but later</span><span class="qd qd-1">withdrawn by the reporter -- no AsyncSink migration actually landed.</span><span class="qd qd-1">This FLIP is not a duplicate and is scoped wider (error classifier</span><span class="qd qd-1">and shared client pool). I&#x27;m happy to link the reasoning from that</span><span class="qd qd-1">ticket in a dedicated &quot;history&quot; section of the cwiki page if that</span><span class="qd qd-1">helps reviewers.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Best,</span><span class="qd qd-1">featzhang</span><span class="qd qd-empty"></span></div></details></div>
-    <div class="trans">
-      <div class="trans-label">中文翻译 · Chinese translation</div>
-      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div>
-    </div>
+On Mon, May 11, 2026 at 1:30 PM FeatZhang &lt;featzhang@apache.org&gt; wrote:</div><details class="quote-block"><summary>📎 Quoted · 130 lines · depth 1 <span class="qpreview">Hi devs,</span></summary><div class="quoted"><span class="qd qd-1">Hi devs,</span><span class="qd qd-empty"></span><span class="qd qd-1">I&#x27;d like to open discussion on `Async MongoDB Sink with Error</span><span class="qd qd-1">Classification and Shared Connection Pool`, a proposal to modernize the</span><span class="qd qd-1">sink path of flink-connector-mongodb by bringing it in line with the</span><span class="qd qd-1">AsyncSink standard, adding a structured error-handling model, and</span><span class="qd qd-1">introducing a TM-shared MongoClient pool.</span><span class="qd qd-1">Motivation</span><span class="qd qd-empty"></span><span class="qd qd-1">While reviewing flink-connector-mongodb at HEAD, three recurring issues</span><span class="qd qd-1">showed up in production workloads:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1.</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoSink still extends SinkV2 directly, so it does not benefit</span><span class="qd qd-1">   from AsyncSinkBase&#x27;s in-flight rate limiting, automatic batching,</span><span class="qd qd-1">   or the standard connector metrics that Kinesis / DynamoDB /</span><span class="qd qd-1">   Firehose already expose. prepareCommit also blocks on flush, so</span><span class="qd qd-1">   barrier alignment latency is amplified by MongoDB write latency.</span><span class="qd qd-1">   2.</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoWriter.doBulkWrite catches the top-level MongoException and</span><span class="qd qd-1">   retries a fixed number of times with LINEAR backoff. That causes</span><span class="qd qd-1">   (a) permanent errors such as E11000 / E10334 / invalid-doc to be</span><span class="qd qd-1">   retried uselessly, (b) thundering-herd patterns after transient</span><span class="qd qd-1">   overload, and (c) no dead-letter path for unrecoverable records.</span><span class="qd qd-1">   This overlaps with the recent thread &quot;Optional configuration</span><span class="qd qd-1">   parameters for better performance&quot; and with FLINK-39398 (PR #66</span><span class="qd qd-1">   by Savonitar, which only covers duplicate keys).</span><span class="qd qd-1">   3.</span><span class="qd qd-empty"></span><span class="qd qd-1">   Every MongoWriter / MongoSourceReader / MongoLookupFunction</span><span class="qd qd-1">   instance opens its own MongoClient. A job with sink=4 + lookup=4</span><span class="qd qd-1">   - source=4 against the same cluster opens 3 x 4 x poolSize</span><span class="qd qd-1">      connections per TM, plus the corresponding SDAM and DNS monitor</span><span class="qd qd-1">      threads.</span><span class="qd qd-empty"></span><span class="qd qd-1">Proposal</span><span class="qd qd-empty"></span><span class="qd qd-1">Three coordinated changes, shipped as sub-tasks under a single FLIP:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1.</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoAsyncSink on top of AsyncSinkBase (FLIP-171). Public API:</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoAsyncSink.builder()</span><span class="qd qd-1">   .setConnectionOptions(...)</span><span class="qd qd-1">   .setSerializationSchema(...)</span><span class="qd qd-1">   .setErrorClassifier(...) // see (2)</span><span class="qd qd-1">   .setDeadLetterSink(...) // see (2)</span><span class="qd qd-1">   .setClientProvider(...) // see (3)</span><span class="qd qd-1">   // AsyncSinkBase options inherited as-is:</span><span class="qd qd-1">   // maxBatchSize / maxInFlightRequests / maxBufferedRequests</span><span class="qd qd-1">   // maxBatchSizeInBytes / maxTimeInBufferMS</span><span class="qd qd-1">   .build();</span><span class="qd qd-empty"></span><span class="qd qd-1">   The existing MongoSink / MongoSinkBuilder are kept for one minor</span><span class="qd qd-1">   release as @Deprecated delegates to MongoAsyncSink.</span><span class="qd qd-1">   2.</span><span class="qd qd-empty"></span><span class="qd qd-1">   A pluggable MongoErrorClassifier mapping MongoDB server error</span><span class="qd qd-1">   codes to one of:</span><span class="qd qd-empty"></span><span class="qd qd-1">   RETRY_WITH_BACKOFF | DEAD_LETTER | IGNORE | UPSERT | FAIL_JOB</span><span class="qd qd-empty"></span><span class="qd qd-1">   Default mapping (configurable):</span><span class="qd qd-empty"></span><span class="qd qd-1">   6,7,89,91,189,13435,13436 -&gt; RETRY_WITH_BACKOFF (transient)</span><span class="qd qd-1">   50 -&gt; RETRY_WITH_BACKOFF (timeout)</span><span class="qd qd-1">   11000,11001 (dup key) -&gt; DEAD_LETTER | IGNORE | UPSERT</span><span class="qd qd-1">   10334,2,14,121 (invalid doc) -&gt; DEAD_LETTER</span><span class="qd qd-1">   others -&gt; FAIL_JOB</span><span class="qd qd-empty"></span><span class="qd qd-1">   Retries use exponential backoff with jitter (via AsyncSink&#x27;s</span><span class="qd qd-1">   ResultHandler.retryForEntries). DEAD_LETTER is routed to a</span><span class="qd qd-1">   user-supplied Sink with full metadata.</span><span class="qd qd-1">   3.</span><span class="qd qd-empty"></span><span class="qd qd-1">   A TM-shared MongoClientProvider (ref-counted, keyed by canonical</span><span class="qd qd-1">   URI + credentials digest + TLS + compressors + appName). Sink,</span><span class="qd qd-1">   Source and Lookup all go through:</span><span class="qd qd-empty"></span><span class="qd qd-1">   MongoClient c = provider.acquire(options);</span><span class="qd qd-1">   ...</span><span class="qd qd-1">   provider.release(c); // underlying close() when refCount == 0</span><span class="qd qd-empty"></span><span class="qd qd-1">   Default provider: sharedPerTaskManager(). Legacy behavior is kept</span><span class="qd qd-1">   via perInstance() and a sink.client-provider=PER_INSTANCE option.</span><span class="qd qd-empty"></span><span class="qd qd-1">Backward compatibility</span><span class="qd qd-empty"></span><span class="qd qd-1">   - MongoSink / MongoSinkBuilder: @Deprecated, internally delegating.</span><span class="qd qd-1">   - Legacy ConfigOptions (sink.bulk-flush.max-actions,</span><span class="qd qd-1">   sink.bulk-flush.interval) continue to work; mapped to</span><span class="qd qd-1">   maxBatchSize / maxTimeInBufferMS at runtime with a WARN log.</span><span class="qd qd-1">   - Table DDL parameters: legacy keys kept for one minor version.</span><span class="qd qd-1">   - State schema is not binary compatible; a MongoStateMigrator tool</span><span class="qd qd-1">   is provided to replay unacked entries from an old savepoint into</span><span class="qd qd-1">   the new sink.</span><span class="qd qd-empty"></span><span class="qd qd-1">Deprecation timeline:</span><span class="qd qd-1">flink-connector-mongodb 2.0 : both exist, legacy is default</span><span class="qd qd-1">flink-connector-mongodb 2.1 : MongoAsyncSink becomes default</span><span class="qd qd-1">flink-connector-mongodb 3.0 : legacy MongoSink removed</span><span class="qd qd-1">Test plan</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Unit tests: DefaultMongoErrorClassifierTest (all branches),</span><span class="qd qd-1">   SharedMongoClientProviderTest (concurrency / ref-count),</span><span class="qd qd-1">   MongoSinkWriterTest (standard AsyncSink behaviors).</span><span class="qd qd-1">   - Integration tests with testcontainers MongoDB 6.0 / 7.0 covering</span><span class="qd qd-1">   network partition, primary step-down, oversized doc, duplicate</span><span class="qd qd-1">   key, and savepoint migration from the legacy sink.</span><span class="qd qd-1">   - JMH benchmark: 1 KB docs, parallelism 100, 5 min. Target:</span><span class="qd qd-1">   throughput &gt;= 1.2x legacy, p99 &lt;= legacy, TM heap -30% (from the</span><span class="qd qd-1">   shared client).</span><span class="qd qd-1">   - CI matrix expanded to Flink 1.20 LTS / 2.0 / 2.1.</span><span class="qd qd-empty"></span><span class="qd qd-1">Note on FLINK-36228</span><span class="qd qd-empty"></span><span class="qd qd-1">An earlier attempt (FLINK-36228) was resolved as Fixed but later</span><span class="qd qd-1">withdrawn by the reporter -- no AsyncSink migration actually landed.</span><span class="qd qd-1">This FLIP is not a duplicate and is scoped wider (error classifier</span><span class="qd qd-1">and shared client pool). I&#x27;m happy to link the reasoning from that</span><span class="qd qd-1">ticket in a dedicated &quot;history&quot; section of the cwiki page if that</span><span class="qd qd-1">helps reviewers.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Best,</span><span class="qd qd-1">featzhang</span><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
   </div>
 </div>
+<div class="footer">
+  Generated by <code>dissuss/_build.py</code> from
+  <a href="https://lists.apache.org/thread/l57l980g4d0w5d6b34kdmnwxn7d7zws2" target="_blank" rel="noreferrer">lists.apache.org</a>
+  · Quoted content collapsed by default · Reply relationships shown via "↩ In reply to" links
+</div>
+<script>
+function toggleAll(open){document.querySelectorAll('details.quote-block').forEach(function(d){d.open=open})}
+window.addEventListener('hashchange',function(){
+  var id=location.hash.slice(1);if(!id)return;
+  var el=document.getElementById(id);if(!el)return;
+  el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1200);
+});
+// flash on initial load if URL has hash
+window.addEventListener('DOMContentLoaded',function(){
+  if(location.hash){
+    var el=document.getElementById(location.hash.slice(1));
+    if(el){el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1200)}
+  }
+});
+</script>
 </body>
 </html>
