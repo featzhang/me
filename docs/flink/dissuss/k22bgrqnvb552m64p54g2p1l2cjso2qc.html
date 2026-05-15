@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>[DISCUSS] Node Health Management and Quarantine Framework in Flink</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#fff;--fg:#1f2328;--muted:#57606a;--card:#f6f8fa;--accent:#0969da;--border:#d0d7de;--quote-bg:#fbfbfd;--trans-bg:#fafbff}
+body.dark{--bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--card:#161b22;--accent:#58a6ff;--border:#30363d;--quote-bg:#0b0e13;--trans-bg:#0f1320}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;max-width:none;margin:0;padding:0 32px 64px}
+.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.toolbar h1{font-size:18px;margin:0;flex:1 1 auto;min-width:240px}
+.toolbar .status{color:var(--muted);font-size:12px}
+.toolbar button, .toolbar a.btn{font-size:12px;padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
+.toolbar button:hover, .toolbar a.btn:hover{border-color:var(--accent);color:var(--accent)}
+.email{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px}
+.email>header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.email .from{font-weight:600;color:var(--fg)}
+.email .subj{flex:1 1 100%;font-weight:500;color:var(--fg);font-size:13px}
+.email .mid{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}
+.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.orig{min-width:0}
+.trans{min-width:0;background:var(--trans-bg);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px}
+.trans-label{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.85}
+body.hide-trans .body-grid{grid-template-columns:1fr}
+body.hide-trans .trans{display:none}
+@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:3px solid var(--accent);border-radius:0 0 6px 6px}}
+.body-font{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
+.trans .body-font, .trans-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13px}
+.text-block{white-space:pre-wrap;word-wrap:break-word;margin:6px 0}
+.trans-pending{color:var(--muted);font-style:italic;font-size:12px}
+.trans-quote-placeholder{margin:6px 0;min-height:1.4em;opacity:0}
+details.quote-block{margin:6px 0;border-left:3px solid var(--border);background:var(--quote-bg);padding:4px 8px;border-radius:0 4px 4px 0}
+details.quote-block summary{cursor:pointer;color:var(--muted);font-size:11px;user-select:none;padding:2px 0;list-style:none}
+details.quote-block summary::-webkit-details-marker{display:none}
+details.quote-block summary::before{content:'▶ ';display:inline-block;transition:transform .12s;margin-right:4px}
+details.quote-block[open]>summary::before{transform:rotate(90deg)}
+.quoted{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;margin-top:6px}
+.qd{display:block;white-space:pre-wrap;padding-left:8px;border-left:2px solid;margin:1px 0}
+.qd-1{border-color:#0969da;color:var(--fg)}
+.qd-2{border-color:#1a7f37;color:var(--fg);opacity:.95}
+.qd-3{border-color:#bf8700;color:var(--fg);opacity:.9}
+.qd-4{border-color:#cf222e;color:var(--fg);opacity:.85}
+.qd-5{border-color:#8250df;color:var(--fg);opacity:.8}
+.qd-empty{display:block;min-height:.5em;border-left:none;padding:0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.summary-card{background:linear-gradient(135deg,rgba(9,105,218,.08),rgba(130,80,223,.05));border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px}
+.summary-card h2{font-size:14px;margin:0 0 6px;color:var(--accent)}
+.summary-card p{margin:6px 0;color:var(--muted);font-size:13px}
+.summary-card ul{margin:6px 0 0 18px;color:var(--fg);font-size:13px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>[DISCUSS] Node Health Management and Quarantine Framework in Flink</h1>
+  <span class="status">1 emails · 0 quote blocks · pending (no translation file)</span>
+  <button onclick="document.querySelectorAll('details.quote-block').forEach(d=>d.open=!d.open)">Expand / collapse quotes</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">Show / hide translation</button>
+  <button onclick="document.body.classList.toggle('dark')">Dark / light</button>
+  <a class="btn" href="https://lists.apache.org/thread/k22bgrqnvb552m64p54g2p1l2cjso2qc" target="_blank">↗ Open on lists.apache.org</a>
+  <a class="btn" href="../index.html">← Back to dashboard</a>
+</div>
+<div class="summary-card">
+  <h2>Mailing-list thread archive</h2>
+  <p>Generated by <code>dissuss/_build.py</code> following <code>mail-thread-archiver.prompt.md</code>. Layout: left = English original (with collapsible quotes), right = Chinese translation (per spec §3.5). Use the <em>Show / hide translation</em> button to toggle the right column.</p>
+  <ul>
+    <li><b>Subject</b>: [DISCUSS] Node Health Management and Quarantine Framework in Flink</li>
+    <li><b>Archive</b>: 1 emails, 0 quote blocks</li>
+    <li><b>Source</b>: <a href="https://lists.apache.org/thread/k22bgrqnvb552m64p54g2p1l2cjso2qc" target="_blank">https://lists.apache.org/thread/k22bgrqnvb552m64p54g2p1l2cjso2qc</a></li>
+    <li><b>Translation</b>: pending (no translation file) (drop a <code>k22bgrqnvb552m64p54g2p1l2cjso2qc.translation.json</code> beside this file and rebuild to fill it in)</li>
+  </ul>
+</div>
+<div class="email" id="m1">
+  <header>
+    <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
+    <span class="time">Fri, 27 Feb 2026 16:05:59 +0800</span>
+    <span class="subj">[DISCUSS] Node Health Management and Quarantine Framework in Flink</span>
+    <span class="mid">&lt;k22bgrqnvb552m64p54g2p1l2cjso2qc&gt;</span>
+  </header>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi all,
+
+I would like to start a discussion about introducing a Node Health
+Management
+and Quarantine framework at the ResourceManager level in Flink.
+
+*Background*
+
+Currently, Flink provides a blocklist mechanism (FLIP-224
+&lt;<a href="https://cwiki.apache.org/confluence/display/FLINK/FLIP-224%3A+Blocklist+Mechanism&gt;)," target="_blank" rel="noopener">https://cwiki.apache.org/confluence/display/FLINK/FLIP-224%3A+Blocklist+Mechanism&gt;),</a>
+which was primarily
+designed for speculative execution in batch jobs. While this works well for
+mitigating slow nodes in specific scenarios, it does not provide a
+general-purpose
+node-level health management mechanism.
+
+In production environments, we have observed the following recurring issues:
+
+1. TaskManagers that repeatedly fail due to hardware or JVM-level
+instability.
+2. Nodes experiencing transient performance degradation (e.g., GC stalls,
+IO issues).
+3. Heartbeat-flapping nodes that repeatedly rejoin and disrupt scheduling
+stability.
+4. The lack of a centralized mechanism to temporarily isolate problematic
+nodes
+   from scheduling decisions.
+
+At present, these scenarios are typically handled externally (e.g.,
+Kubernetes
+taints, YARN node controls), or indirectly through repeated task failures.
+However, Flink itself does not provide a runtime-level node quarantine
+capability.
+
+*Problem Statement*
+
+
+There is currently no cluster-level, scheduling-aware mechanism in Flink to:
+
+- Mark a TaskManager as unhealthy.
+- Temporarily exclude it from slot allocation.
+- Automatically restore it after a configurable expiration period.
+- Provide visibility via metrics or REST API.
+
+This makes node-level fault governance reactive rather than proactive.
+
+*Proposal (High-Level)*
+
+
+The goal of this discussion is not to introduce a simple &quot;blacklist&quot;, but
+to
+explore a lightweight and extensible Node Health Management layer
+integrated
+at the ResourceManager level.
+
+Key design principles:
+
+[image: image.png]
+
+1. ResourceManager-level integration (Slot filtering before allocation).
+2. No modification to existing scheduling algorithms.
+3. Fully backward compatible and disabled by default.
+4. Policy-driven and pluggable (manual + automatic triggers).
+5. Minimal surface area for initial phase.
+
+*Possible Architecture Sketch*
+
+
+Introduce a NodeHealthManager component within ResourceManager:
+
+    ResourceManager
+        └── NodeHealthManager
+                └── Slot filtering hook in SlotManager
+
+*Phase 1 (Minimal Scope)*:
+- Manual quarantine via REST API.
+- Slot filtering based on node state.
+- Configurable expiration time.
+- Basic metrics exposure.
+
+Future extensions (not in initial phase):
+- Failure-count-based triggering.
+- Heartbeat-based health scoring.
+- Performance-based triggers.
+- Integration with AdaptiveScheduler.
+
+*Discussion Points*
+
+1. Should node-level health management be part of Flink runtime,
+   or remain entirely external (e.g., K8s/YARN responsibility)?
+2. Is ResourceManager the correct integration point?
+3. Would a pluggable health policy abstraction be acceptable?
+4. Are there existing efforts or related FLIPs that should be aligned with?
+
+*Backward Compatibility*
+
+The feature would be:
+
+- Disabled by default.
+- Transparent to existing deployments.
+- No changes to job semantics.
+
+I would appreciate feedback on whether this direction aligns with the
+community’s design philosophy, and whether drafting a formal FLIP
+would be appropriate.
+
+Looking forward to your thoughts.
+
+Best regards,
+Feat Zhang
+
+ FLIP-XXX: Node Health Management and Quarantine Framework
+&lt;<a href="https://drive.google.com/open?id=1-kRk01swcBaw6saBNJqoCVxD4vWfXiez-FaW_Oknz5c&gt;" target="_blank" rel="noopener">https://drive.google.com/open?id=1-kRk01swcBaw6saBNJqoCVxD4vWfXiez-FaW_Oknz5c&gt;</a></div></div>
+    <div class="trans">
+      <div class="trans-label">中文翻译 · Chinese translation</div>
+      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

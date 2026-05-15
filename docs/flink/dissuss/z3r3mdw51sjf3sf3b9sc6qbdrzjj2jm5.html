@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>[DISCUSS][Table/SQL] Align Built-in Aggregate Function Type Support with ANSI SQL Standard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#fff;--fg:#1f2328;--muted:#57606a;--card:#f6f8fa;--accent:#0969da;--border:#d0d7de;--quote-bg:#fbfbfd;--trans-bg:#fafbff}
+body.dark{--bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--card:#161b22;--accent:#58a6ff;--border:#30363d;--quote-bg:#0b0e13;--trans-bg:#0f1320}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;max-width:none;margin:0;padding:0 32px 64px}
+.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.toolbar h1{font-size:18px;margin:0;flex:1 1 auto;min-width:240px}
+.toolbar .status{color:var(--muted);font-size:12px}
+.toolbar button, .toolbar a.btn{font-size:12px;padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
+.toolbar button:hover, .toolbar a.btn:hover{border-color:var(--accent);color:var(--accent)}
+.email{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px}
+.email>header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.email .from{font-weight:600;color:var(--fg)}
+.email .subj{flex:1 1 100%;font-weight:500;color:var(--fg);font-size:13px}
+.email .mid{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}
+.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.orig{min-width:0}
+.trans{min-width:0;background:var(--trans-bg);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px}
+.trans-label{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.85}
+body.hide-trans .body-grid{grid-template-columns:1fr}
+body.hide-trans .trans{display:none}
+@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:3px solid var(--accent);border-radius:0 0 6px 6px}}
+.body-font{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
+.trans .body-font, .trans-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13px}
+.text-block{white-space:pre-wrap;word-wrap:break-word;margin:6px 0}
+.trans-pending{color:var(--muted);font-style:italic;font-size:12px}
+.trans-quote-placeholder{margin:6px 0;min-height:1.4em;opacity:0}
+details.quote-block{margin:6px 0;border-left:3px solid var(--border);background:var(--quote-bg);padding:4px 8px;border-radius:0 4px 4px 0}
+details.quote-block summary{cursor:pointer;color:var(--muted);font-size:11px;user-select:none;padding:2px 0;list-style:none}
+details.quote-block summary::-webkit-details-marker{display:none}
+details.quote-block summary::before{content:'▶ ';display:inline-block;transition:transform .12s;margin-right:4px}
+details.quote-block[open]>summary::before{transform:rotate(90deg)}
+.quoted{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;margin-top:6px}
+.qd{display:block;white-space:pre-wrap;padding-left:8px;border-left:2px solid;margin:1px 0}
+.qd-1{border-color:#0969da;color:var(--fg)}
+.qd-2{border-color:#1a7f37;color:var(--fg);opacity:.95}
+.qd-3{border-color:#bf8700;color:var(--fg);opacity:.9}
+.qd-4{border-color:#cf222e;color:var(--fg);opacity:.85}
+.qd-5{border-color:#8250df;color:var(--fg);opacity:.8}
+.qd-empty{display:block;min-height:.5em;border-left:none;padding:0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.summary-card{background:linear-gradient(135deg,rgba(9,105,218,.08),rgba(130,80,223,.05));border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px}
+.summary-card h2{font-size:14px;margin:0 0 6px;color:var(--accent)}
+.summary-card p{margin:6px 0;color:var(--muted);font-size:13px}
+.summary-card ul{margin:6px 0 0 18px;color:var(--fg);font-size:13px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>[DISCUSS][Table/SQL] Align Built-in Aggregate Function Type Support with ANSI SQL Standard</h1>
+  <span class="status">1 emails · 0 quote blocks · pending (no translation file)</span>
+  <button onclick="document.querySelectorAll('details.quote-block').forEach(d=>d.open=!d.open)">Expand / collapse quotes</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">Show / hide translation</button>
+  <button onclick="document.body.classList.toggle('dark')">Dark / light</button>
+  <a class="btn" href="https://lists.apache.org/thread/z3r3mdw51sjf3sf3b9sc6qbdrzjj2jm5" target="_blank">↗ Open on lists.apache.org</a>
+  <a class="btn" href="../index.html">← Back to dashboard</a>
+</div>
+<div class="summary-card">
+  <h2>Mailing-list thread archive</h2>
+  <p>Generated by <code>dissuss/_build.py</code> following <code>mail-thread-archiver.prompt.md</code>. Layout: left = English original (with collapsible quotes), right = Chinese translation (per spec §3.5). Use the <em>Show / hide translation</em> button to toggle the right column.</p>
+  <ul>
+    <li><b>Subject</b>: [DISCUSS][Table/SQL] Align Built-in Aggregate Function Type Support with ANSI SQL Standard</li>
+    <li><b>Archive</b>: 1 emails, 0 quote blocks</li>
+    <li><b>Source</b>: <a href="https://lists.apache.org/thread/z3r3mdw51sjf3sf3b9sc6qbdrzjj2jm5" target="_blank">https://lists.apache.org/thread/z3r3mdw51sjf3sf3b9sc6qbdrzjj2jm5</a></li>
+    <li><b>Translation</b>: pending (no translation file) (drop a <code>z3r3mdw51sjf3sf3b9sc6qbdrzjj2jm5.translation.json</code> beside this file and rebuild to fill it in)</li>
+  </ul>
+</div>
+<div class="email" id="m1">
+  <header>
+    <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
+    <span class="time">Wed, 25 Feb 2026 11:39:16 +0800</span>
+    <span class="subj">[DISCUSS][Table/SQL] Align Built-in Aggregate Function Type Support with ANSI SQL Standard</span>
+    <span class="mid">&lt;z3r3mdw51sjf3sf3b9sc6qbdrzjj2jm5&gt;</span>
+  </header>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi all,
+
+I would like to start a discussion about *improving the type support
+consistency of built-in aggregate functions in Flink SQL and aligning them
+more systematically with the ANSI SQL standard*.
+Background
+
+Currently, Flink SQL provides a rich set of built-in aggregate functions
+(e.g., SUM, AVG, MIN, MAX, COUNT, STDDEV, etc.). However, the supported
+input types for these functions are not fully documented in a structured
+way, and in some cases they appear to be inconsistent with ANSI SQL
+expectations or with common database systems.
+
+For example:
+
+   -
+
+   Some aggregate functions do not support certain string types such as CHAR
+   .
+   -
+
+   Numeric aggregates may have limitations or implicit behaviors around
+   DECIMAL precision/scale inference.
+   -
+
+   Support for INTERVAL, BOOLEAN, or time-related types is not always
+   clearly defined or consistent.
+   -
+
+   There is no centralized “type support matrix” describing which aggregate
+   function supports which logical types.
+
+This makes it harder for users to reason about SQL portability and standard
+compliance.
+Proposal
+
+I propose the following steps:
+
+   1.
+
+   Define a built-in aggregate function × data type support matrix.
+   -
+
+      Cover all built-in aggregate functions.
+      -
+
+      Cover major logical types (CHAR/VARCHAR, numeric types, DECIMAL,
+      DATE/TIME/TIMESTAMP, INTERVAL, BOOLEAN, etc.).
+      -
+
+      Explicitly document current support status.
+      2.
+
+   Compare the current behavior against:
+   -
+
+      ANSI SQL standard expectations
+      -
+
+      Widely adopted database behaviors (for reference)
+      3.
+
+   Identify gaps and inconsistencies, and prioritize incremental
+   improvements.
+   -
+
+      For example: enabling MIN/MAX on CHAR, clarifying DECIMAL inference
+      rules for AVG, etc.
+      -
+
+      Ensure backward compatibility and avoid breaking changes.
+      4.
+
+   Add corresponding validation tests and documentation updates to make the
+   behavior explicit and predictable.
+
+Scope
+
+This discussion is limited to:
+
+   -
+
+   Built-in aggregate functions in the Table/SQL planner.
+   -
+
+   Type inference, validation, and return type determination.
+   -
+
+   No changes to runtime semantics beyond enabling or clarifying type
+   support.
+
+Compatibility
+
+All changes should:
+
+   -
+
+   Preserve existing semantics where possible.
+   -
+
+   Avoid breaking existing queries.
+   -
+
+   Be introduced incrementally through small, reviewable improvements.
+
+Questions for the community
+
+   1.
+
+   Do we agree that defining a formal type support matrix for built-in
+   aggregates would improve clarity and standard alignment?
+   2.
+
+   Are there known historical design decisions or constraints around
+   aggregate type support that we should consider?
+   3.
+
+   Would this effort require a FLIP, or can we proceed incrementally under
+   a series of improvement JIRAs?
+
+If there is consensus, I can start by drafting an initial type support
+matrix based on the current implementation and share it for review.
+
+Looking forward to your feedback.
+
+
+ FLIP-XXX: Align Built-in Aggregate Function Type Support with ANSI SQL
+&lt;<a href="https://drive.google.com/open?id=1BWAU0ms6c5E1VkxplD9MwjOPL_V-ptexIu3CvWARa8g&gt;" target="_blank" rel="noopener">https://drive.google.com/open?id=1BWAU0ms6c5E1VkxplD9MwjOPL_V-ptexIu3CvWARa8g&gt;</a>
+
+Best regards,
+Feat Zhang</div></div>
+    <div class="trans">
+      <div class="trans-label">中文翻译 · Chinese translation</div>
+      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

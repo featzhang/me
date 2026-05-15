@@ -1,6 +1,967 @@
 {
   "lastUpdated": "2026-05-11T06:16:57Z",
   "githubUser": "FeatZhang",
+  "stats": {
+    "merged": 0,
+    "_comment": "Set 'merged' to your all-time merged PR count across apache/flink* repos (run: gh search prs --author=FeatZhang --merged --owner=apache --limit=1000 --json url | jq length)"
+  },
+  "dailyContributions": {
+    "_comment": "Optional. Map of YYYY-MM-DD -> count. Counts can include commits/PRs/reviews/comments combined. If omitted, the dashboard will infer activity from PR updatedAt + mailing-list dates. Populate via: gh api graphql -f query='{user(login:\"FeatZhang\"){contributionsCollection{contributionCalendar{weeks{contributionDays{date contributionCount}}}}}}' | jq -r ..."
+  },
+  "unrepliedIssues": [
+    {
+      "_comment": "Open FLINK JIRA issues with 0 comments. Populate via: curl -sG 'https://issues.apache.org/jira/rest/api/2/search' --data-urlencode 'jql=project = FLINK AND resolution = Unresolved AND comments < 1 ORDER BY created DESC' --data-urlencode 'fields=summary,created,priority,components,labels,reporter' --data-urlencode 'maxResults=200' | jq '[.issues[]|{key,summary:.fields.summary,url:(\"https://issues.apache.org/jira/browse/\"+.key),createdAt:.fields.created,priority:.fields.priority.name,components:[.fields.components[].name],labels:.fields.labels,reporter:.fields.reporter.displayName}]'"
+    }
+  ],
+  "crTargets": [
+    {
+      "_comment": "Open Flink PRs (NOT authored by you) in SQL/Table or AI/Model areas, worth reviewing actively. Populate via: gh search prs --owner=apache 'is:pr is:open archived:false -author:FeatZhang draft:false (sql OR table OR planner OR calcite OR ai OR model OR inference OR mcp) in:title' --limit=80 --json number,title,url,repository,author,updatedAt,labels,isDraft,additions,deletions,reviewDecision | jq '[.[]|{number,title,url,repo:.repository.nameWithOwner,author:.author.login,updatedAt,labels:[.labels[].name],isDraft,additions,deletions,reviewState:((.reviewDecision//\"\")|ascii_downcase)}]'. Field topic (sql|ai|other) is auto-inferred from title/module/labels keywords if omitted."
+    },
+    {
+      "number": 28162,
+      "title": "[FLINK-39421][table] Fix metadata filter contract and add coverage",
+      "url": "https://github.com/apache/flink/pull/28162",
+      "repo": "apache/flink",
+      "author": "jnh5y",
+      "updatedAt": "2026-05-15T02:58:30Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 878,
+      "deletions": 57,
+      "reviewState": ""
+    },
+    {
+      "number": 28159,
+      "title": "[FLINK-39677][table] Fix ARRAY_SORT comparator contract violation",
+      "url": "https://github.com/apache/flink/pull/28159",
+      "repo": "apache/flink",
+      "author": "jnh5y",
+      "updatedAt": "2026-05-14T16:16:44Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 107,
+      "deletions": 9,
+      "reviewState": ""
+    },
+    {
+      "number": 28158,
+      "title": "[FLINK-38262][table] add CreateConnectionOperation and converter",
+      "url": "https://github.com/apache/flink/pull/28158",
+      "repo": "apache/flink",
+      "author": "Shekharrajak",
+      "updatedAt": "2026-05-14T15:21:33Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 274,
+      "deletions": 0,
+      "reviewState": ""
+    },
+    {
+      "number": 28155,
+      "title": "[FLINK-39677][table] Fix ARRAY_SORT comparator contract violation",
+      "url": "https://github.com/apache/flink/pull/28155",
+      "repo": "apache/flink",
+      "author": "jnh5y",
+      "updatedAt": "2026-05-15T00:31:13Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 49,
+      "deletions": 2,
+      "reviewState": ""
+    },
+    {
+      "number": 28154,
+      "title": "[FLINK-39671][model-triton] Adopt jackson-bom for unified version management",
+      "url": "https://github.com/apache/flink/pull/28154",
+      "repo": "apache/flink",
+      "author": "spuru9",
+      "updatedAt": "2026-05-15T00:31:13Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 4,
+      "deletions": 8,
+      "reviewState": ""
+    },
+    {
+      "number": 28153,
+      "title": "[FLINK-36665][table] Fix WINDOW_START and WINDOW_END to return input …",
+      "url": "https://github.com/apache/flink/pull/28153",
+      "repo": "apache/flink",
+      "author": "wbittles",
+      "updatedAt": "2026-05-15T00:31:12Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 22,
+      "deletions": 12,
+      "reviewState": ""
+    },
+    {
+      "number": 28152,
+      "title": "[FLINK-35856][table] Upgrade Calcite to 1.37.0",
+      "url": "https://github.com/apache/flink/pull/28152",
+      "repo": "apache/flink",
+      "author": "snuyanzin",
+      "updatedAt": "2026-05-13T17:51:30Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 913,
+      "deletions": 271,
+      "reviewState": ""
+    },
+    {
+      "number": 28151,
+      "title": "[FLINK-22543][runtime-web] Fix Exception History table layout broken by long error label strings",
+      "url": "https://github.com/apache/flink/pull/28151",
+      "repo": "apache/flink",
+      "author": "Izeren",
+      "updatedAt": "2026-05-15T00:31:12Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 19,
+      "deletions": 6,
+      "reviewState": ""
+    },
+    {
+      "number": 28150,
+      "title": "[FLINK-39589][table] Fix incorrect TVF aggregation results with RocksDB",
+      "url": "https://github.com/apache/flink/pull/28150",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-05-13T05:04:09Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 44,
+      "deletions": 4,
+      "reviewState": ""
+    },
+    {
+      "number": 28148,
+      "title": "[FLINK-39669][table-planner] BatchPhysicalCorrelateRule / StreamPhysicalCorrelateRule drop right-side projection when a Calc sits between Correlate and TableFunctionScan",
+      "url": "https://github.com/apache/flink/pull/28148",
+      "repo": "apache/flink",
+      "author": "venkata91",
+      "updatedAt": "2026-05-12T19:36:46Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 221,
+      "deletions": 58,
+      "reviewState": ""
+    },
+    {
+      "number": 28146,
+      "title": "[FLINK-39666][table] Fix edge-case bugs in TO_TIMESTAMP_LTZ precision handling",
+      "url": "https://github.com/apache/flink/pull/28146",
+      "repo": "apache/flink",
+      "author": "raminqaf",
+      "updatedAt": "2026-05-15T00:31:11Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 349,
+      "deletions": 63,
+      "reviewState": "approved"
+    },
+    {
+      "number": 28145,
+      "title": "[FLINK-36781][table] Fix SQL REPL lag when using remote gateways",
+      "url": "https://github.com/apache/flink/pull/28145",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-05-15T00:31:10Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 196,
+      "deletions": 5,
+      "reviewState": ""
+    },
+    {
+      "number": 28144,
+      "title": "[FLINK-36847][table] Fix enum field conversion in Table API to DataStream",
+      "url": "https://github.com/apache/flink/pull/28144",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-05-15T00:31:10Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 195,
+      "deletions": 4,
+      "reviewState": ""
+    },
+    {
+      "number": 28142,
+      "title": "[FLINK-39637][state] Add filter pushdown support for savepoint connector",
+      "url": "https://github.com/apache/flink/pull/28142",
+      "repo": "apache/flink",
+      "author": "soin08",
+      "updatedAt": "2026-05-12T21:13:17Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 1847,
+      "deletions": 41,
+      "reviewState": ""
+    },
+    {
+      "number": 28127,
+      "title": "[FLINK-32940] [SQL] Unnest projection and filter pushdown",
+      "url": "https://github.com/apache/flink/pull/28127",
+      "repo": "apache/flink",
+      "author": "venkata91",
+      "updatedAt": "2026-05-13T01:53:36Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 1557,
+      "deletions": 49,
+      "reviewState": ""
+    },
+    {
+      "number": 28118,
+      "title": "[FLINK-36779][table] Fix metric is incorrect and non-changing during the time in Rank",
+      "url": "https://github.com/apache/flink/pull/28118",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-05-06T08:15:35Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 160,
+      "deletions": 13,
+      "reviewState": ""
+    },
+    {
+      "number": 28115,
+      "title": "[FLINK-39605][Flink-Formats] Add avro variant confluent format",
+      "url": "https://github.com/apache/flink/pull/28115",
+      "repo": "apache/flink",
+      "author": "swapna267",
+      "updatedAt": "2026-05-07T20:18:39Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 1393,
+      "deletions": 0,
+      "reviewState": ""
+    },
+    {
+      "number": 28114,
+      "title": "[FLINK-39604][table] Show state and PTF capabilities in DESCRIBE FUNCTION EXTENDED",
+      "url": "https://github.com/apache/flink/pull/28114",
+      "repo": "apache/flink",
+      "author": "nateab",
+      "updatedAt": "2026-05-15T00:31:08Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 309,
+      "deletions": 6,
+      "reviewState": ""
+    },
+    {
+      "number": 28091,
+      "title": "[FLINK-14621][flink-table-planner] Do not generate watermark assigner operator if no time attribute operations on rowtime",
+      "url": "https://github.com/apache/flink/pull/28091",
+      "repo": "apache/flink",
+      "author": "Dennis-Mircea",
+      "updatedAt": "2026-05-15T00:31:04Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 1901,
+      "deletions": 1905,
+      "reviewState": ""
+    },
+    {
+      "number": 28090,
+      "title": "[FLINK-38579] [table-planner] Fix incorrect UB drop for filter on non-upsert key",
+      "url": "https://github.com/apache/flink/pull/28090",
+      "repo": "apache/flink",
+      "author": "fresh-borzoni",
+      "updatedAt": "2026-05-15T00:31:04Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 402,
+      "deletions": 111,
+      "reviewState": ""
+    },
+    {
+      "number": 28085,
+      "title": "[FLINK-39590] connection catalog manager changes",
+      "url": "https://github.com/apache/flink/pull/28085",
+      "repo": "apache/flink",
+      "author": "lihaosky",
+      "updatedAt": "2026-05-14T22:49:06Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 2056,
+      "deletions": 7,
+      "reviewState": ""
+    },
+    {
+      "number": 28084,
+      "title": "[FLINK-39426] Add flink-connector-migration bridge module for Sink V2…",
+      "url": "https://github.com/apache/flink/pull/28084",
+      "repo": "apache/flink",
+      "author": "negiparas-bridge4",
+      "updatedAt": "2026-05-06T14:19:58Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 409,
+      "deletions": 0,
+      "reviewState": ""
+    },
+    {
+      "number": 28083,
+      "title": "[FLINK-39588][flink-table][connector/datagen] Migrate the DataGen table connector off deprecated source APIs",
+      "url": "https://github.com/apache/flink/pull/28083",
+      "repo": "apache/flink",
+      "author": "Dennis-Mircea",
+      "updatedAt": "2026-05-15T00:31:02Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 656,
+      "deletions": 369,
+      "reviewState": ""
+    },
+    {
+      "number": 28074,
+      "title": "[FLINK-37240][table] RowDataSerializer relaxes NOT NULL to NULL as a state compatibility change.",
+      "url": "https://github.com/apache/flink/pull/28074",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-05-08T11:37:50Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 922,
+      "deletions": 28,
+      "reviewState": ""
+    },
+    {
+      "number": 28066,
+      "title": "[FLINK-39577][table] Reuse Calcite's `COALESCE` to apply simplifications from `RexSimplify`",
+      "url": "https://github.com/apache/flink/pull/28066",
+      "repo": "apache/flink",
+      "author": "snuyanzin",
+      "updatedAt": "2026-05-15T00:30:59Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 690,
+      "deletions": 322,
+      "reviewState": ""
+    },
+    {
+      "number": 28054,
+      "title": "[FLINK-39556][table] Make file path optional in COMPILE PLAN to return plan inline as a result set",
+      "url": "https://github.com/apache/flink/pull/28054",
+      "repo": "apache/flink",
+      "author": "luca-p-castelli",
+      "updatedAt": "2026-05-15T00:30:58Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 194,
+      "deletions": 40,
+      "reviewState": ""
+    },
+    {
+      "number": 28042,
+      "title": "[FLINK-39548][table-planner] Fix projected primary key indices for ch…",
+      "url": "https://github.com/apache/flink/pull/28042",
+      "repo": "apache/flink",
+      "author": "ljw-hit",
+      "updatedAt": "2026-05-15T00:30:55Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 85,
+      "deletions": 6,
+      "reviewState": ""
+    },
+    {
+      "number": 28037,
+      "title": "[FLINK-39531][table-planner] Fix duplicated Python UDF extraction in calc split rule",
+      "url": "https://github.com/apache/flink/pull/28037",
+      "repo": "apache/flink",
+      "author": "auroflow",
+      "updatedAt": "2026-05-06T07:32:19Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 42,
+      "deletions": 19,
+      "reviewState": ""
+    },
+    {
+      "number": 28027,
+      "title": "[FLINK-39539][table] Document changelog processing in AGENTS.md",
+      "url": "https://github.com/apache/flink/pull/28027",
+      "repo": "apache/flink",
+      "author": "gustavodemorais",
+      "updatedAt": "2026-04-27T12:30:29Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 191,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 28008,
+      "title": "[FLINK-39529][table] Add SQL-to-operator lifecycle and restructure planner AGENTS.md ",
+      "url": "https://github.com/apache/flink/pull/28008",
+      "repo": "apache/flink",
+      "author": "gustavodemorais",
+      "updatedAt": "2026-05-05T12:53:16Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 151,
+      "deletions": 29,
+      "reviewState": ""
+    },
+    {
+      "number": 28006,
+      "title": "[FLINK-38075][table] Fix data loss in tumble/hop/cumulate windows with LTZ for non-DST timezones",
+      "url": "https://github.com/apache/flink/pull/28006",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-04-23T11:13:29Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 116,
+      "deletions": 10,
+      "reviewState": ""
+    },
+    {
+      "number": 28005,
+      "title": "[FLINK-37981][table] TableAsyncExecutionController sends Long.MAX watermark downstream in endInput",
+      "url": "https://github.com/apache/flink/pull/28005",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-04-23T11:13:23Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 61,
+      "deletions": 8,
+      "reviewState": ""
+    },
+    {
+      "number": 28004,
+      "title": "[FLINK-38397][table] Fix stale sort trait on BatchPhysicalLocalHashAggregate causing ArrayIndexOutOfBoundsException",
+      "url": "https://github.com/apache/flink/pull/28004",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-04-23T11:06:01Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 33,
+      "deletions": 2,
+      "reviewState": ""
+    },
+    {
+      "number": 27992,
+      "title": "[FLINK-39210][table] Fixed Memory Leak Issue in Flink SQL with Multiple Temporal Joins",
+      "url": "https://github.com/apache/flink/pull/27992",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-04-22T07:05:44Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 76,
+      "deletions": 5,
+      "reviewState": ""
+    },
+    {
+      "number": 27984,
+      "title": "[FLINK-39062][table] Support watermark definition in SQL views via APPLY_WATERMARK PTF",
+      "url": "https://github.com/apache/flink/pull/27984",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-05-10T23:50:10Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 982,
+      "deletions": 24,
+      "reviewState": ""
+    },
+    {
+      "number": 27979,
+      "title": "[FLINK-39498][table] Day time interval with unsupported precision should fail in planning time rather than code gen",
+      "url": "https://github.com/apache/flink/pull/27979",
+      "repo": "apache/flink",
+      "author": "snuyanzin",
+      "updatedAt": "2026-05-15T00:30:52Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 17,
+      "deletions": 2,
+      "reviewState": "approved"
+    },
+    {
+      "number": 27959,
+      "title": "[FLINK-39583][table-planner] Normalize Calcite correl variables for more effective sub-plan digest reuse",
+      "url": "https://github.com/apache/flink/pull/27959",
+      "repo": "apache/flink",
+      "author": "ferenc-csaky",
+      "updatedAt": "2026-05-15T00:30:50Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 613,
+      "deletions": 2,
+      "reviewState": ""
+    },
+    {
+      "number": 27928,
+      "title": "[FLINK-39377][table] Add initial implementation of ProcessTableFunctionTestHarness",
+      "url": "https://github.com/apache/flink/pull/27928",
+      "repo": "apache/flink",
+      "author": "autophagy",
+      "updatedAt": "2026-05-15T00:30:48Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 3071,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27924,
+      "title": "Bump org.apache.kafka:kafka-clients from 2.2.2 to 3.9.2 in /flink-end-to-end-tests/flink-sql-client-test",
+      "url": "https://github.com/apache/flink/pull/27924",
+      "repo": "apache/flink",
+      "author": "app/dependabot",
+      "updatedAt": "2026-04-13T22:37:46Z",
+      "labels": [
+        "dependencies",
+        "java"
+      ],
+      "isDraft": false,
+      "additions": 2,
+      "deletions": 2,
+      "reviewState": ""
+    },
+    {
+      "number": 27898,
+      "title": "[FLINK-39402][table] Fix LIKE quick path ignoring default escape character '\\'",
+      "url": "https://github.com/apache/flink/pull/27898",
+      "repo": "apache/flink",
+      "author": "Au-Miner",
+      "updatedAt": "2026-05-15T00:30:45Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 70,
+      "deletions": 35,
+      "reviewState": ""
+    },
+    {
+      "number": 27839,
+      "title": "[FLINK-39340][table] Add BinaryMultiJoinToJoinRule",
+      "url": "https://github.com/apache/flink/pull/27839",
+      "repo": "apache/flink",
+      "author": "ldadima",
+      "updatedAt": "2026-04-14T04:09:21Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 233,
+      "deletions": 0,
+      "reviewState": ""
+    },
+    {
+      "number": 27827,
+      "title": "[FLINK-39324][table-planner] Allow MultiJoin to respect IS_NOT_DISTICT_FROM when extracting join keys",
+      "url": "https://github.com/apache/flink/pull/27827",
+      "repo": "apache/flink",
+      "author": "SteveStevenpoor",
+      "updatedAt": "2026-05-15T00:30:42Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 527,
+      "deletions": 3,
+      "reviewState": ""
+    },
+    {
+      "number": 27822,
+      "title": "[FLINK-36843][table-planner] Remove deprecated method in table-planner",
+      "url": "https://github.com/apache/flink/pull/27822",
+      "repo": "apache/flink",
+      "author": "balassai",
+      "updatedAt": "2026-05-15T00:30:41Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 0,
+      "deletions": 122,
+      "reviewState": "approved"
+    },
+    {
+      "number": 27815,
+      "title": "[FLINK-39285][table] Ignore project rel node generated by FlinkFilterJoinRule in JoinToMultiJoinRule",
+      "url": "https://github.com/apache/flink/pull/27815",
+      "repo": "apache/flink",
+      "author": "ldadima",
+      "updatedAt": "2026-04-14T04:09:25Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 5841,
+      "deletions": 3,
+      "reviewState": ""
+    },
+    {
+      "number": 27793,
+      "title": "[FLINK-14925][table] Support precision-aware TO_TIMESTAMP with format-based inference",
+      "url": "https://github.com/apache/flink/pull/27793",
+      "repo": "apache/flink",
+      "author": "raminqaf",
+      "updatedAt": "2026-05-15T00:30:39Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 534,
+      "deletions": 123,
+      "reviewState": ""
+    },
+    {
+      "number": 27759,
+      "title": "[FLINK-39225][model] Add retry with default value fallback for Triton inference failures",
+      "url": "https://github.com/apache/flink/pull/27759",
+      "repo": "apache/flink",
+      "author": "wrmxs227",
+      "updatedAt": "2026-04-10T01:57:36Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 519,
+      "deletions": 49,
+      "reviewState": ""
+    },
+    {
+      "number": 27727,
+      "title": "[FLINK-39219] [table] Support lineage extraction for DataStreamscan/sink providers",
+      "url": "https://github.com/apache/flink/pull/27727",
+      "repo": "apache/flink",
+      "author": "jsingh-yelp",
+      "updatedAt": "2026-04-28T00:28:11Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 448,
+      "deletions": 0,
+      "reviewState": "approved"
+    },
+    {
+      "number": 27724,
+      "title": "[FLINK-39059][models] Add unified inference metrics for model functions",
+      "url": "https://github.com/apache/flink/pull/27724",
+      "repo": "apache/flink",
+      "author": "dubin555",
+      "updatedAt": "2026-03-02T14:59:37Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 447,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27717,
+      "title": "Bump com.fasterxml.jackson.core:jackson-core from 2.15.2 to 2.18.6 in /flink-models/flink-model-triton",
+      "url": "https://github.com/apache/flink/pull/27717",
+      "repo": "apache/flink",
+      "author": "app/dependabot",
+      "updatedAt": "2026-04-13T19:15:48Z",
+      "labels": [
+        "dependencies",
+        "java"
+      ],
+      "isDraft": false,
+      "additions": 1,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27650,
+      "title": "[FLINK-39123][table] Updated ValueLiteralExpression Support for Larger Precision TIMESTAMP_LTZ Instances",
+      "url": "https://github.com/apache/flink/pull/27650",
+      "repo": "apache/flink",
+      "author": "rionmonster",
+      "updatedAt": "2026-02-24T13:27:24Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 52,
+      "deletions": 17,
+      "reviewState": ""
+    },
+    {
+      "number": 27611,
+      "title": "[FLINK-39092][SQL] Enhance EXPLAIN plan to display watermark specification",
+      "url": "https://github.com/apache/flink/pull/27611",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-05-03T21:14:34Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 88,
+      "deletions": 26,
+      "reviewState": ""
+    },
+    {
+      "number": 27610,
+      "title": "[FLINK-39090][SQL] Enhance structured condition display of Explain output",
+      "url": "https://github.com/apache/flink/pull/27610",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-03-18T07:54:40Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 292,
+      "deletions": 92,
+      "reviewState": ""
+    },
+    {
+      "number": 27609,
+      "title": "[FLINK-39089][SQL] Enhanced projection field alias display",
+      "url": "https://github.com/apache/flink/pull/27609",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-05-04T19:02:26Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 12716,
+      "deletions": 12596,
+      "reviewState": ""
+    },
+    {
+      "number": 27583,
+      "title": "[FLINK-39069][SQL Client] Support saving and exporting SQL execution history",
+      "url": "https://github.com/apache/flink/pull/27583",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-03-17T16:50:09Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 76,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27577,
+      "title": "[FLINK-39064][Table SQL / API] Add built-in REGEXP_SPLIT function to split string by regular expression pattern",
+      "url": "https://github.com/apache/flink/pull/27577",
+      "repo": "apache/flink",
+      "author": "Myracle",
+      "updatedAt": "2026-05-15T00:30:28Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 294,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27574,
+      "title": "[FLINK-35661][table] Fix MiniBatchGroupAggFunction silently dropping records (backport 2.0)",
+      "url": "https://github.com/apache/flink/pull/27574",
+      "repo": "apache/flink",
+      "author": "nateab",
+      "updatedAt": "2026-05-15T00:30:28Z",
+      "labels": [
+        "community-reviewed",
+        "target:release-2.0"
+      ],
+      "isDraft": false,
+      "additions": 154,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27573,
+      "title": "[FLINK-35661][table] Fix MiniBatchGroupAggFunction silently dropping records (backport 2.1)",
+      "url": "https://github.com/apache/flink/pull/27573",
+      "repo": "apache/flink",
+      "author": "nateab",
+      "updatedAt": "2026-05-15T00:30:27Z",
+      "labels": [
+        "community-reviewed-LGTM",
+        "target:release-2.1"
+      ],
+      "isDraft": false,
+      "additions": 154,
+      "deletions": 1,
+      "reviewState": ""
+    },
+    {
+      "number": 27572,
+      "title": "[FLINK-35661][table] Fix MiniBatchGroupAggFunction silently dropping records (backport 2.2)",
+      "url": "https://github.com/apache/flink/pull/27572",
+      "repo": "apache/flink",
+      "author": "nateab",
+      "updatedAt": "2026-05-15T00:30:25Z",
+      "labels": [
+        "community-reviewed",
+        "target:release-2.2"
+      ],
+      "isDraft": false,
+      "additions": 154,
+      "deletions": 1,
+      "reviewState": "approved"
+    },
+    {
+      "number": 27568,
+      "title": "[FLINK-39612][models] Add HTTP connection pool management for Triton inference",
+      "url": "https://github.com/apache/flink/pull/27568",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-05-15T00:30:24Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 1390,
+      "deletions": 26,
+      "reviewState": ""
+    },
+    {
+      "number": 27562,
+      "title": "[FLINK-39611][model] Add sequence ID auto-increment support for Triton inference",
+      "url": "https://github.com/apache/flink/pull/27562",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-05-09T12:09:01Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 577,
+      "deletions": 11,
+      "reviewState": ""
+    },
+    {
+      "number": 27560,
+      "title": "[FLINK-39059][table] Add unified metrics support to AsyncPredictFunction and PredictFunction",
+      "url": "https://github.com/apache/flink/pull/27560",
+      "repo": "apache/flink",
+      "author": "featzhang",
+      "updatedAt": "2026-05-15T00:30:23Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 914,
+      "deletions": 16,
+      "reviewState": ""
+    },
+    {
+      "number": 27555,
+      "title": "[FLINK-39051][Table SQL/Planner] Support APPROX_COUNT_DISTINCT aggregate function in streaming mode with Window TVF",
+      "url": "https://github.com/apache/flink/pull/27555",
+      "repo": "apache/flink",
+      "author": "Myracle",
+      "updatedAt": "2026-04-09T14:19:35Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 1831,
+      "deletions": 6,
+      "reviewState": ""
+    },
+    {
+      "number": 27554,
+      "title": "[FLINK-39050][Table SQL/Planner] Support configurable handling strategy for null rowtime field in watermark generation",
+      "url": "https://github.com/apache/flink/pull/27554",
+      "repo": "apache/flink",
+      "author": "Myracle",
+      "updatedAt": "2026-05-14T08:55:16Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 355,
+      "deletions": 8,
+      "reviewState": ""
+    },
+    {
+      "number": 27536,
+      "title": "[FLINK-39035][format][avro] Support Avro fast-read and column pruning…",
+      "url": "https://github.com/apache/flink/pull/27536",
+      "repo": "apache/flink",
+      "author": "low-bee",
+      "updatedAt": "2026-05-11T07:34:35Z",
+      "labels": [
+        "stale"
+      ],
+      "isDraft": false,
+      "additions": 691,
+      "deletions": 14,
+      "reviewState": ""
+    },
+    {
+      "number": 27533,
+      "title": "[FLINK-39030][Table SQL/API] Support emit-only-on-update mode for CUMULATE window TVF to reduce unnecessary outputs",
+      "url": "https://github.com/apache/flink/pull/27533",
+      "repo": "apache/flink",
+      "author": "Myracle",
+      "updatedAt": "2026-03-10T13:48:14Z",
+      "labels": [],
+      "isDraft": false,
+      "additions": 526,
+      "deletions": 27,
+      "reviewState": ""
+    },
+    {
+      "number": 27510,
+      "title": "[FLINK-38539][table] Fix integer overflow in AbstractBytesMultiMap wh…",
+      "url": "https://github.com/apache/flink/pull/27510",
+      "repo": "apache/flink",
+      "author": "nateab",
+      "updatedAt": "2026-04-27T19:46:23Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 253,
+      "deletions": 17,
+      "reviewState": ""
+    },
+    {
+      "number": 27499,
+      "title": "[FLINK-39005][format] Users can choose to use the fast reader feature.",
+      "url": "https://github.com/apache/flink/pull/27499",
+      "repo": "apache/flink",
+      "author": "low-bee",
+      "updatedAt": "2026-05-14T16:39:56Z",
+      "labels": [
+        "community-reviewed"
+      ],
+      "isDraft": false,
+      "additions": 163,
+      "deletions": 8,
+      "reviewState": "changes_requested"
+    }
+  ],
   "repositories": [
     {
       "name": "apache/flink",

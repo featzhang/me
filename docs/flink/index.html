@@ -1,925 +1,1035 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flink Todo - FeatZhang</title>
-    <style>
-        :root {
-            --bg: #0d1117;
-            --card-bg: #161b22;
-            --border: #30363d;
-            --text: #c9d1d9;
-            --text-muted: #8b949e;
-            --accent: #58a6ff;
-            --failure: #f85149;
-            --success: #3fb950;
-            --warning: #d29922;
-            --tag-bg: #21262d;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            padding: 20px;
-        }
-
-        .container { max-width: 1200px; margin: 0 auto; }
-
-        header {
-            text-align: center;
-            padding: 40px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 30px;
-        }
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, var(--accent), #a371f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        header p { color: var(--text-muted); font-size: 1.1em; }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-        .stat-card .number { font-size: 2.5em; font-weight: bold; margin-bottom: 8px; }
-        .stat-card.open .number { color: var(--accent); }
-        .stat-card.action .number { color: var(--failure); }
-        .stat-card.success .number { color: var(--success); }
-        .stat-card .label { color: var(--text-muted); font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
-
-        .section { margin-bottom: 40px; }
-        .section h2 {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .section h2 .badge {
-            background: var(--failure);
-            color: white;
-            font-size: 0.6em;
-            padding: 4px 10px;
-            border-radius: 20px;
-        }
-
-        .pr-grid { display: grid; gap: 16px; }
-
-        .pr-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            transition: all 0.2s;
-        }
-        .pr-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1); }
-
-        .pr-card .status-icon {
-            font-size: 1.5em;
-            flex-shrink: 0;
-            margin-top: 4px;
-        }
-        .pr-card.failure .status-icon { color: var(--failure); }
-        .pr-card.changes .status-icon { color: var(--warning); }
-
-        .pr-content { flex: 1; min-width: 0; }
-
-        .pr-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-        .pr-number {
-            font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
-            font-size: 0.85em;
-            background: var(--tag-bg);
-            padding: 2px 8px;
-            border-radius: 6px;
-            color: var(--accent);
-        }
-        .pr-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            flex: 1;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .pr-title a { color: var(--text); text-decoration: none; }
-        .pr-title a:hover { color: var(--accent); text-decoration: underline; }
-
-        .pr-tags { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .tag {
-            font-size: 0.75em;
-            padding: 3px 10px;
-            border-radius: 12px;
-            background: var(--tag-bg);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-        }
-        .tag.draft { color: var(--warning); border-color: var(--warning); }
-        .tag.failure { color: var(--failure); border-color: var(--failure); }
-        .tag.changes { color: var(--warning); border-color: var(--warning); }
-        .tag.discuss { color: var(--accent); border-color: var(--accent); background: rgba(88, 166, 255, 0.1); }
-
-        .pr-meta { color: var(--text-muted); font-size: 0.85em; margin-top: 8px; }
-        .pr-meta span { margin-right: 16px; }
-        .pr-meta .repo { color: var(--accent); }
-
-        .repo-section { margin-bottom: 30px; }
-        .repo-section h3 {
-            font-size: 1.2em;
-            margin-bottom: 16px;
-            color: var(--accent);
-            padding-left: 12px;
-            border-left: 3px solid var(--accent);
-        }
-
-        .discuss-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            transition: all 0.2s;
-        }
-        .discuss-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1); }
-        .discuss-icon {
-            font-size: 1.5em;
-            flex-shrink: 0;
-            margin-top: 4px;
-        }
-        .discuss-content { flex: 1; min-width: 0; }
-        .discuss-subject {
-            font-size: 1.1em;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .discuss-subject a { color: var(--text); text-decoration: none; }
-        .discuss-subject a:hover { color: var(--accent); text-decoration: underline; }
-        .discuss-meta { color: var(--text-muted); font-size: 0.85em; }
-        .discuss-meta span { margin-right: 16px; }
-        .discuss-meta .replies { color: var(--accent); }
-        .discuss-grid { display: grid; gap: 16px; }
-
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-            padding: 16px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .filter-label {
-            color: var(--text-muted);
-            font-size: 0.85em;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .filter-btn {
-            padding: 5px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--tag-bg);
-            color: var(--text-muted);
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .filter-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .filter-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-        .filter-btn.active:hover {
-            background: #4a9eff;
-        }
-        .filter-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--border);
-            margin: 0 4px;
-        }
-        .search-group {
-            display: flex;
-            align-items: center;
-            flex: 1;
-            min-width: 180px;
-            max-width: 320px;
-        }
-        .search-input {
-            width: 100%;
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 0.85em;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .search-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
-        }
-        .search-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 0;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.9em;
-        }
-        footer a { color: var(--accent); text-decoration: none; }
-
-        .loading, .error { text-align: center; padding: 40px 20px; color: var(--text-muted); }
-        .error { color: var(--failure); }
-
-        .ci-line {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 6px 0 8px;
-            font-size: 0.8em;
-        }
-        .ci-status {
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.85em;
-        }
-        .ci-status.ci-success {
-            color: #2e7d32;
-            background: rgba(46, 125, 50, 0.1);
-        }
-        .ci-status.ci-failure {
-            color: #c62828;
-            background: rgba(198, 40, 40, 0.1);
-        }
-        .ci-status.ci-pending {
-            color: #f9a825;
-            background: rgba(249, 168, 37, 0.1);
-        }
-        .discuss-count {
-            color: var(--accent);
-            font-weight: 500;
-            font-size: 0.85em;
-        }
-        .pr-card.need-follow {
-            border-left: 4px solid #ff5252;
-        }
-        .tag.discuss {
-            background: rgba(77, 171, 247, 0.2);
-            color: #4dabf7;
-            font-weight: 600;
-        }
-        .tag.changes {
-            background: rgba(255, 183, 77, 0.2);
-            color: #ffb74d;
-            font-weight: 600;
-        }
-
-        .tab-nav {
-            display: flex;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px 12px 0 0;
-            overflow: hidden;
-            margin-bottom: -1px;
-            position: relative;
-            z-index: 999;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 18px 24px;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            text-align: center;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        .tab-btn:hover {
-            color: var(--accent);
-            background: rgba(88, 166, 255, 0.075);
-        }
-        .tab-btn.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-            background: linear-gradient(to bottom, rgba(88, 166, 255, 0.175), transparent);
-        }
-        .tab-indicator {
-            font-size: 0.875em;
-            background: var(--failure);
-            color: white;
-            border-radius: 5555px;
-            padding: 2px 8px;
-            margin-left: 8px;
-            vertical-align: middle;
-            font-weight: 700;
-        }
-        .tab-btn:nth-child(1) .tab-indicator { background: #388e3c; } /* PR总数绿色 */
-        .tab-btn:nth-child(2) .tab-indicator { background: var(--failure); } /* Action红色 */
-        .tab-btn:nth-child(3) .tab-indicator { background: #2196f3; } /* 讨论蓝色 */
-        
-        .tab-pane {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0 0 12px 12px;
-            padding: 36px 32px;
-            box-shadow: 0 10px 38px rgba(0, 0, 0, 0.428);
-        }
-        @media (max-width: 540px) {
-            .tab-btn { padding: 13px 16px; font-size: 0.89em; }
-            .tab-pane { padding: 21px 18px; }
-        }
-        @media (max-width: 375px) {
-            .tab-btn { padding: 9px 8px; font-size: 0.78em; }
-            .tab-pane { padding: 14px 8px; }
-        }
-
-        @media (max-width: 768px) {
-            body { padding: 12px; }
-            header { padding: 24px 0; margin-bottom: 20px; }
-            header h1 { font-size: 1.5em; }
-            header p { font-size: 0.95em; }
-            .stat-card { padding: 16px; }
-            .stat-card .number { font-size: 2em; }
-            .stat-card .label { font-size: 0.75em; }
-            .section h2 { font-size: 1.2em; margin-bottom: 12px; }
-            .repo-section h3 { font-size: 1em; padding-left: 8px; }
-            .pr-card { padding: 14px; flex-direction: column; gap: 10px; }
-            .pr-card .status-icon { font-size: 1.3em; margin-top: 0; }
-            .pr-header { flex-direction: column; align-items: flex-start; gap: 6px; }
-            .pr-number { font-size: 0.8em; }
-            .pr-title { font-size: 1em; white-space: normal; line-height: 1.5; }
-            .tag { font-size: 0.7em; padding: 2px 8px; }
-            .pr-meta { font-size: 0.75em; display: flex; flex-wrap: wrap; gap: 4px; }
-            .pr-meta span { margin-right: 8px; }
-            .filter-bar { padding: 12px; gap: 12px; }
-            .filter-divider { display: none; }
-            .search-group { min-width: 100%; max-width: none; margin-top: 4px; }
-            .search-input { font-size: 0.9em; padding: 8px 12px; }
-        }
-
-        @media (max-width: 480px) {
-            body { padding: 6px; }
-            header { padding: 10px 0 12px 0; margin-bottom: 10px; }
-            header h1 { font-size: 1.1em; }
-            header p { font-size: 0.75em; margin-top: 4px; }
-            .stats { display: flex; gap: 6px; margin-bottom: 12px; }
-            .stat-card { flex: 1; padding: 6px 4px; border-radius: 6px; }
-            .stat-card .number { font-size: 1.3em; margin-bottom: 2px; }
-            .stat-card .label { font-size: 0.55em; letter-spacing: 0.3px; }
-            .section { margin-bottom: 16px; }
-            .section h2 { font-size: 0.9em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-            .section h2 .badge { font-size: 0.6em; padding: 2px 6px; }
-            .repo-section { margin-bottom: 12px; }
-            .repo-section h3 { font-size: 0.8em; padding-left: 6px; margin-bottom: 6px; }
-            .pr-card { padding: 8px 10px; border-radius: 6px; gap: 0; flex-direction: row; align-items: center; }
-            .pr-card .status-icon { display: none; }
-            .pr-content { flex: 1; min-width: 0; }
-            .pr-header { flex-direction: row; align-items: center; gap: 0; margin-bottom: 0; flex-wrap: nowrap; }
-            .pr-number { font-size: 0.68em; padding: 0 4px; border-radius: 3px; flex-shrink: 0; margin-right: 6px; }
-            .pr-title { font-size: 0.82em; font-weight: 500; line-height: 1.4; white-space: normal; word-break: break-word; }
-            .pr-tags { display: inline; margin-left: 4px; gap: 2px; }
-            .tag { font-size: 0.55em; padding: 1px 4px; border-radius: 8px; letter-spacing: 0.2px; }
-            .pr-meta { font-size: 0.62em; margin-top: 3px; line-height: 1.3; }
-            .pr-meta span { margin-right: 8px; }
-            footer { padding: 12px 0; font-size: 0.65em; margin-top: 8px; }
-            .filter-bar { padding: 8px; gap: 8px; }
-            .filter-label { display: none; }
-            .filter-btn { padding: 4px 10px; font-size: 0.7em; }
-            .search-group { min-width: 100%; max-width: none; margin-top: 2px; }
-            .search-input { font-size: 0.75em; padding: 6px 10px; }
-        }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .pr-card { padding: 18px; }
-            .pr-title { font-size: 1em; }
-        }
-        @media (min-width: 1440px) {
-            .container { max-width: 1400px; }
-            .stats { grid-template-columns: repeat(3, 1fr); }
-        }
-        html, body { overflow-x: hidden; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Striving to advance real-time computing — @FeatZhang</title>
+<style>
+:root{--bg:#0d1117;--bg-soft:#0b1220;--card-bg:#161b22;--card-bg-hover:#1c232c;--border:#30363d;--border-soft:#21262d;--text:#c9d1d9;--text-muted:#8b949e;--text-dim:#6e7681;--accent:#58a6ff;--accent-2:#a371f7;--failure:#f85149;--success:#3fb950;--warning:#d29922;--tag-bg:#21262d;--gradient:linear-gradient(135deg,#58a6ff 0%,#a371f7 100%);--gradient-soft:linear-gradient(135deg,rgba(88,166,255,.15) 0%,rgba(163,113,247,.15) 100%)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif;background:var(--bg);background-image:radial-gradient(at 20% 0%,rgba(88,166,255,.06) 0,transparent 50%),radial-gradient(at 80% 0%,rgba(163,113,247,.06) 0,transparent 50%);color:var(--text);line-height:1.6;padding:20px;min-height:100vh}
+.container{max-width:1280px;margin:0 auto}
+header{padding:36px 32px;margin-bottom:28px;background:var(--card-bg);border:1px solid var(--border);border-radius:16px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:var(--gradient-soft);opacity:.6;pointer-events:none}
+.dashboard-header-inner{position:relative;z-index:1}
+.dashboard-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+.dashboard-header-title h1{font-size:2.2em;font-weight:700;margin-bottom:6px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dashboard-header-owner{font-size:.45em;font-weight:600;-webkit-text-fill-color:var(--text-muted);color:var(--text-muted);background:rgba(88,166,255,.08);border:1px solid var(--border-soft);padding:3px 10px;border-radius:999px;vertical-align:middle;margin-left:8px;letter-spacing:.02em}
+.dashboard-header-subtitle{font-size:.95em;font-weight:500;color:var(--text-muted);letter-spacing:.04em;margin-top:2px;font-style:italic}
+.dashboard-header-title p{color:var(--text-muted);font-size:1em}
+.dashboard-header-title p a{color:var(--accent);text-decoration:none}
+.dashboard-header-title p a:hover{text-decoration:underline}
+.committer-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);border-radius:999px;font-size:.85em;color:var(--accent);font-weight:600}
+.committer-badge .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(88,166,255,.6)}70%{box-shadow:0 0 0 10px rgba(88,166,255,0)}100%{box-shadow:0 0 0 0 rgba(88,166,255,0)}}
+.progress-section{background:rgba(13,17,23,.4);border:1px solid var(--border-soft);border-radius:12px;padding:18px 20px}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.progress-title{font-size:.95em;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.progress-percent{font-size:1.2em;font-weight:700;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.progress-bar{height:8px;background:var(--border-soft);border-radius:999px;overflow:hidden;margin-bottom:12px}
+.progress-fill{height:100%;background:var(--gradient);border-radius:999px;transition:width 1s ease}
+.progress-milestones{display:flex;justify-content:space-between;gap:8px;font-size:.78em;color:var(--text-dim);flex-wrap:wrap}
+.milestone{text-align:center;flex:1;min-width:70px;padding:4px 0}
+.milestone.reached{color:var(--success)}
+.milestone.current{color:var(--accent);font-weight:600}
+.milestone-icon{font-size:1.1em;display:block;margin-bottom:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.kpi-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
+.kpi-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.kpi-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.kpi-card.merged::before{background:var(--success)}
+.kpi-card.action::before{background:var(--failure)}
+.kpi-card.discuss::before{background:var(--accent-2)}
+.kpi-card.flip::before{background:var(--warning)}
+.kpi-label{display:flex;justify-content:space-between;align-items:center;color:var(--text-muted);font-size:.8em;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.kpi-value{font-size:2em;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:4px}
+.kpi-card.merged .kpi-value{color:var(--success)}
+.kpi-card.open .kpi-value{color:var(--accent)}
+.kpi-card.action .kpi-value{color:var(--failure)}
+.kpi-card.discuss .kpi-value{color:var(--accent-2)}
+.kpi-card.flip .kpi-value{color:var(--warning)}
+.kpi-sub{font-size:.78em;color:var(--text-dim)}
+.tab-nav{display:flex;background:var(--card-bg);border:1px solid var(--border);border-radius:12px 12px 0 0;overflow-x:auto;margin-bottom:-1px;position:relative;z-index:5}
+.tab-btn{flex:1 0 auto;padding:16px 20px;border:none;background:transparent;color:var(--text-muted);font-size:.95em;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;text-align:center;transition:all .2s ease;white-space:nowrap;min-width:120px}
+.tab-btn:hover{color:var(--accent);background:rgba(88,166,255,.06)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:linear-gradient(to bottom,rgba(88,166,255,.12),transparent)}
+.tab-indicator{font-size:.75em;background:var(--text-dim);color:white;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle;font-weight:700;min-width:22px;display:inline-block}
+.tab-btn.active .tab-indicator{background:var(--accent)}
+.tab-btn[data-tab="action"] .tab-indicator,.tab-btn[data-tab="action"].active .tab-indicator{background:var(--failure)}
+.tab-btn[data-tab="overview"] .tab-indicator,.tab-btn[data-tab="overview"].active .tab-indicator{background:var(--success)}
+.tab-btn[data-tab="discuss"] .tab-indicator,.tab-btn[data-tab="discuss"].active .tab-indicator{background:var(--accent-2)}
+.tab-btn[data-tab="roadmap"] .tab-indicator,.tab-btn[data-tab="roadmap"].active .tab-indicator{background:var(--warning)}
+.tab-btn[data-tab="help"] .tab-indicator,.tab-btn[data-tab="help"].active .tab-indicator{background:var(--warning)}
+.tab-pane{background:var(--card-bg);border:1px solid var(--border);border-radius:0 0 12px 12px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.section{margin-bottom:32px}
+.section:last-child{margin-bottom:0}
+.section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.section-title{font-size:1.2em;font-weight:600;display:flex;align-items:center;gap:10px}
+.section-badge{font-size:.6em;background:var(--tag-bg);color:var(--text-muted);padding:3px 10px;border-radius:999px;border:1px solid var(--border);font-weight:700;letter-spacing:.5px}
+.section-badge.danger{background:rgba(248,81,73,.15);color:var(--failure);border-color:rgba(248,81,73,.4)}
+.section-badge.info{background:rgba(88,166,255,.15);color:var(--accent);border-color:rgba(88,166,255,.4)}
+.section-desc{color:var(--text-muted);font-size:.85em;margin-bottom:14px}
+.repo-section{margin-bottom:22px}
+.repo-section:last-child{margin-bottom:0}
+.repo-section h3{font-size:1em;margin-bottom:12px;color:var(--accent);padding-left:12px;border-left:3px solid var(--accent);display:flex;align-items:center;gap:8px}
+.repo-section h3 .count{font-size:.78em;color:var(--text-muted);background:var(--tag-bg);padding:2px 8px;border-radius:999px;font-weight:500}
+.pr-grid{display:grid;gap:12px}
+.pr-card{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:all .2s}
+.pr-card:hover{border-color:var(--accent);background:var(--card-bg-hover);box-shadow:0 4px 16px rgba(88,166,255,.08)}
+.pr-card.need-follow{border-left:3px solid var(--failure)}
+.pr-card.success{border-left:3px solid var(--success)}
+.pr-card.changes{border-left:3px solid var(--warning)}
+.pr-card.failure{border-left:3px solid var(--failure)}
+.pr-card .status-icon{font-size:1.4em;flex-shrink:0;margin-top:2px}
+.pr-content{flex:1;min-width:0}
+.pr-header{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.pr-number{font-family:'SF Mono',Monaco,monospace;font-size:.8em;background:var(--tag-bg);padding:2px 8px;border-radius:6px;color:var(--accent);font-weight:600}
+.pr-title{font-size:1em;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-title a{color:var(--text);text-decoration:none}
+.pr-title a:hover{color:var(--accent);text-decoration:underline}
+.pr-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.tag{font-size:.72em;padding:2px 8px;border-radius:999px;background:var(--tag-bg);color:var(--text-muted);border:1px solid var(--border);font-weight:500}
+.tag.draft{color:var(--warning);border-color:rgba(210,153,34,.4);background:rgba(210,153,34,.1)}
+.tag.failure{color:var(--failure);border-color:rgba(248,81,73,.4);background:rgba(248,81,73,.1)}
+.tag.changes{color:var(--warning);border-color:rgba(210,153,34,.4);background:rgba(210,153,34,.1)}
+.tag.success{color:var(--success);border-color:rgba(63,185,80,.4);background:rgba(63,185,80,.1)}
+.tag.discuss{color:var(--accent);border-color:rgba(88,166,255,.4);background:rgba(88,166,255,.1)}
+.tag.module{color:var(--accent-2);border-color:rgba(163,113,247,.4);background:rgba(163,113,247,.1)}
+.tag.stale{color:#ff8c69;border-color:rgba(255,140,105,.4);background:rgba(255,140,105,.1)}
+.pr-meta{color:var(--text-dim);font-size:.78em;margin-top:8px;display:flex;flex-wrap:wrap;gap:14px}
+.pr-meta .repo{color:var(--accent)}
+.overview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:28px}
+.overview-card{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:20px}
+.overview-card h4{font-size:.95em;font-weight:600;margin-bottom:14px;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.overview-card h4 .total{color:var(--text-muted);font-size:.85em;font-weight:500}
+.module-list{display:flex;flex-direction:column;gap:10px}
+.module-row{display:flex;align-items:center;gap:10px;font-size:.85em}
+.module-name{min-width:100px;max-width:130px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.module-bar-wrap{flex:1;height:8px;background:var(--tag-bg);border-radius:999px;overflow:hidden;min-width:60px}
+.module-bar{height:100%;background:var(--gradient);border-radius:999px}
+.module-count{color:var(--text-muted);font-size:.85em;min-width:28px;text-align:right;font-variant-numeric:tabular-nums}
+.activity-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+.activity-cell{aspect-ratio:1;background:var(--tag-bg);border-radius:3px}
+.activity-cell.l1{background:rgba(63,185,80,.25)}
+.activity-cell.l2{background:rgba(63,185,80,.5)}
+.activity-cell.l3{background:rgba(63,185,80,.75)}
+.activity-cell.l4{background:var(--success)}
+.activity-legend{display:flex;justify-content:flex-end;align-items:center;gap:4px;margin-top:10px;font-size:.72em;color:var(--text-dim)}
+.legend-cell{width:10px;height:10px;border-radius:2px}
+.daily-section{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:24px}
+.daily-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.daily-title{font-size:1.05em;font-weight:600;display:flex;align-items:center;gap:10px;color:var(--text)}
+.daily-stats{display:flex;gap:18px;flex-wrap:wrap}
+.daily-stat{text-align:right}
+.daily-stat-val{font-size:1.3em;font-weight:700;color:var(--success);line-height:1.1;font-variant-numeric:tabular-nums}
+.daily-stat-val.muted{color:var(--text-muted)}
+.daily-stat-val.accent{color:var(--accent)}
+.daily-stat-val.warn{color:var(--warning)}
+.daily-stat-label{font-size:.7em;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-top:2px}
+.daily-graph-wrap{overflow-x:auto;padding-bottom:6px}
+.daily-graph{display:flex;gap:3px;min-width:max-content}
+.daily-graph .day-labels{display:grid;grid-template-rows:repeat(7,1fr);gap:3px;font-size:.65em;color:var(--text-dim);padding-right:6px;line-height:11px}
+.daily-graph .day-labels span{height:11px}
+.daily-graph .week-col{display:grid;grid-template-rows:repeat(7,1fr);gap:3px}
+.day-cell{width:11px;height:11px;border-radius:2px;background:var(--border-soft);cursor:default;transition:transform .1s}
+.day-cell:hover{outline:1px solid var(--accent);transform:scale(1.4);z-index:1;position:relative}
+.day-cell.l1{background:rgba(63,185,80,.25)}
+.day-cell.l2{background:rgba(63,185,80,.5)}
+.day-cell.l3{background:rgba(63,185,80,.75)}
+.day-cell.l4{background:var(--success)}
+.day-cell.today{outline:1px solid var(--accent)}
+.daily-month-row{display:flex;gap:3px;padding-left:30px;font-size:.7em;color:var(--text-dim);margin-bottom:6px;min-width:max-content}
+.daily-month-label{display:inline-block}
+.daily-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.72em;color:var(--text-dim);flex-wrap:wrap;gap:8px}
+.daily-legend{display:flex;align-items:center;gap:4px}
+.daily-source{font-size:.72em;color:var(--text-dim);font-style:italic}
+.timeline-list{display:flex;flex-direction:column;gap:10px}
+.timeline-item{display:flex;gap:10px;font-size:.85em;padding:8px 10px;border-radius:8px;transition:background .15s}
+.timeline-item:hover{background:var(--card-bg-hover)}
+.timeline-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:7px}
+.timeline-dot.success{background:var(--success)}
+.timeline-dot.fail{background:var(--failure)}
+.timeline-dot.warn{background:var(--warning)}
+.timeline-content{flex:1;min-width:0}
+.timeline-content a{color:var(--text);text-decoration:none}
+.timeline-content a:hover{color:var(--accent)}
+.timeline-date{color:var(--text-dim);font-size:.78em}
+.jira-cluster{display:flex;flex-wrap:wrap;gap:6px}
+.jira-chip{font-family:'SF Mono',Monaco,monospace;font-size:.75em;padding:4px 10px;border-radius:6px;background:var(--tag-bg);color:var(--accent);border:1px solid var(--border);text-decoration:none;transition:all .15s}
+.jira-chip:hover{background:rgba(88,166,255,.15);border-color:var(--accent);transform:translateY(-1px)}
+.jira-chip .pr-count{margin-left:6px;color:var(--text-muted);font-size:.9em}
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;padding:14px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;align-items:center}
+.filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.filter-label{color:var(--text-muted);font-size:.8em;font-weight:600;white-space:nowrap}
+.filter-btn{padding:5px 12px;border-radius:999px;border:1px solid var(--border);background:var(--tag-bg);color:var(--text-muted);font-size:.8em;cursor:pointer;transition:all .15s;user-select:none}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+.filter-divider{width:1px;height:20px;background:var(--border);margin:0 4px}
+.search-group{display:flex;align-items:center;flex:1;min-width:180px;max-width:320px;margin-left:auto}
+.search-input{width:100%;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85em;outline:none;transition:border-color .2s,box-shadow .2s}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(88,166,255,.2)}
+.discuss-grid{display:grid;gap:12px}
+.discuss-card{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;gap:14px;transition:all .2s}
+.discuss-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(88,166,255,.08)}
+.discuss-icon{font-size:1.4em;flex-shrink:0;margin-top:2px}
+.discuss-content{flex:1;min-width:0}
+.discuss-subject{font-size:1em;font-weight:600;margin-bottom:6px}
+.discuss-subject a{color:var(--text);text-decoration:none}
+.discuss-subject a:hover{color:var(--accent);text-decoration:underline}
+.discuss-meta{color:var(--text-dim);font-size:.78em;display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.discuss-meta .replies{color:var(--accent)}
+.discuss-report-btn{margin-left:auto;font-size:.95em;padding:3px 10px;border:1px solid var(--accent);border-radius:14px;color:var(--accent);text-decoration:none;background:rgba(88,166,255,.06);transition:all .15s;white-space:nowrap}
+.discuss-report-btn:hover{background:var(--accent);color:#fff;text-decoration:none}
+.roadmap-intro{background:var(--bg-soft);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 18px;border-radius:8px;font-size:.9em;color:var(--text-muted);margin-bottom:24px;line-height:1.7}
+.roadmap-intro b{color:var(--text)}
+.checklist{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s}
+.check-item:hover{border-color:var(--accent);background:var(--card-bg-hover)}
+.check-item.done{border-color:rgba(63,185,80,.4)}
+.check-item.done .check-text{text-decoration:line-through;color:var(--text-muted)}
+.check-box{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .15s;color:white;font-size:14px;font-weight:bold}
+.check-item.done .check-box{background:var(--success);border-color:var(--success)}
+.check-content{flex:1;min-width:0}
+.check-text{font-weight:600;font-size:.95em;color:var(--text);margin-bottom:4px}
+.check-desc{font-size:.82em;color:var(--text-muted);line-height:1.5}
+.check-progress{font-size:.75em;color:var(--text-dim);margin-top:6px}
+.check-progress strong{color:var(--accent)}
+.check-progress.met strong{color:var(--success)}
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.resource-card{display:block;padding:16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);transition:all .2s}
+.resource-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.resource-card .res-title{font-weight:600;font-size:.95em;margin-bottom:4px}
+.resource-card .res-desc{color:var(--text-muted);font-size:.8em;line-height:1.5}
+footer{text-align:center;padding:28px 0 12px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.85em;margin-top:28px}
+footer a{color:var(--accent);text-decoration:none}
+.help-howto{background:var(--bg-soft);border:1px solid var(--border);border-left:3px solid var(--warning);padding:14px 18px;border-radius:8px;font-size:.85em;color:var(--text-muted);margin-bottom:18px;line-height:1.7}
+.help-howto code{background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:.9em;font-family:'SF Mono',Monaco,monospace}
+.help-howto pre{background:var(--bg);padding:10px 12px;border-radius:6px;color:var(--text);font-size:.78em;font-family:'SF Mono',Monaco,monospace;overflow-x:auto;margin-top:8px;border:1px solid var(--border-soft);line-height:1.5}
+.issue-grid{display:grid;gap:10px}
+.issue-card{background:var(--bg-soft);border:1px solid var(--border);border-left:3px solid var(--warning);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:all .2s}
+.issue-card:hover{border-color:var(--accent);background:var(--card-bg-hover);box-shadow:0 4px 16px rgba(88,166,255,.08)}
+.issue-card.aged{border-left-color:var(--failure)}
+.issue-card.cr-sql{border-left-color:var(--accent)}
+.issue-card.cr-ai{border-left-color:var(--accent-2)}
+.issue-icon{font-size:1.2em;flex-shrink:0;margin-top:2px}
+.issue-content{flex:1;min-width:0}
+.issue-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.issue-key{font-family:'SF Mono',Monaco,monospace;font-size:.78em;background:var(--tag-bg);padding:2px 8px;border-radius:6px;color:var(--accent);font-weight:600;text-decoration:none;flex-shrink:0}
+.issue-key:hover{background:rgba(88,166,255,.2)}
+.issue-summary{font-size:.95em;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+.issue-summary a{color:var(--text);text-decoration:none}
+.issue-summary a:hover{color:var(--accent);text-decoration:underline}
+.issue-meta{color:var(--text-dim);font-size:.78em;display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.issue-meta .age{font-weight:600}
+.issue-meta .age.fresh{color:var(--success)}
+.issue-meta .age.medium{color:var(--warning)}
+.issue-meta .age.aged{color:var(--failure)}
+.tag.priority-blocker,.tag.priority-critical{color:var(--failure);border-color:rgba(248,81,73,.4);background:rgba(248,81,73,.1)}
+.tag.priority-major{color:var(--warning);border-color:rgba(210,153,34,.4);background:rgba(210,153,34,.1)}
+.tag.priority-minor,.tag.priority-trivial{color:var(--text-muted)}
+.tag.starter{color:var(--success);border-color:rgba(63,185,80,.4);background:rgba(63,185,80,.1);font-weight:600}
+.help-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:stretch;margin-bottom:20px}
+.help-cta-card{flex:1;min-width:220px;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.help-cta-card .lbl{font-size:.72em;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:4px}
+.help-cta-card .val{font-size:1.4em;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.help-cta-card .val.warn{color:var(--warning)}
+.help-cta-card .val.danger{color:var(--failure)}
+.help-cta-card .sub{font-size:.78em;color:var(--text-muted);margin-top:2px}
+.loading,.error,.empty{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.error{color:var(--failure)}
+.empty-icon{font-size:2.5em;margin-bottom:10px}
+@media (max-width:768px){body{padding:12px}header{padding:22px 18px;margin-bottom:18px;border-radius:12px}.dashboard-header-title h1{font-size:1.5em}.tab-pane{padding:18px 16px}.tab-btn{padding:12px 14px;font-size:.85em;min-width:100px}.pr-card{padding:12px 14px}.pr-title{font-size:.9em;white-space:normal;line-height:1.45}.filter-divider{display:none}.search-group{min-width:100%;max-width:none;margin-left:0}.activity-grid{grid-template-columns:repeat(8,1fr)}}
+@media (max-width:480px){body{padding:8px}.dashboard-header-title h1{font-size:1.25em}.kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}.kpi-card{padding:10px 12px}.kpi-value{font-size:1.3em}.tab-btn{padding:10px 12px;font-size:.78em;min-width:88px}.tab-pane{padding:14px 12px}.pr-card{padding:10px 12px;flex-direction:column;gap:6px}.pr-card .status-icon{display:none}.pr-title{font-size:.85em;white-space:normal}.tag{font-size:.65em;padding:1px 6px}}
+@media (min-width:1440px){.container{max-width:1400px}}
+html,body{overflow-x:hidden}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Apache Flink Todo</h1>
-            <p>Open PRs &amp; mailing-list discussions for <a href="https://github.com/featzhang" target="_blank">@FeatZhang</a></p>
-        </header>
+<div class="container">
+<div id="loading" class="loading">Loading contribution data...</div>
+<div id="error" class="error" style="display:none;"></div>
+<div id="content" style="display:none;"></div>
+</div>
+<script>
+let globalData=null;
+let activeFilter={type:'overview',prStatus:'all',followUp:'all',searchKeyword:'',helpSort:'oldest',helpPriority:'all',helpStarter:'all',crTopic:'all',crSort:'updated'};
+const ROADMAP_KEY='flink-committer-roadmap-v1';
+let roadmapState=JSON.parse(localStorage.getItem(ROADMAP_KEY)||'{}');
+const UI_CONFIG={status:{'ci-failure':{icon:'❌',tagClass:'failure',tagLabel:'CI FAILURE',cardClass:'failure'},'changes-requested':{icon:'🔄',tagClass:'changes',tagLabel:'CHANGES REQUESTED',cardClass:'changes'},'success':{icon:'✅',tagClass:'success',tagLabel:'CI SUCCESS',cardClass:'success'}},draftTag:{tagClass:'draft',tagLabel:'DRAFT'}};
+const COMMITTER_CHECKLIST=[
+{id:'first-pr',text:'Land your first merged PR',desc:'Get any non-trivial PR merged into apache/flink or a sub-project. Foundation milestone.',target:s=>s.merged>=1,fmt:s=>`${s.merged} merged`},
+{id:'pr-10',text:'Reach 10+ merged PRs',desc:'Build a steady contribution track record across multiple modules.',target:s=>s.merged>=10,fmt:s=>`${s.merged}/10`},
+{id:'pr-30',text:'Reach 30+ merged PRs',desc:'Many committers reach this volume before nomination — quality + breadth matter.',target:s=>s.merged>=30,fmt:s=>`${s.merged}/30`},
+{id:'flip',text:'Drive a FLIP discussion',desc:'Author or co-author a Flink Improvement Proposal on dev@flink.apache.org.',target:s=>s.flipsAuthored>=1,fmt:s=>`${s.flipsAuthored} FLIP-tagged threads`},
+{id:'review',text:"Review others' PRs (give back)",desc:'Active code review shows committer-level judgement. Aim for 20+ meaningful reviews. (self-tracked)',target:()=>false},
+{id:'multi-module',text:'Contribute to 3+ distinct modules',desc:'Demonstrate breadth: e.g. table, runtime, connectors, web-ui, docs.',target:s=>s.distinctModules>=3,fmt:s=>`${s.distinctModules}/3 modules`},
+{id:'mailing-list',text:'Active on dev@flink.apache.org',desc:'Participate in 10+ DISCUSS / VOTE threads to build community visibility.',target:s=>s.mlDiscussions>=10,fmt:s=>`${s.mlDiscussions}/10 threads`},
+{id:'help-newcomer',text:'Mentor new contributors',desc:'Help triage user@ questions, answer JIRA tickets, review starter PRs. (self-tracked)',target:()=>false},
+{id:'triage-unreplied',text:'Triage unreplied JIRA issues',desc:'Pick up issues nobody has commented on yet — ask clarifying questions, reproduce, or label. Highest community-impact ratio.',target:()=>false},
+{id:'release',text:'Help with a release',desc:'Test RCs, vote on releases, or assist with release verification on dev@. (self-tracked)',target:()=>false}
+];
+const RESOURCES=[
+{title:'📖 Contributing Guide',url:'https://flink.apache.org/how-to-contribute/overview/',desc:'Official Flink contribution overview.'},
+{title:'🧭 Code Style & Quality',url:'https://flink.apache.org/how-to-contribute/code-style-and-quality-preamble/',desc:'Critical reading before opening PRs.'},
+{title:'💡 FLIP Process',url:'https://cwiki.apache.org/confluence/display/FLINK/Flink+Improvement+Proposals',desc:'How to propose major changes.'},
+{title:'🐛 Open JIRA Tickets',url:'https://issues.apache.org/jira/projects/FLINK/issues?filter=allopenissues',desc:'Find your next contribution.'},
+{title:'🆘 Unreplied FLINK issues',url:'https://issues.apache.org/jira/issues/?jql=project%20%3D%20FLINK%20AND%20resolution%20%3D%20Unresolved%20AND%20comments%20%3C%201%20ORDER%20BY%20created%20DESC',desc:'Open issues nobody has commented on yet — biggest impact.'},
+{title:'✉️ dev@ Mailing List',url:'https://lists.apache.org/list.html?dev@flink.apache.org',desc:'Where decisions happen.'},
+{title:'🎓 Become a Committer',url:'https://community.apache.org/contributors/',desc:'ASF general committer guidance.'}
+];
 
-        <div id="loading" class="loading">Loading todo data...</div>
-        <div id="error" class="error" style="display: none;"></div>
-        <div id="content" style="display: none;">
-            <div id="filter-bar" class="filter-bar"></div>
-        </div>
-    </div>
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+function escapeAttr(s){return escapeHtml(s)}
+function truncate(s,n){s=s||'';return s.length>n?s.slice(0,n-1)+'…':s}
+function needFollowUp(pr){return pr.status==='ci-failure'||pr.status==='changes-requested'}
 
-    <script>
-        // 全局数据缓存和筛选状态
-        let globalData = null;
-        let activeFilter = {
-            type: 'follow',
-            prStatus: 'all',
-            followUp: 'all',
-            searchKeyword: ''
+async function loadPRData(){
+    const loading=document.getElementById('loading'),error=document.getElementById('error'),content=document.getElementById('content');
+    try{
+        const r=await fetch('todo-data.json?t='+Date.now());
+        if(!r.ok)throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        globalData=await r.json();
+        applyFilter();
+        loading.style.display='none';
+        content.style.display='block';
+    }catch(e){loading.style.display='none';error.style.display='block';error.textContent='Failed to load contribution data: '+e.message}
+}
+
+function computeStats(data){
+    const allPRs=(data.repositories||[]).flatMap(r=>r.pullRequests.map(p=>({...p,repo:r.name})));
+    const total=allPRs.length;
+    const success=allPRs.filter(p=>p.status==='success').length;
+    const ciFail=allPRs.filter(p=>p.status==='ci-failure').length;
+    const changes=allPRs.filter(p=>p.status==='changes-requested').length;
+    const drafts=allPRs.filter(p=>p.isDraft).length;
+    const actionRequired=allPRs.filter(needFollowUp).length;
+    const totalDiscussions=allPRs.reduce((s,p)=>s+(p.discussions||0),0);
+    const distinctIssues=new Set(allPRs.map(p=>p.issueId).filter(Boolean));
+    const distinctModules=new Set(allPRs.map(p=>(p.module||'').toLowerCase()).filter(Boolean));
+    const mlDiscussions=(data.discussions||[]).length;
+    const flipsAuthored=(data.discussions||[]).filter(d=>/FLIP/i.test(d.subject)).length;
+    const merged=(data.stats&&typeof data.stats.merged==='number')?data.stats.merged:0;
+    const moduleMap={};
+    allPRs.forEach(p=>{const m=(p.module||'unknown').toLowerCase();moduleMap[m]=(moduleMap[m]||0)+1});
+    const moduleDist=Object.entries(moduleMap).map(([n,c])=>({name:n,count:c})).sort((a,b)=>b.count-a.count);
+    const jiraMap={};
+    allPRs.forEach(p=>{if(!p.issueId)return;if(!jiraMap[p.issueId])jiraMap[p.issueId]={id:p.issueId,prs:[]};jiraMap[p.issueId].prs.push(p)});
+    const jiraClusters=Object.values(jiraMap).sort((a,b)=>b.prs.length-a.prs.length);
+    const months={};
+    allPRs.forEach(p=>{const d=p.updatedAt||p.createdAt;if(!d)return;const k=d.substring(0,7);months[k]=(months[k]||0)+1});
+    const monthList=Object.entries(months).sort(([a],[b])=>a.localeCompare(b)).slice(-12).map(([m,c])=>({month:m,count:c}));
+    const recent=[...allPRs].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,8);
+    const refDate=new Date(data.lastUpdated||Date.now());
+    const stalePRs=allPRs.filter(p=>{if(!p.updatedAt)return false;const u=new Date(p.updatedAt);if(isNaN(u))return false;return((refDate-u)/(1000*60*60*24))>30&&p.status==='success'});
+    const daily=computeDailyContributions(data,allPRs);
+    const unrepliedIssues=computeUnrepliedIssues(data);
+    const crTargets=computeCrTargets(data);
+    return{allPRs,total,success,ciFail,changes,drafts,actionRequired,totalDiscussions,distinctIssues:distinctIssues.size,distinctModules:distinctModules.size,mlDiscussions,flipsAuthored,merged,moduleDist,jiraClusters,monthList,recent,stalePRs,daily,unrepliedIssues,crTargets};
+}
+
+function computeCrTargets(data){
+    const list=Array.isArray(data.crTargets)?data.crTargets:[];
+    const refDate=new Date(data.lastUpdated||Date.now());
+    const enriched=list.filter(it=>it&&(it.number||it.url)).map(it=>{
+        const url=it.url||'';
+        const m=url.match(/github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/);
+        const repo=it.repo||(m?m[1]:'apache/flink');
+        const number=it.number||(m?+m[2]:0);
+        const updatedAt=it.updatedAt||it.updated||null;
+        let ageDays=null;
+        if(updatedAt){const u=new Date(updatedAt);if(!isNaN(u))ageDays=Math.floor((refDate-u)/(1000*60*60*24))}
+        const subj=`${it.title||''} ${(it.module||'')} ${(it.labels||[]).join(' ')}`.toLowerCase();
+        let topic=(it.topic||'').toLowerCase();
+        if(!topic){
+            if(/\b(ai|model|llm|ml-|inference|embedding|vector|mcp)\b/.test(subj))topic='ai';
+            else if(/\b(sql|table|planner|catalog|calcite|hive|view|udf|connector|format)\b/.test(subj))topic='sql';
+            else topic='other';
+        }
+        return{
+            number,url,repo,
+            title:it.title||'(no title)',
+            author:it.author||it.user||'',
+            module:it.module||'',
+            labels:Array.isArray(it.labels)?it.labels:[],
+            topic,
+            updatedAt,ageDays,
+            reviewState:(it.reviewState||'').toLowerCase(),
+            ciStatus:(it.ciStatus||'').toLowerCase(),
+            isDraft:!!it.isDraft,
+            comments:typeof it.comments==='number'?it.comments:0,
+            additions:it.additions||0,deletions:it.deletions||0
         };
+    });
+    const total=enriched.length;
+    const sql=enriched.filter(c=>c.topic==='sql').length;
+    const ai=enriched.filter(c=>c.topic==='ai').length;
+    const fresh=enriched.filter(c=>c.ageDays!=null&&c.ageDays<=7).length;
+    return{list:enriched,total,sql,ai,fresh};
+}
 
-        function needFollowUp(pr) {
-            return pr.status === 'ci-failure' || pr.status === 'changes-requested';
+function computeUnrepliedIssues(data){
+    const list=Array.isArray(data.unrepliedIssues)?data.unrepliedIssues:[];
+    const refDate=new Date(data.lastUpdated||Date.now());
+    const enriched=list.filter(it=>it&&(it.key||it.id)).map(it=>{
+        const key=it.key||it.id;
+        const url=it.url||`https://issues.apache.org/jira/browse/${key}`;
+        const created=it.createdAt||it.created||null;
+        let ageDays=null;
+        if(created){const c=new Date(created);if(!isNaN(c))ageDays=Math.floor((refDate-c)/(1000*60*60*24))}
+        const components=Array.isArray(it.components)?it.components:(it.component?[it.component]:[]);
+        const priority=(it.priority||'').toLowerCase();
+        const labels=Array.isArray(it.labels)?it.labels:[];
+        const isStarter=labels.some(l=>/^(starter|good[-_ ]?first[-_ ]?issue|newbie|beginner)$/i.test(l));
+        return{key,url,summary:it.summary||it.title||'(no summary)',created,ageDays,components,priority,labels,isStarter,reporter:it.reporter||null};
+    });
+    const total=enriched.length;
+    const aged=enriched.filter(i=>i.ageDays!=null&&i.ageDays>365).length;
+    const starter=enriched.filter(i=>i.isStarter).length;
+    // distinct components
+    const compSet=new Set();
+    enriched.forEach(i=>i.components.forEach(c=>compSet.add(c)));
+    return{list:enriched,total,aged,starter,components:[...compSet].sort()};
+}
+
+function computeDailyContributions(data,allPRs){
+    // Source priority: explicit data.dailyContributions map (if it has any YYYY-MM-DD key) > PR updatedAt counts
+    const raw=data.dailyContributions;
+    let explicit=false;
+    const counts={};
+    if(raw&&typeof raw==='object'){
+        Object.entries(raw).forEach(([d,v])=>{if(/^\d{4}-\d{2}-\d{2}$/.test(d)){counts[d]=(counts[d]||0)+(Number(v)||0);explicit=true}});
+    }
+    if(!explicit){
+        allPRs.forEach(p=>{const d=(p.updatedAt||'').substring(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(d))counts[d]=(counts[d]||0)+1});
+        // Add mailing-list discussion dates as contributions too
+        (data.discussions||[]).forEach(disc=>{const d=(disc.date||'').substring(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(d))counts[d]=(counts[d]||0)+1});
+    }
+    // Build last 53-week grid ending on lastUpdated (Sat) or today
+    const ref=new Date(data.lastUpdated||Date.now());
+    const today=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate());
+    const todayStr=fmtDate(today);
+    // End on the Saturday of the current week (col 52); start 52 weeks earlier on Sunday
+    const endDow=today.getDay(); // 0=Sun..6=Sat
+    const end=new Date(today);end.setDate(end.getDate()+(6-endDow)); // last Saturday of grid (>= today)
+    const start=new Date(end);start.setDate(start.getDate()-(53*7-1));
+    const weeks=[];
+    let cursor=new Date(start);
+    let totalYear=0,activeDays=0,maxDay=0;
+    const monthMarkers=[];
+    let lastMonth=-1;
+    for(let w=0;w<53;w++){
+        const col={days:[]};
+        for(let dow=0;dow<7;dow++){
+            const ds=fmtDate(cursor);
+            const c=counts[ds]||0;
+            const future=cursor>today;
+            col.days.push({date:ds,count:c,future,isToday:ds===todayStr});
+            if(!future){totalYear+=c;if(c>0)activeDays++;if(c>maxDay)maxDay=c}
+            cursor.setDate(cursor.getDate()+1);
         }
+        // first day of this column for month label
+        const firstDay=new Date(cursor);firstDay.setDate(firstDay.getDate()-7);
+        const m=firstDay.getMonth();
+        if(m!==lastMonth&&firstDay.getDate()<=7){monthMarkers.push({col:w,label:firstDay.toLocaleString('en',{month:'short'})});lastMonth=m}
+        weeks.push(col);
+    }
+    // streaks (only past + today)
+    const sortedDates=[];
+    let it=new Date(start);
+    while(it<=today){sortedDates.push(fmtDate(it));it.setDate(it.getDate()+1)}
+    let curStreak=0,maxStreak=0,running=0;
+    sortedDates.forEach(ds=>{if(counts[ds]){running++;if(running>maxStreak)maxStreak=running}else running=0});
+    // current streak counts back from today (today optional)
+    let back=new Date(today);
+    while(true){const ds=fmtDate(back);if(counts[ds]){curStreak++;back.setDate(back.getDate()-1)}else{
+        // allow today to be 0 without breaking the streak — start counting from yesterday
+        if(curStreak===0&&fmtDate(back)===todayStr){back.setDate(back.getDate()-1);continue}
+        break;
+    }}
+    const todayCount=counts[todayStr]||0;
+    // last 7 days
+    let last7=0;for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);last7+=counts[fmtDate(d)]||0}
+    return{weeks,monthMarkers,totalYear,activeDays,maxDay,curStreak,maxStreak,todayCount,last7,source:explicit?'explicit':'inferred',start:fmtDate(start),end:fmtDate(end)};
+}
 
-        // 展示配置：所有展示信息由页面控制，而非数据文件
-        const UI_CONFIG = {
-            status: {
-                'ci-failure': { icon: '❌', tagClass: 'failure', tagLabel: 'CI FAILURE', cardClass: 'failure' },
-                'changes-requested': { icon: '🔄', tagClass: 'changes', tagLabel: 'CHANGES REQUESTED', cardClass: 'changes' },
-                'success': { icon: '✅', tagClass: 'success', tagLabel: 'CI SUCCESS', cardClass: 'success' }
-            },
-            draftTag: { tagClass: 'draft', tagLabel: 'DRAFT' }
-        };
+function fmtDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${da}`}
 
-        async function loadPRData() {
-            const loading = document.getElementById('loading');
-            const error = document.getElementById('error');
-            const content = document.getElementById('content');
+function renderDashboardHeader(s){
+    const mergedScore=Math.min(s.merged/30,1)*60;
+    const flipScore=Math.min(s.flipsAuthored/1,1)*15;
+    const moduleScore=Math.min(s.distinctModules/3,1)*10;
+    const discussScore=Math.min(s.mlDiscussions/10,1)*15;
+    const progress=Math.round(mergedScore+flipScore+moduleScore+discussScore);
+    let stage='Newcomer';
+    if(progress>=80)stage='Committer-ready 🎯';
+    else if(progress>=60)stage='Senior contributor';
+    else if(progress>=35)stage='Active contributor';
+    else if(progress>=15)stage='Regular contributor';
+    document.getElementById('committer-stage')&&(document.getElementById('committer-stage').textContent=stage);
+    const milestones=[{l:'First PR',t:5,i:'🌱'},{l:'10 merged',t:20,i:'🌿'},{l:'FLIP',t:35,i:'📜'},{l:'30 merged',t:60,i:'🌳'},{l:'Committer',t:90,i:'🏆'}];
+    return`
+<header class="dashboard-header">
+<div class="dashboard-header-inner">
+<div class="dashboard-header-top">
+<div class="dashboard-header-title"><h1>🚀 Striving to advance real-time computing <span class="dashboard-header-owner">@${escapeHtml(globalData.githubUser||'me')}</span></h1><div class="dashboard-header-subtitle">Personal Apache Flink contribution dashboard</div></div>
+<div class="committer-badge"><span class="pulse"></span><span>${stage}</span></div>
+</div>
+<div class="progress-section">
+<div class="progress-header">
+<div class="progress-title">📈 My Contributions</div>
+<div class="progress-percent">${progress}%</div>
+</div>
+<div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+<div class="progress-milestones">
+${milestones.map(m=>{const reached=progress>=m.t;const current=!reached&&progress>=(m.t-25);return`<div class="milestone ${reached?'reached':''} ${current?'current':''}"><span class="milestone-icon">${m.i}</span>${m.l}<br><small>${m.t}%</small></div>`}).join('')}
+</div>
+</div>
+</div>
+</header>`;
+}
 
-            try {
-                const response = await fetch('todo-data.json?t=' + Date.now());
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                const data = await response.json();
-                renderPage(data);
-                loading.style.display = 'none';
-                content.style.display = 'block';
-            } catch (e) {
-                loading.style.display = 'none';
-                error.style.display = 'block';
-                error.textContent = 'Failed to load todo data: ' + e.message;
-            }
+function applyFilter(){
+    const content=document.getElementById('content');
+    const stats=computeStats(globalData);
+    let html=renderKpi(stats)+renderTabNav(stats);
+    let pane='';
+    switch(activeFilter.type){
+        case'overview':pane=renderOverview(stats);break;
+        case'action':pane=renderAction(stats);break;
+        case'pr':pane=renderAllPRs();break;
+        case'discuss':pane=renderDiscuss();break;
+        case'cr':pane=renderCrTargets(stats);break;
+        case'roadmap':pane=renderRoadmap(stats);break;
+    }
+    html+=`<div class="tab-pane">${pane}</div>`;
+    html+=renderFooter(globalData.lastUpdated);
+    content.innerHTML=html;
+    bindEvents();
+    const si=document.getElementById('pr-search');
+    if(si&&activeFilter.searchKeyword){si.focus();si.setSelectionRange(si.value.length,si.value.length)}
+}
+
+function renderKpi(s){
+    const cards=[
+        {cls:'merged',icon:'🎯',label:'My Merged',value:s.merged,sub:s.merged?'all-time merged':'set <code>stats.merged</code> in JSON'},
+        {cls:'open',icon:'📬',label:'My Open PRs',value:s.total,sub:`${s.success} ✅ · ${s.actionRequired} ⚠️`},
+        {cls:'action',icon:'🔔',label:'Action Needed',value:s.actionRequired,sub:`${s.ciFail} CI fail · ${s.changes} changes (mine)`},
+        {cls:'flip',icon:'📜',label:'My FLIP Threads',value:s.flipsAuthored,sub:`${s.mlDiscussions} ML threads I joined`},
+        {cls:'discuss',icon:'💬',label:'PR Discussions',value:s.totalDiscussions,sub:`${s.distinctIssues} JIRA issues · ${s.distinctModules} modules (mine)`},
+        {cls:'open',icon:'🔍',label:'Review Targets',value:s.crTargets.total,sub:s.crTargets.total?`community-wide · ${s.crTargets.sql} 🧮 SQL · ${s.crTargets.ai} 🤖 AI`:'add <code>crTargets</code> to JSON'}
+    ];
+    return`<div class="kpi-grid">${cards.map(c=>`
+<div class="kpi-card ${c.cls}">
+<div class="kpi-label"><span>${c.label}</span><span>${c.icon}</span></div>
+<div class="kpi-value">${c.value}</div>
+<div class="kpi-sub">${c.sub}</div>
+</div>`).join('')}</div>`;
+}
+
+function renderTabNav(s){
+    const tabs=[
+        {key:'overview',label:'📊 Overview',count:s.total},
+        {key:'action',label:'🔔 My Action Items',count:s.actionRequired},
+        {key:'pr',label:'🔧 My PRs',count:s.total},
+        {key:'cr',label:'🔍 Review Targets',count:s.crTargets.total},
+        {key:'discuss',label:'💬 My Discussions',count:s.mlDiscussions},
+        {key:'roadmap',label:'📈 My Contributions',count:''}
+    ];
+    return`<div class="tab-nav" id="tab-nav">${tabs.map(t=>`
+<button class="tab-btn ${activeFilter.type===t.key?'active':''}" data-tab="${t.key}">${t.label}${t.count!==''?`<span class="tab-indicator">${t.count}</span>`:''}</button>`).join('')}</div>`;
+}
+
+function renderOverview(s){
+    return`
+${renderDashboardHeader(s)}
+<div class="section">
+<div class="section-header"><div class="section-title">📈 My contributions at a glance</div></div>
+<div class="overview-grid">
+${renderModuleCard(s)}
+${renderRecentCard(s)}
+</div>
+</div>
+${s.jiraClusters.length>0?renderJiraSection(s):''}
+${s.stalePRs.length>0?renderStaleSection(s.stalePRs):''}`;
+}
+
+function renderDailyGraph(d){
+    if(!d)return'';
+    const max=Math.max(1,d.maxDay);
+    const dayLabels=['','Mon','','Wed','','Fri',''];
+    const monthRow=(()=>{
+        const cells=[];
+        for(let w=0;w<d.weeks.length;w++){
+            const m=d.monthMarkers.find(x=>x.col===w);
+            cells.push(`<span class="daily-month-label" style="width:11px;">${m?m.label:''}</span>`);
         }
+        return cells.join('');
+    })();
+    const cols=d.weeks.map(col=>`<div class="week-col">${col.days.map(day=>{
+        if(day.future)return`<div class="day-cell" style="visibility:hidden"></div>`;
+        const r=day.count/max;
+        let l='';
+        if(day.count>0){if(r>.75)l='l4';else if(r>.5)l='l3';else if(r>.25)l='l2';else l='l1'}
+        const t=day.isToday?'today':'';
+        const noun=day.count===1?'contribution':'contributions';
+        return`<div class="day-cell ${l} ${t}" title="${day.date}: ${day.count} ${noun}"></div>`;
+    }).join('')}</div>`).join('');
+    const sourceNote=d.source==='explicit'?'data: <code>dailyContributions</code>':'inferred from PR updates + ML threads — set <code>dailyContributions</code> in JSON for accurate per-day counts (commits, reviews, comments)';
+    return`<div class="daily-section">
+<div class="daily-header">
+<div>
+<div class="daily-title">📅 Daily Contributions <span class="section-badge info" style="font-size:.55em;">LAST 12 MONTHS</span></div>
+<div class="daily-source" style="margin-top:6px;">${sourceNote}</div>
+</div>
+<div class="daily-stats">
+<div class="daily-stat"><div class="daily-stat-val accent">${d.todayCount}</div><div class="daily-stat-label">Today</div></div>
+<div class="daily-stat"><div class="daily-stat-val">${d.last7}</div><div class="daily-stat-label">Last 7 days</div></div>
+<div class="daily-stat"><div class="daily-stat-val ${d.curStreak>0?'':'muted'}">${d.curStreak}🔥</div><div class="daily-stat-label">Current streak</div></div>
+<div class="daily-stat"><div class="daily-stat-val warn">${d.maxStreak}</div><div class="daily-stat-label">Longest streak</div></div>
+<div class="daily-stat"><div class="daily-stat-val muted">${d.activeDays}</div><div class="daily-stat-label">Active days</div></div>
+<div class="daily-stat"><div class="daily-stat-val">${d.totalYear}</div><div class="daily-stat-label">Year total</div></div>
+</div>
+</div>
+<div class="daily-graph-wrap">
+<div class="daily-month-row">${monthRow}</div>
+<div class="daily-graph">
+<div class="day-labels">${dayLabels.map(l=>`<span>${l}</span>`).join('')}</div>
+${cols}
+</div>
+</div>
+<div class="daily-footer">
+<div>Each cell = one day. Hover to see counts.</div>
+<div class="daily-legend"><span>Less</span>
+<span class="day-cell" style="background:var(--border-soft)"></span>
+<span class="day-cell l1"></span><span class="day-cell l2"></span><span class="day-cell l3"></span><span class="day-cell l4"></span>
+<span>More</span></div>
+</div>
+</div>`;
+}
 
-        function renderPage(data) {
-            globalData = data;
-            applyFilter();
-        }
+function renderModuleCard(s){
+    const top=s.moduleDist.slice(0,8);
+    const max=top[0]?.count||1;
+    return`<div class="overview-card">
+<h4>🧩 My module distribution <span class="total">${s.distinctModules} modules</span></h4>
+<div class="module-list">
+${top.length===0?'<div class="empty" style="padding:20px 0;">No data</div>':top.map(m=>`
+<div class="module-row">
+<div class="module-name" title="${escapeAttr(m.name)}">${escapeHtml(m.name)}</div>
+<div class="module-bar-wrap"><div class="module-bar" style="width:${(m.count/max*100)}%"></div></div>
+<div class="module-count">${m.count}</div>
+</div>`).join('')}
+</div>
+</div>`;
+}
 
-        function applyFilter() {
-            const content = document.getElementById('content');
-            content.innerHTML = '';
+function renderActivityCard(s){
+    const months=s.monthList,max=Math.max(1,...months.map(m=>m.count));
+    const cells=months.map(m=>{const r=m.count/max;let l='';if(m.count>0){if(r>.75)l='l4';else if(r>.5)l='l3';else if(r>.25)l='l2';else l='l1'}return`<div class="activity-cell ${l}" title="${m.month}: ${m.count} PR updates"></div>`}).join('');
+    return`<div class="overview-card">
+<h4>🔥 Recent activity (12 mo) <span class="total">${months.reduce((a,m)=>a+m.count,0)} updates</span></h4>
+<div class="activity-grid">${cells||'<div class="empty">No data</div>'}</div>
+<div class="activity-legend"><span>Less</span><span class="legend-cell" style="background:var(--tag-bg);"></span><span class="legend-cell l1"></span><span class="legend-cell l2"></span><span class="legend-cell l3"></span><span class="legend-cell l4"></span><span>More</span></div>
+</div>`;
+}
 
-            // 计算Tab的数量徽章
-            const totalPRs = globalData.repositories.reduce((sum, r) => sum + r.pullRequests.length, 0);
-            const needFollowCount = globalData.repositories.reduce((sum, r) =>
-                sum + r.pullRequests.filter(pr => needFollowUp(pr)).length, 0);
-            const discussCount = (globalData.discussions || []).length;
+function renderRecentCard(s){
+    return`<div class="overview-card">
+<h4>⏱️ My latest PR updates <span class="total">top 8</span></h4>
+<div class="timeline-list">
+${s.recent.map(pr=>{const dc=pr.status==='success'?'success':(pr.status==='changes-requested'?'warn':'fail');return`
+<div class="timeline-item"><div class="timeline-dot ${dc}"></div><div class="timeline-content">
+<a href="${pr.url}" target="_blank" title="${escapeAttr(pr.title)}"><strong>#${pr.number}</strong> ${escapeHtml(truncate(pr.title,60))}</a>
+<div class="timeline-date">${pr.updatedAt} · ${pr.repo}</div>
+</div></div>`}).join('')}
+</div>
+</div>`;
+}
 
-            // 渲染Tab导航栏
-            content.innerHTML += renderTabNav(totalPRs, needFollowCount, discussCount);
+function renderJiraSection(s){
+    const top=s.jiraClusters.slice(0,30);
+    return`<div class="section">
+<div class="section-header"><div class="section-title">🎟️ My JIRA Issue Clusters</div><div class="section-badge info">${s.jiraClusters.length} ISSUES</div></div>
+<p class="section-desc">My PRs grouped by JIRA. Multi-PR clusters indicate significant feature work.</p>
+<div class="jira-cluster">${top.map(j=>`<a class="jira-chip" href="https://issues.apache.org/jira/browse/${j.id}" target="_blank">${j.id}<span class="pr-count">×${j.prs.length}</span></a>`).join('')}</div>
+</div>`;
+}
 
-            // Tab内容区域
-            let tabContent = '';
+function renderStaleSection(stalePRs){
+    return`<div class="section">
+<div class="section-header"><div class="section-title">⏰ Stale PRs <small style="color:var(--text-muted);font-size:.7em;font-weight:400;">(no update in 30+ days)</small></div><div class="section-badge danger">${stalePRs.length}</div></div>
+<p class="section-desc">Consider pinging reviewers, rebasing, or closing if abandoned.</p>
+<div class="pr-grid">${stalePRs.map(pr=>renderPRCard({...pr,_isStale:true},pr.repo)).join('')}</div>
+</div>`;
+}
 
-            if (activeFilter.type === 'pr' || activeFilter.type === 'follow') {
-                // 保留筛选器和搜索（仅PR相关tab显示）
-                tabContent += renderFilterBar();
+function renderAction(s){
+    const repos=globalData.repositories.map(r=>({...r,pullRequests:r.pullRequests.filter(needFollowUp)})).filter(r=>r.pullRequests.length>0);
+    if(repos.length===0)return`<div class="empty"><div class="empty-icon">🎉</div><p>All clear! No PR needs immediate attention.</p></div>`;
+    return`<div class="section">
+<div class="section-header"><div class="section-title">🔔 PRs needing your attention</div><div class="section-badge danger">${s.actionRequired}</div></div>
+<p class="section-desc">CI failures and reviewer change requests. Tackle these first.</p>
+${repos.map(r=>renderRepoGroup(r)).join('')}
+</div>`;
+}
 
-                let filteredRepos = getFilteredRepos(globalData.repositories);
+function renderAllPRs(){
+    const repos=getFilteredRepos(globalData.repositories);
+    const fb=renderFilterBar();
+    if(repos.length===0)return fb+`<div class="empty"><div class="empty-icon">🔍</div><p>No PRs match the current filters.</p></div>`;
+    return fb+repos.map(r=>renderRepoGroup(r)).join('');
+}
 
-                // Follow Up Tab 自动应用需要跟进过滤
-                if (activeFilter.type === 'follow') {
-                    filteredRepos = filteredRepos.map(repo => ({
-                        ...repo,
-                        pullRequests: repo.pullRequests.filter(pr => needFollowUp(pr))
-                    })).filter(repo => repo.pullRequests.length > 0);
-                }
+function getFilteredRepos(repos){
+    const sf=activeFilter.prStatus,ff=activeFilter.followUp,kw=activeFilter.searchKeyword.trim().toLowerCase();
+    return repos.map(r=>({...r,pullRequests:r.pullRequests.filter(p=>{
+        if(sf!=='all'){if(sf==='draft'){if(!p.isDraft)return false}else if(p.status!==sf)return false}
+        if(ff!=='all'){const f=needFollowUp(p);if(ff==='need-follow'&&!f)return false;if(ff==='no-follow'&&f)return false}
+        if(kw){const t=`${p.title} ${p.issueId||''} #${p.number} ${p.module||''}`.toLowerCase();if(!t.includes(kw))return false}
+        return true;
+    })})).filter(r=>r.pullRequests.length>0);
+}
 
-                if (filteredRepos.length > 0) {
-                    const stats = computeStats(filteredRepos);
-                    tabContent += renderStats(stats);
+function renderFilterBar(){
+    const sb=[{k:'all',l:'All'},{k:'ci-failure',l:'❌ CI Fail'},{k:'changes-requested',l:'🔄 Changes'},{k:'draft',l:'📝 Draft'},{k:'success',l:'✅ Success'}];
+    const fb=[{k:'all',l:'All'},{k:'need-follow',l:'🔔 Need follow'},{k:'no-follow',l:'✅ OK'}];
+    return`<div class="filter-bar" id="filter-bar">
+<div class="filter-group"><span class="filter-label">Status:</span>${sb.map(b=>`<button class="filter-btn ${activeFilter.prStatus===b.k?'active':''}" data-filter="status" data-value="${b.k}">${b.l}</button>`).join('')}</div>
+<div class="filter-divider"></div>
+<div class="filter-group"><span class="filter-label">Follow:</span>${fb.map(b=>`<button class="filter-btn ${activeFilter.followUp===b.k?'active':''}" data-filter="followUp" data-value="${b.k}">${b.l}</button>`).join('')}</div>
+<div class="search-group"><input type="text" class="search-input" id="pr-search" placeholder="🔍 Search title, JIRA, module..." value="${escapeAttr(activeFilter.searchKeyword)}"></div>
+</div>`;
+}
 
-                    const section = buildActionRequiredSection(filteredRepos);
-                    if (section.groups.length > 0) {
-                        tabContent += renderSection(section);
-                    }
-                } else {
-                    tabContent += '<div class="loading">No PRs match the current filters.</div>';
-                }
-            } else if (activeFilter.type === 'discuss') {
-                if (globalData.discussions && globalData.discussions.length > 0) {
-                    tabContent += renderDiscussionsSection(globalData.discussions);
-                } else {
-                    tabContent += '<div class="loading">No community discussions available.</div>';
-                }
-            }
+function renderRepoGroup(r){
+    return`<div class="repo-section">
+<h3>${r.name} <span class="count">${r.pullRequests.length}</span></h3>
+<div class="pr-grid">${r.pullRequests.map(p=>renderPRCard(p,r.name)).join('')}</div>
+</div>`;
+}
 
-            content.innerHTML += `<div class="tab-pane">${tabContent}</div>`;
-            content.innerHTML += renderFooter(globalData.lastUpdated);
-            bindTabEvents();
-            bindFilterEvents();
+function renderPRCard(pr,repoName){
+    const cfg=UI_CONFIG.status[pr.status]||UI_CONFIG.status['ci-failure'];
+    const tags=buildTags(pr,cfg);
+    const tagsHtml=tags.map(t=>`<span class="tag ${t.class}">${t.label}</span>`).join('');
+    const nf=needFollowUp(pr);
+    const fc=nf?'need-follow':cfg.cardClass;
+    const icon=nf?'🔔':cfg.icon;
+    const created=pr.createdAt||pr.updatedAt;
+    const mt=pr.module?`<span class="tag module">${escapeHtml(pr.module)}</span>`:'';
+    const st=pr._isStale?`<span class="tag stale">⏰ STALE</span>`:'';
+    return`<div class="pr-card ${fc}">
+<div class="status-icon">${icon}</div>
+<div class="pr-content">
+<div class="pr-header"><span class="pr-number">#${pr.number}</span><span class="pr-title"><a href="${pr.url}" target="_blank">[${pr.issueId||'NO-JIRA'}] ${escapeHtml(pr.title)}</a></span></div>
+<div class="pr-tags">${mt}${tagsHtml}${st}</div>
+<div class="pr-meta"><span class="repo">${repoName}</span><span>📅 ${created||'—'}</span><span>📝 Updated: ${pr.updatedAt}</span></div>
+</div>
+</div>`;
+}
 
-            // Re-focus search input after re-render to keep typing continuity
-            const searchInput = document.getElementById('pr-search');
-            if (searchInput && activeFilter.searchKeyword) {
-                searchInput.focus();
-                const len = searchInput.value.length;
-                searchInput.setSelectionRange(len, len);
-            }
-        }
+function buildTags(pr,cfg){
+    const tags=[];
+    if(pr.isDraft)tags.push({class:UI_CONFIG.draftTag.tagClass,label:UI_CONFIG.draftTag.tagLabel});
+    let hs=false;
+    (pr.flips||[]).forEach(f=>{
+        if(f.startsWith('discussions:'))tags.push({class:'discuss',label:`💬 ${f.replace('discussions:','')}`});
+        else if(f.startsWith('gha-fail:')){tags.push({class:'failure',label:`⚠️ ${f.replace('gha-fail:','')}`});hs=true}
+        else if(f==='ci-failure'){tags.push({class:cfg.tagClass,label:cfg.tagLabel});hs=true}
+        else if(f==='changes-requested'){tags.push({class:'changes',label:'🔄 CHANGES'});hs=true}
+        else{tags.push({class:'changes',label:f});hs=true}
+    });
+    if(!hs)tags.push({class:cfg.tagClass,label:cfg.tagLabel});
+    return tags;
+}
 
-        function getFilteredRepos(repos) {
-            const statusFilter = activeFilter.prStatus;
-            const followUpFilter = activeFilter.followUp;
-            const keyword = activeFilter.searchKeyword.trim().toLowerCase();
-            const result = repos.map(repo => ({
-                ...repo,
-                pullRequests: repo.pullRequests.filter(pr => {
-                    // Status filter
-                    if (statusFilter !== 'all') {
-                        if (statusFilter === 'draft') {
-                            if (!pr.isDraft) return false;
-                        } else if (pr.status !== statusFilter) {
-                            return false;
-                        }
-                    }
-                    // Follow-up filter
-                    if (followUpFilter !== 'all') {
-                        const needsFollow = needFollowUp(pr);
-                        if (followUpFilter === 'need-follow' && !needsFollow) return false;
-                        if (followUpFilter === 'no-follow' && needsFollow) return false;
-                    }
-                    // Keyword search (filter)
-                    if (keyword) {
-                        const searchText = (pr.title + ' ' + pr.issueId + ' #' + pr.number).toLowerCase();
-                        if (!searchText.includes(keyword)) return false;
-                    }
-                    return true;
-                })
-            })).filter(repo => repo.pullRequests.length > 0);
-            return result;
-        }
+function renderDiscuss(){
+    const ds=globalData.discussions||[];
+    if(ds.length===0)return`<div class="empty"><div class="empty-icon">💬</div><p>No mailing-list discussions tracked yet.</p></div>`;
+    const flip=ds.filter(d=>/\bFLIP\b/i.test(d.subject)),gen=ds.filter(d=>!/\bFLIP\b/i.test(d.subject));
+    return`
+${flip.length>0?`<div class="section">
+<div class="section-header"><div class="section-title">📜 FLIP &amp; Vote threads I joined</div><div class="section-badge info">${flip.length}</div></div>
+<p class="section-desc">High-impact threads on dev@flink.apache.org that I participated in — most relevant to committer nomination.</p>
+<div class="discuss-grid">${flip.map(renderDiscussCard).join('')}</div></div>`:''}
+${gen.length>0?`<div class="section">
+<div class="section-header"><div class="section-title">💬 General discussions I joined</div><div class="section-badge">${gen.length}</div></div>
+<div class="discuss-grid">${gen.map(renderDiscussCard).join('')}</div></div>`:''}`;
+}
 
-        function renderFilterBar() {
-            const statusBtns = [
-                { key: 'all', label: 'All' },
-                { key: 'ci-failure', label: '❌ CI Failure' },
-                { key: 'changes-requested', label: '🔄 Changes' },
-                { key: 'draft', label: '📝 Draft' },
-                { key: 'success', label: '✅ Success' }
-            ];
+function renderDiscussCard(d){
+    const rt=d.replies>0?`${d.replies} replies`:'No replies yet';
+    const rb=d.role==='starter'?'<span class="tag discuss">🆕 STARTED</span>':(d.role==='participant'?'<span class="tag changes">💬 PARTICIPATED</span>':'');
+    const tidMatch=(d.url||'').match(/\/thread\/([a-z0-9]+)/i);
+    const tid=tidMatch?tidMatch[1]:null;
+    const reportLink=tid?`<a class="discuss-report-btn" href="dissuss/${tid}.html" target="_blank" title="Offline archive + AI summary">📖 Read</a>`:'';
+    return`<div class="discuss-card">
+<div class="discuss-icon">${d.role==='starter'?'🆕':'💬'}</div>
+<div class="discuss-content">
+<div class="discuss-subject"><a href="${d.url}" target="_blank">${escapeHtml(d.subject)}</a></div>
+<div class="pr-tags">${rb}</div>
+<div class="discuss-meta"><span>📅 ${d.date}</span><span class="replies">💬 ${rt}</span>${reportLink}</div>
+</div></div>`;
+}
 
-            // Follow Up 筛选仅在 All PRs Tab 显示（Need Follow Tab 本身已过滤）
-            const showFollowFilter = activeFilter.type === 'pr';
-            const followUpBtns = [
-                { key: 'all', label: 'All' },
-                { key: 'need-follow', label: '🔔 Need Follow' },
-                { key: 'no-follow', label: '✅ OK' }
-            ];
+function renderHelpWanted(s){
+    const u=s.unrepliedIssues;
+    if(u.total===0){
+        return renderHelpHowto()+`<div class="empty">
+<div class="empty-icon">🆘</div>
+<p><b>No unreplied issues loaded.</b></p>
+<p style="margin-top:8px;font-size:.9em;">Add the <code>unrepliedIssues</code> field to <code>todo-data.json</code> to populate this board.</p>
+</div>`;
+    }
+    // filter
+    let list=u.list.slice();
+    if(activeFilter.helpPriority!=='all')list=list.filter(i=>i.priority===activeFilter.helpPriority);
+    if(activeFilter.helpStarter==='starter')list=list.filter(i=>i.isStarter);
+    // search reuse
+    const kw=activeFilter.searchKeyword.trim().toLowerCase();
+    if(kw)list=list.filter(i=>(`${i.key} ${i.summary} ${i.components.join(' ')}`).toLowerCase().includes(kw));
+    // sort
+    const sortMode=activeFilter.helpSort;
+    list.sort((a,b)=>{
+        if(sortMode==='oldest')return(b.ageDays??-1)-(a.ageDays??-1);
+        if(sortMode==='newest')return(a.ageDays??Infinity)-(b.ageDays??Infinity);
+        if(sortMode==='priority'){const p=['blocker','critical','major','minor','trivial'];return(p.indexOf(a.priority)+(a.priority?0:99))-(p.indexOf(b.priority)+(b.priority?0:99))}
+        return 0;
+    });
+    const priOpts=[{k:'all',l:'All'},{k:'blocker',l:'🚨 Blocker'},{k:'critical',l:'🔥 Critical'},{k:'major',l:'⚠️ Major'},{k:'minor',l:'🔹 Minor'}];
+    const sortOpts=[{k:'oldest',l:'⏳ Oldest first'},{k:'newest',l:'🆕 Newest first'},{k:'priority',l:'🔥 By priority'}];
+    const starterOpts=[{k:'all',l:'All'},{k:'starter',l:'🌱 Starter only'}];
+    return`
+<div class="section">
+<div class="section-header">
+<div class="section-title">🆘 Open issues with no replies <small style="color:var(--text-muted);font-size:.7em;font-weight:400;">(community needs help)</small></div>
+<div class="section-badge danger">${u.total}</div>
+</div>
+<p class="section-desc">JIRA issues that nobody has commented on yet. Picking these up — even just to triage or ask clarifying questions — is one of the highest-leverage things you can do as an aspiring committer.</p>
+<div class="help-cta">
+<div class="help-cta-card"><div class="lbl">Total unreplied</div><div class="val warn">${u.total}</div><div class="sub">issues with 0 comments</div></div>
+<div class="help-cta-card"><div class="lbl">Aged &gt; 1 year</div><div class="val danger">${u.aged}</div><div class="sub">long-forgotten — easy wins</div></div>
+<div class="help-cta-card"><div class="lbl">Starter-tagged</div><div class="val" style="color:var(--success)">${u.starter}</div><div class="sub">good first issues</div></div>
+<div class="help-cta-card"><div class="lbl">Components</div><div class="val">${u.components.length}</div><div class="sub">distinct areas</div></div>
+</div>
+<div class="filter-bar">
+<div class="filter-group"><span class="filter-label">Sort:</span>${sortOpts.map(o=>`<button class="filter-btn ${sortMode===o.k?'active':''}" data-filter="helpSort" data-value="${o.k}">${o.l}</button>`).join('')}</div>
+<div class="filter-divider"></div>
+<div class="filter-group"><span class="filter-label">Priority:</span>${priOpts.map(o=>`<button class="filter-btn ${activeFilter.helpPriority===o.k?'active':''}" data-filter="helpPriority" data-value="${o.k}">${o.l}</button>`).join('')}</div>
+<div class="filter-divider"></div>
+<div class="filter-group">${starterOpts.map(o=>`<button class="filter-btn ${activeFilter.helpStarter===o.k?'active':''}" data-filter="helpStarter" data-value="${o.k}">${o.l}</button>`).join('')}</div>
+<div class="search-group"><input type="text" class="search-input" id="pr-search" placeholder="🔍 Search summary, key, component..." value="${escapeAttr(activeFilter.searchKeyword)}"></div>
+</div>
+${list.length===0?'<div class="empty"><div class="empty-icon">🔍</div><p>No issues match these filters.</p></div>':`<div class="issue-grid">${list.map(renderIssueCard).join('')}</div>`}
+</div>
+${renderHelpHowto()}`;
+}
 
-            const followUpGroup = showFollowFilter ? `
-                <div class="filter-divider"></div>
-                <div class="filter-group">
-                    <span class="filter-label">Follow Up:</span>
-                    ${followUpBtns.map(btn => `<button class="filter-btn ${activeFilter.followUp === btn.key ? 'active' : ''}" data-filter="followUp" data-value="${btn.key}">${btn.label}</button>`).join('')}
-                </div>
-            ` : '';
+function renderHelpHowto(){
+    return`<div class="help-howto">
+<b>📡 How to populate this board</b><br>
+Add an <code>unrepliedIssues</code> array to <code>todo-data.json</code>. Each entry: <code>{ key, summary, url?, createdAt, components?, priority?, labels?, reporter? }</code>.<br>
+Run this JIRA REST query to fetch open Flink issues with <b>0 comments</b> (newest first), then transform to the schema above:
+<pre>curl -sG 'https://issues.apache.org/jira/rest/api/2/search' \\
+  --data-urlencode 'jql=project = FLINK AND resolution = Unresolved AND comments &lt; 1 ORDER BY created DESC' \\
+  --data-urlencode 'fields=summary,created,priority,components,labels,reporter' \\
+  --data-urlencode 'maxResults=200' | jq '{unrepliedIssues:[.issues[]|{key,summary:.fields.summary,url:("https://issues.apache.org/jira/browse/"+.key),createdAt:.fields.created,priority:.fields.priority.name,components:[.fields.components[].name],labels:.fields.labels,reporter:.fields.reporter.displayName}]}'</pre>
+Tip: tighten <code>comments &lt; 1</code> to <code>comments = 0 AND assignee is EMPTY</code> for true "no-one-touched-it" issues.
+</div>`;
+}
 
-            return `
-                <div class="filter-bar" id="filter-bar">
-                    <div class="filter-group">
-                        <span class="filter-label">PR Status:</span>
-                        ${statusBtns.map(btn => `<button class="filter-btn ${activeFilter.prStatus === btn.key ? 'active' : ''}" data-filter="status" data-value="${btn.key}">${btn.label}</button>`).join('')}
-                    </div>
-                    ${followUpGroup}
-                    <div class="filter-divider"></div>
-                    <div class="search-group">
-                        <input type="text" class="search-input" id="pr-search" placeholder="🔍 Search by title, issue ID..." value="${activeFilter.searchKeyword}">
-                    </div>
-                </div>
-            `;
-        }
+function renderIssueCard(i){
+    const ageDays=i.ageDays;
+    let ageCls='fresh',ageLabel='—';
+    if(ageDays!=null){
+        ageLabel=ageDays<30?`${ageDays}d`:(ageDays<365?`${Math.round(ageDays/30)}mo`:`${(ageDays/365).toFixed(1)}y`);
+        ageCls=ageDays>365?'aged':(ageDays>180?'medium':'fresh');
+    }
+    const cardCls=ageDays!=null&&ageDays>365?'aged':'';
+    const comps=i.components.slice(0,3).map(c=>`<span class="tag module">${escapeHtml(c)}</span>`).join('');
+    const pri=i.priority?`<span class="tag priority-${i.priority.toLowerCase()}">${escapeHtml(i.priority.toUpperCase())}</span>`:'';
+    const starter=i.isStarter?'<span class="tag starter">🌱 STARTER</span>':'';
+    const reporter=i.reporter?`<span>👤 ${escapeHtml(i.reporter)}</span>`:'';
+    const created=i.created?i.created.substring(0,10):'—';
+    return`<div class="issue-card ${cardCls}">
+<div class="issue-icon">${ageDays!=null&&ageDays>365?'⏰':'🆘'}</div>
+<div class="issue-content">
+<div class="issue-header">
+<a class="issue-key" href="${i.url}" target="_blank">${escapeHtml(i.key)}</a>
+<span class="issue-summary"><a href="${i.url}" target="_blank">${escapeHtml(i.summary)}</a></span>
+</div>
+<div class="pr-tags">${pri}${starter}${comps}</div>
+<div class="issue-meta">
+<span>📅 ${created}</span>
+${ageDays!=null?`<span class="age ${ageCls}">⏳ ${ageLabel} old · 0 replies</span>`:'<span class="age">0 replies</span>'}
+${reporter}
+</div>
+</div>
+</div>`;
+}
 
-        function renderTabNav(totalPRs, needFollowCount, discussCount) {
-            const tabs = [
-                { key: 'pr', label: '🔧 All PRs', count: totalPRs },
-                { key: 'follow', label: '🔔 Need Follow', count: needFollowCount },
-                { key: 'discuss', label: '💬 Discussions', count: discussCount }
-            ];
-            return `
-                <div class="tab-nav" id="tab-nav">
-                    ${tabs.map(t => `
-                        <button class="tab-btn ${activeFilter.type === t.key ? 'active' : ''}" data-tab="${t.key}">
-                            ${t.label}
-                            <span class="tab-indicator">${t.count}</span>
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-        }
+function renderCrTargets(s){
+    const cr=s.crTargets;
+    if(cr.total===0){
+        return renderCrHowto()+`<div class="empty">
+<div class="empty-icon">🔍</div>
+<p><b>No CR targets loaded.</b></p>
+<p style="margin-top:8px;font-size:.9em;">Add the <code>crTargets</code> array to <code>todo-data.json</code> to populate this board.</p>
+</div>`;
+    }
+    let list=cr.list.slice();
+    if(activeFilter.crTopic!=='all')list=list.filter(p=>p.topic===activeFilter.crTopic);
+    const kw=activeFilter.searchKeyword.trim().toLowerCase();
+    if(kw)list=list.filter(p=>(`${p.title} ${p.author} ${p.module} ${p.repo} #${p.number} ${(p.labels||[]).join(' ')}`).toLowerCase().includes(kw));
+    const sort=activeFilter.crSort;
+    list.sort((a,b)=>{
+        if(sort==='updated')return(b.updatedAt||'').localeCompare(a.updatedAt||'');
+        if(sort==='stale')return(a.updatedAt||'').localeCompare(b.updatedAt||'');
+        if(sort==='size')return(a.additions+a.deletions)-(b.additions+b.deletions);
+        return 0;
+    });
+    const topicOpts=[
+        {k:'all',l:`All (${cr.total})`},
+        {k:'sql',l:`🧮 SQL / Table (${cr.sql})`},
+        {k:'ai',l:`🤖 AI / Model (${cr.ai})`},
+        {k:'other',l:'🔧 Other'}
+    ];
+    const sortOpts=[
+        {k:'updated',l:'🆕 Recently active'},
+        {k:'stale',l:'⏳ Stalest first'},
+        {k:'size',l:'📏 Smallest first'}
+    ];
+    return`
+<div class="section">
+<div class="section-header">
+<div class="section-title">🔍 PRs to actively review <span class="section-badge info" style="vertical-align:middle;font-size:.55em;margin-left:6px;">COMMUNITY-WIDE</span> <small style="color:var(--text-muted);font-size:.7em;font-weight:400;display:block;margin-top:4px;">(SQL/Table &amp; AI/Model · authored by others)</small></div>
+<div class="section-badge">${cr.total}</div>
+</div>
+<p class="section-desc">Reviewing other contributors' PRs in your areas of expertise — SQL/Table planner work and AI/Model integrations — is one of the strongest signals for committer candidacy. Pick a small one, leave a substantive comment within 24h.</p>
+<div class="help-cta">
+<div class="help-cta-card"><div class="lbl">Total open</div><div class="val">${cr.total}</div><div class="sub">PRs awaiting review</div></div>
+<div class="help-cta-card"><div class="lbl">SQL / Table</div><div class="val" style="color:var(--accent)">${cr.sql}</div><div class="sub">planner, calcite, table API</div></div>
+<div class="help-cta-card"><div class="lbl">AI / Model</div><div class="val" style="color:var(--accent-2)">${cr.ai}</div><div class="sub">model, ML, inference, MCP</div></div>
+<div class="help-cta-card"><div class="lbl">Updated &le; 7d</div><div class="val" style="color:var(--success)">${cr.fresh}</div><div class="sub">freshest — pick one now</div></div>
+</div>
+<div class="filter-bar">
+<div class="filter-group"><span class="filter-label">Topic:</span>${topicOpts.map(o=>`<button class="filter-btn ${activeFilter.crTopic===o.k?'active':''}" data-filter="crTopic" data-value="${o.k}">${o.l}</button>`).join('')}</div>
+<div class="filter-divider"></div>
+<div class="filter-group"><span class="filter-label">Sort:</span>${sortOpts.map(o=>`<button class="filter-btn ${activeFilter.crSort===o.k?'active':''}" data-filter="crSort" data-value="${o.k}">${o.l}</button>`).join('')}</div>
+<div class="search-group"><input type="text" class="search-input" id="pr-search" placeholder="🔍 Search title, author, module..." value="${escapeAttr(activeFilter.searchKeyword)}"></div>
+</div>
+${list.length===0?'<div class="empty"><div class="empty-icon">🔍</div><p>No PRs match these filters.</p></div>':`<div class="issue-grid">${list.map(renderCrCard).join('')}</div>`}
+</div>
+${renderCrHowto()}`;
+}
 
-        function bindTabEvents() {
-            document.querySelectorAll('#tab-nav .tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    activeFilter.type = this.dataset.tab;
-                    applyFilter();
-                });
-            });
-        }
+function renderCrCard(p){
+    const ageDays=p.ageDays;
+    let ageCls='fresh',ageLabel='—';
+    if(ageDays!=null){
+        ageLabel=ageDays<7?`${ageDays}d`:(ageDays<60?`${Math.round(ageDays/7)}w`:`${Math.round(ageDays/30)}mo`);
+        ageCls=ageDays>30?'aged':(ageDays>7?'medium':'fresh');
+    }
+    const cardCls=p.topic==='ai'?'cr-ai':(p.topic==='sql'?'cr-sql':'');
+    const topicTag=p.topic==='ai'?'<span class="tag discuss">🤖 AI/MODEL</span>':(p.topic==='sql'?'<span class="tag changes">🧮 SQL/TABLE</span>':'<span class="tag module">🔧 OTHER</span>');
+    const draftTag=p.isDraft?'<span class="tag">📝 DRAFT</span>':'';
+    const ciTag=p.ciStatus==='failure'?'<span class="tag priority-blocker">❌ CI FAIL</span>':(p.ciStatus==='success'?'<span class="tag" style="color:var(--success);border-color:rgba(63,185,80,.3)">✅ CI</span>':'');
+    const reviewTag=p.reviewState==='changes_requested'?'<span class="tag priority-major">⚠️ CHANGES</span>':(p.reviewState==='approved'?'<span class="tag" style="color:var(--success);border-color:rgba(63,185,80,.3)">👍 APPROVED</span>':'');
+    const moduleTag=p.module?`<span class="tag module">${escapeHtml(p.module)}</span>`:'';
+    const sizeTag=(p.additions||p.deletions)?`<span style="color:var(--success)">+${p.additions}</span>/<span style="color:var(--failure)">-${p.deletions}</span>`:'';
+    const updated=p.updatedAt?p.updatedAt.substring(0,10):'—';
+    return`<div class="issue-card ${cardCls}">
+<div class="issue-icon">${p.topic==='ai'?'🤖':(p.topic==='sql'?'🧮':'🔍')}</div>
+<div class="issue-content">
+<div class="issue-header">
+<a class="issue-key" href="${p.url}" target="_blank">#${p.number}</a>
+<span class="issue-summary"><a href="${p.url}" target="_blank">${escapeHtml(p.title)}</a></span>
+</div>
+<div class="pr-tags">${topicTag}${moduleTag}${reviewTag}${ciTag}${draftTag}</div>
+<div class="issue-meta">
+<span>📅 ${updated}</span>
+${ageDays!=null?`<span class="age ${ageCls}">⏳ ${ageLabel} since update</span>`:''}
+${p.author?`<span>👤 ${escapeHtml(p.author)}</span>`:''}
+${p.comments?`<span>💬 ${p.comments}</span>`:''}
+${sizeTag?`<span>${sizeTag}</span>`:''}
+<span style="margin-left:auto"><a class="discuss-report-btn" href="${p.url}/files" target="_blank" title="Open files diff in new tab">🔍 Review</a></span>
+</div>
+</div>
+</div>`;
+}
 
-        function bindFilterEvents() {
-            document.querySelectorAll('#filter-bar .filter-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const filterType = this.dataset.filter;
-                    const filterValue = this.dataset.value;
+function renderCrHowto(){
+    return`<div class="help-howto">
+<b>📡 How to populate this board</b><br>
+Add a <code>crTargets</code> array to <code>todo-data.json</code>. Each entry: <code>{ number, title, url, repo, author, module?, topic? (sql|ai|other), updatedAt, reviewState?, ciStatus?, isDraft?, comments?, additions?, deletions?, labels? }</code>. <code>topic</code> is auto-inferred from title keywords if omitted.<br>
+Run this GitHub search to fetch open Flink PRs in SQL / Table / AI / Model areas (excluding your own):
+<pre>gh search prs --owner=apache 'is:pr is:open archived:false -author:FeatZhang draft:false (sql OR table OR planner OR calcite OR ai OR model OR inference OR mcp) in:title' \\
+  --limit=80 --json number,title,url,repository,author,updatedAt,labels,isDraft,additions,deletions,reviewDecision \\
+  | jq '{crTargets:[.[]|{number,title,url,repo:.repository.nameWithOwner,author:.author.login,updatedAt,labels:[.labels[].name],isDraft,additions,deletions,reviewState:(.reviewDecision//""|ascii_downcase)}]}'</pre>
+Tip: filter by mention with <code>review-requested:@FeatZhang</code> to surface PRs that explicitly tagged you.
+</div>`;
+}
 
-                    if (filterType === 'status') {
-                        activeFilter.prStatus = filterValue;
-                    } else if (filterType === 'followUp') {
-                        activeFilter.followUp = filterValue;
-                    }
-                    applyFilter();
-                });
-            });
+function renderRoadmap(s){
+    const items=COMMITTER_CHECKLIST.map(it=>{
+        const auto=it.target?!!it.target(s):false;
+        const manual=!!roadmapState[it.id];
+        const done=auto||manual;
+        const progressText=it.fmt?it.fmt(s):'';
+        return`<div class="check-item ${done?'done':''}" data-id="${it.id}">
+<div class="check-box">${done?'✓':''}</div>
+<div class="check-content">
+<div class="check-text">${escapeHtml(it.text)}</div>
+<div class="check-desc">${escapeHtml(it.desc)}</div>
+${progressText?`<div class="check-progress ${done?'met':''}">Progress: <strong>${progressText}</strong>${auto?' · auto-detected ✓':''}</div>`:''}
+</div>
+</div>`;
+    }).join('');
+    const doneCount=COMMITTER_CHECKLIST.filter(it=>(it.target&&it.target(s))||roadmapState[it.id]).length;
+    return`<div class="roadmap-intro">
+<b>Becoming an Apache Flink committer</b> is recognition, not a checkbox — but consistent contribution across these dimensions builds the case. Items auto-tick from your data; the rest you can mark manually. Progress is saved locally.
+</div>
+<div class="section">
+<div class="section-header"><div class="section-title">✅ Committer checklist</div><div class="section-badge info">${doneCount}/${COMMITTER_CHECKLIST.length}</div></div>
+<div class="checklist">${items}</div>
+</div>
+<div class="section">
+<div class="section-header"><div class="section-title">📚 Resources</div></div>
+<div class="resource-grid">${RESOURCES.map(r=>`<a class="resource-card" href="${r.url}" target="_blank"><div class="res-title">${r.title}</div><div class="res-desc">${escapeHtml(r.desc)}</div></a>`).join('')}</div>
+</div>`;
+}
 
-            // Search input with debounce
-            const searchInput = document.getElementById('pr-search');
-            if (searchInput) {
-                let debounceTimer;
-                searchInput.addEventListener('input', function(e) {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        activeFilter.searchKeyword = e.target.value;
-                        applyFilter();
-                    }, 200);
-                });
-                searchInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        clearTimeout(debounceTimer);
-                        activeFilter.searchKeyword = e.target.value;
-                        applyFilter();
-                    }
-                });
-            }
-        }
+function renderFooter(lu){
+    return`<footer>
+<p>Last updated: ${lu||'—'}</p>
+<p>Auto-generated by flink-pr-todo skill · <a href="https://github.com/featzhang" target="_blank">@FeatZhang</a></p>
+</footer>`;
+}
 
-        function computeStats(repos) {
-            let totalOpen = 0;
-            let actionRequired = 0;
-            let ciSuccess = 0;
-            repos.forEach(repo => {
-                totalOpen += repo.pullRequests.length;
-                repo.pullRequests.forEach(pr => {
-                    if (pr.status === 'success') {
-                        ciSuccess++;
-                    } else {
-                        actionRequired++;
-                    }
-                });
-            });
-            return {
-                totalOpen: totalOpen,
-                actionRequired: actionRequired,
-                ciSuccess: ciSuccess
-            };
-        }
+function bindEvents(){
+    document.querySelectorAll('#tab-nav .tab-btn').forEach(b=>b.addEventListener('click',function(){activeFilter.type=this.dataset.tab;applyFilter()}));
+    document.querySelectorAll('#filter-bar .filter-btn, .filter-bar .filter-btn').forEach(b=>b.addEventListener('click',function(){
+        const f=this.dataset.filter,v=this.dataset.value;
+        if(f==='status')activeFilter.prStatus=v;
+        else if(f==='followUp')activeFilter.followUp=v;
+        else if(f==='helpSort')activeFilter.helpSort=v;
+        else if(f==='helpPriority')activeFilter.helpPriority=v;
+        else if(f==='helpStarter')activeFilter.helpStarter=v;
+        else if(f==='crTopic')activeFilter.crTopic=v;
+        else if(f==='crSort')activeFilter.crSort=v;
+        applyFilter();
+    }));
+    const si=document.getElementById('pr-search');
+    if(si){let t;si.addEventListener('input',e=>{clearTimeout(t);t=setTimeout(()=>{activeFilter.searchKeyword=e.target.value;applyFilter()},200)})}
+    document.querySelectorAll('.check-item').forEach(it=>it.addEventListener('click',function(){
+        const id=this.dataset.id;
+        roadmapState[id]=!roadmapState[id];
+        localStorage.setItem(ROADMAP_KEY,JSON.stringify(roadmapState));
+        applyFilter();
+    }));
+}
 
-        function buildActionRequiredSection(repos) {
-            const groups = repos.map(repo => ({
-                repoName: repo.name,
-                repoUrl: repo.url,
-                prs: repo.pullRequests
-            }));
-            const total = groups.reduce((sum, g) => sum + g.prs.length, 0);
-            return {
-                title: 'Action Required',
-                badge: total,
-                groups: groups
-            };
-        }
-
-        function renderStats(stats) {
-            return `
-                <div class="stats">
-                    <div class="stat-card open">
-                        <div class="number">${stats.totalOpen}</div>
-                        <div class="label">Open PRs</div>
-                    </div>
-                    <div class="stat-card action">
-                        <div class="number">${stats.actionRequired}</div>
-                        <div class="label">Action Required</div>
-                    </div>
-                    <div class="stat-card success">
-                        <div class="number">${stats.ciSuccess}</div>
-                        <div class="label">CI Success</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderSection(section) {
-            const groupsHtml = section.groups.map(group => renderGroup(group)).join('');
-            return `
-                <div class="section">
-                    <h2>
-                        ${section.title}
-                        <span class="badge">${section.badge}</span>
-                    </h2>
-                    ${groupsHtml}
-                </div>
-            `;
-        }
-
-        function renderGroup(group) {
-            if (group.prs.length === 0) return '';
-            const prsHtml = group.prs.map(pr => renderPRCard(pr, group.repoName)).join('');
-            return `
-                <div class="repo-section">
-                    <h3>${group.repoName}</h3>
-                    <div class="pr-grid">
-                        ${prsHtml}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderPRCard(pr, repoName) {
-            const config = UI_CONFIG.status[pr.status] || UI_CONFIG.status['ci-failure'];
-            const tagsHtml = buildTags(pr, config).map(t => `<span class="tag ${t.class}">${t.label}</span>`).join('');
-
-            // Discussion count (CI status is rendered once via buildTags -> pr-tags)
-            let discussIndicator = '';
-            if (pr.discussions > 0 || (pr.flips && pr.flips.some(f => f.startsWith('discussions:')))) {
-                const discCount = pr.discussions > 0 ? pr.discussions : (pr.flips.find(f => f.startsWith('discussions:')) || '').replace('discussions:', '');
-                discussIndicator = `<span class="discuss-count">💬 ${discCount} comments</span>`;
-            }
-
-            // Follow-up indicator
-            const needsFollow = needFollowUp(pr);
-            const followIcon = needsFollow ? '🔔' : '';
-            const followClass = needsFollow ? 'need-follow' : '';
-
-            // Calculate creation time from PR number or fall back to updatedAt
-            const createdAt = pr.createdAt || pr.updatedAt;
-
-            return `
-                <div class="pr-card ${config.cardClass} ${followClass}">
-                    <div class="status-icon">${followIcon || config.icon}</div>
-                    <div class="pr-content">
-                        <div class="pr-header">
-                            <span class="pr-number">#${pr.number}</span>
-                            <span class="pr-title"><a href="${pr.url}" target="_blank">[${pr.issueId}][${pr.module}] ${pr.title}</a></span>
-                        </div>
-                        <div class="pr-tags">
-                            ${tagsHtml}
-                        </div>
-                        ${discussIndicator ? `<div class="ci-line">${discussIndicator}</div>` : ''}
-                        <div class="pr-meta">
-                            <span class="repo">${repoName}</span>
-                            <span>📅 ${createdAt}</span>
-                            <span>📝 Updated: ${pr.updatedAt}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function buildTags(pr, config) {
-            const tags = [];
-            if (pr.isDraft) {
-                tags.push({ class: UI_CONFIG.draftTag.tagClass, label: UI_CONFIG.draftTag.tagLabel });
-            }
-            // Track whether any CI/review status tag was emitted from flips;
-            // if not, we still need to show the default status tag (e.g. CI SUCCESS)
-            let hasStatusTag = false;
-            if (pr.flips && pr.flips.length > 0) {
-                pr.flips.forEach(flip => {
-                    if (flip.startsWith('discussions:')) {
-                        const count = flip.replace('discussions:', '');
-                        tags.push({ class: 'discuss', label: `💬 ${count}` });
-                    } else if (flip.startsWith('gha-fail:')) {
-                        tags.push({ class: 'failure', label: `⚠️ ${flip.replace('gha-fail:', '')}` });
-                        hasStatusTag = true;
-                    } else if (flip === 'ci-failure') {
-                        tags.push({ class: config.tagClass, label: config.tagLabel });
-                        hasStatusTag = true;
-                    } else if (flip === 'changes-requested') {
-                        tags.push({ class: 'changes', label: '🔄 CHANGES' });
-                        hasStatusTag = true;
-                    } else {
-                        tags.push({ class: 'warning', label: flip });
-                        hasStatusTag = true;
-                    }
-                });
-            }
-            if (!hasStatusTag) {
-                // Default status tag (e.g. ✅ CI SUCCESS) when flips carried no explicit status
-                tags.push({ class: config.tagClass, label: config.tagLabel });
-            }
-            return tags;
-        }
-
-        function renderDiscussionsSection(discussions) {
-            const cardsHtml = discussions.map(d => renderDiscussCard(d)).join('');
-            return `
-                <div class="section">
-                    <h2>
-                        💬 Community Discussions
-                        <span class="badge">${discussions.length}</span>
-                    </h2>
-                    <div class="discuss-grid">
-                        ${cardsHtml}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderDiscussCard(discuss) {
-            const repliesText = discuss.replies > 0 ? `${discuss.replies} replies` : 'No replies yet';
-            const roleBadge = discuss.role === 'starter'
-                ? '<span class="tag discuss">🆕 STARTED</span>'
-                : (discuss.role === 'participant'
-                    ? '<span class="tag changes">💬 PARTICIPATED</span>'
-                    : '');
-            return `
-                <div class="discuss-card">
-                    <div class="discuss-icon">${discuss.role === 'starter' ? '🆕' : '💬'}</div>
-                    <div class="discuss-content">
-                        <div class="discuss-subject">
-                            <a href="${discuss.url}" target="_blank">${discuss.subject}</a>
-                        </div>
-                        <div class="pr-tags" style="margin: 6px 0;">
-                            ${roleBadge}
-                        </div>
-                        <div class="discuss-meta">
-                            <span>📅 ${discuss.date}</span>
-                            <span class="replies">💬 ${repliesText}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderFooter(lastUpdated) {
-            return `
-                <footer>
-                    <p>Last updated: ${lastUpdated}</p>
-                    <p>Auto-generated by flink-pr-todo skill</p>
-                </footer>
-            `;
-        }
-
-        document.addEventListener('DOMContentLoaded', loadPRData);
-    </script>
+document.addEventListener('DOMContentLoaded',loadPRData);
+</script>
 </body>
 </html>

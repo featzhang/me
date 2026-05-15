@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>[DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#fff;--fg:#1f2328;--muted:#57606a;--card:#f6f8fa;--accent:#0969da;--border:#d0d7de;--quote-bg:#fbfbfd;--trans-bg:#fafbff}
+body.dark{--bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--card:#161b22;--accent:#58a6ff;--border:#30363d;--quote-bg:#0b0e13;--trans-bg:#0f1320}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;max-width:none;margin:0;padding:0 32px 64px}
+.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.toolbar h1{font-size:18px;margin:0;flex:1 1 auto;min-width:240px}
+.toolbar .status{color:var(--muted);font-size:12px}
+.toolbar button, .toolbar a.btn{font-size:12px;padding:6px 12px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
+.toolbar button:hover, .toolbar a.btn:hover{border-color:var(--accent);color:var(--accent)}
+.email{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px}
+.email>header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.email .from{font-weight:600;color:var(--fg)}
+.email .subj{flex:1 1 100%;font-weight:500;color:var(--fg);font-size:13px}
+.email .mid{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all}
+.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.orig{min-width:0}
+.trans{min-width:0;background:var(--trans-bg);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px}
+.trans-label{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.85}
+body.hide-trans .body-grid{grid-template-columns:1fr}
+body.hide-trans .trans{display:none}
+@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:3px solid var(--accent);border-radius:0 0 6px 6px}}
+.body-font{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
+.trans .body-font, .trans-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13px}
+.text-block{white-space:pre-wrap;word-wrap:break-word;margin:6px 0}
+.trans-pending{color:var(--muted);font-style:italic;font-size:12px}
+.trans-quote-placeholder{margin:6px 0;min-height:1.4em;opacity:0}
+details.quote-block{margin:6px 0;border-left:3px solid var(--border);background:var(--quote-bg);padding:4px 8px;border-radius:0 4px 4px 0}
+details.quote-block summary{cursor:pointer;color:var(--muted);font-size:11px;user-select:none;padding:2px 0;list-style:none}
+details.quote-block summary::-webkit-details-marker{display:none}
+details.quote-block summary::before{content:'▶ ';display:inline-block;transition:transform .12s;margin-right:4px}
+details.quote-block[open]>summary::before{transform:rotate(90deg)}
+.quoted{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;margin-top:6px}
+.qd{display:block;white-space:pre-wrap;padding-left:8px;border-left:2px solid;margin:1px 0}
+.qd-1{border-color:#0969da;color:var(--fg)}
+.qd-2{border-color:#1a7f37;color:var(--fg);opacity:.95}
+.qd-3{border-color:#bf8700;color:var(--fg);opacity:.9}
+.qd-4{border-color:#cf222e;color:var(--fg);opacity:.85}
+.qd-5{border-color:#8250df;color:var(--fg);opacity:.8}
+.qd-empty{display:block;min-height:.5em;border-left:none;padding:0}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.summary-card{background:linear-gradient(135deg,rgba(9,105,218,.08),rgba(130,80,223,.05));border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:18px}
+.summary-card h2{font-size:14px;margin:0 0 6px;color:var(--accent)}
+.summary-card p{margin:6px 0;color:var(--muted);font-size:13px}
+.summary-card ul{margin:6px 0 0 18px;color:var(--fg);font-size:13px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>[DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</h1>
+  <span class="status">4 emails · 15 quote blocks · pending (no translation file)</span>
+  <button onclick="document.querySelectorAll('details.quote-block').forEach(d=>d.open=!d.open)">Expand / collapse quotes</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">Show / hide translation</button>
+  <button onclick="document.body.classList.toggle('dark')">Dark / light</button>
+  <a class="btn" href="https://lists.apache.org/thread/sk3lzsqq66wbtbrb5l1fk2k3mg5sb5m3" target="_blank">↗ Open on lists.apache.org</a>
+  <a class="btn" href="../index.html">← Back to dashboard</a>
+</div>
+<div class="summary-card">
+  <h2>Mailing-list thread archive</h2>
+  <p>Generated by <code>dissuss/_build.py</code> following <code>mail-thread-archiver.prompt.md</code>. Layout: left = English original (with collapsible quotes), right = Chinese translation (per spec §3.5). Use the <em>Show / hide translation</em> button to toggle the right column.</p>
+  <ul>
+    <li><b>Subject</b>: [DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</li>
+    <li><b>Archive</b>: 4 emails, 15 quote blocks</li>
+    <li><b>Source</b>: <a href="https://lists.apache.org/thread/sk3lzsqq66wbtbrb5l1fk2k3mg5sb5m3" target="_blank">https://lists.apache.org/thread/sk3lzsqq66wbtbrb5l1fk2k3mg5sb5m3</a></li>
+    <li><b>Translation</b>: pending (no translation file) (drop a <code>sk3lzsqq66wbtbrb5l1fk2k3mg5sb5m3.translation.json</code> beside this file and rebuild to fill it in)</li>
+  </ul>
+</div>
+<div class="email" id="m1">
+  <header>
+    <span class="from">FeatZhang &lt;featzhang@apache.org&gt;</span>
+    <span class="time">Fri, 24 Apr 2026 19:49:22 +0800</span>
+    <span class="subj">[DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</span>
+    <span class="mid">&lt;sk3lzsqq66wbtbrb5l1fk2k3mg5sb5m3&gt;</span>
+  </header>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Flink devs,
+
+I’d like to start a discussion on a potential enhancement to Flink SQL
+around *declarative error handling and side-output semantics*.
+
+This is an early-stage proposal and I’m mainly looking for feedback on
+feasibility, scope, and design direction.
+------------------------------
+1. Background
+
+In production streaming systems built on Flink SQL, data quality issues are
+a persistent challenge, especially in:
+
+   - Kafka ingestion pipelines
+   - CDC streams
+   - Log/event processing systems
+   - Schema-evolving data sources
+   - UDF-heavy transformation pipelines
+
+Common failure modes include:
+
+   - malformed JSON / Avro records
+   - type mismatches during casting
+   - schema drift (missing/extra fields)
+   - runtime UDF exceptions
+   - partial parsing failures
+
+------------------------------
+2. Current Limitations
+
+Today, Flink SQL provides only partial solutions:
+
+   - TRY_CAST / defensive expressions
+   - json.ignore-parse-errors
+   - null-based filtering
+   - fallback to DataStream API
+
+However, these approaches are fragmented and do not provide a unified
+abstraction.
+Key gaps: 2.1 No unified error handling model
+
+Different failure modes require different mechanisms, with no consistent
+cross-operator abstraction.
+2.2 No SQL-level side output semantics
+
+Unlike DataStream API (OutputTag), SQL cannot express:
+
+route invalid records to a separate sink
+
+2.3 No structured error observability
+
+Even when errors are handled:
+
+   - no error type
+   - no raw record preservation
+   - no column-level context
+   - no standardized routing mechanism
+
+------------------------------
+3. Proposal: ON ERROR Clause
+
+We propose introducing an optional SQL clause:
+
+INSERT INTO clean_sink
+SELECT *
+FROM source_table
+ON ERROR INTO dirty_sink;
+
+------------------------------
+4. Semantics (Initial Proposal)
+
+The execution semantics are:
+
+   - Records successfully processed → clean_sink
+   - Records failing during:
+      - parsing
+      - expression evaluation
+      - UDF execution
+      - operator-level exceptions
+
+→ routed to dirty_sink
+
+Importantly:
+
+   - main pipeline execution is NOT interrupted
+   - error handling is non-fatal by default
+
+------------------------------
+5. Optional Extensions (For Discussion) 5.1 Error context propagation
+
+ON ERROR INTO dirty_sink WITH CONTEXT;
+
+This would allow enriching the dirty stream with:
+
+   - raw record
+   - error message
+   - error type
+   - failing field (if available)
+   - timestamp
+
+------------------------------
+5.2 Error classification routing
+
+ON ERROR INTO (
+  parse_error_sink,
+  type_error_sink,
+  udf_error_sink
+);
+
+------------------------------
+5.3 Retry / fallback semantics (future extension)
+
+ON ERROR
+  RETRY 3 TIMES
+  BACKOFF 2s
+  THEN INTO dirty_sink;
+
+------------------------------
+6. Execution Model
+
+Conceptually, this introduces a *dual-output operator semantics*:
+
+record
+  |
+  v
++------------------------+
+| ErrorAwareOperator     |
+| (try/catch boundary)   |
++------------------------+
+     |              |
+     |              |
+     v              v
+ clean stream   dirty stream
+
+------------------------------
+7. Relation to Existing Flink Concepts
+
+This proposal is essentially a SQL-level abstraction over existing runtime
+capability:
+
+   - DataStream Side Output (OutputTag)
+   - per-record try/catch execution
+   - operator-level failure isolation
+
+The key gap is *exposing this capability at SQL layer in a declarative form*
+.
+------------------------------
+8. Design Considerations &amp; Risks
+
+I want to explicitly call out a few open concerns:
+8.1 Performance overhead
+
+Introducing per-record exception boundaries may introduce:
+
+   - CPU overhead (try/catch)
+   - potential JIT inhibition
+
+We may need optimized execution strategies (e.g. selective instrumentation
+or vectorized paths).
+------------------------------
+8.2 Semantics of exactly-once
+
+Open question:
+
+   - Should dirty stream be exactly-once, at-least-once, or best-effort?
+   - Should it participate in checkpointing consistency?
+
+------------------------------
+8.3 Scope definition
+
+We need to clarify whether this applies to:
+
+   - INSERT INTO only (likely initial scope)
+   - or SELECT / views / CTAS / materialized views
+
+------------------------------
+8.4 Connector interaction
+
+Error classification may differ across:
+
+   - Kafka / filesystem / CDC connectors
+   - UDF-defined errors
+   - format-level parsing errors
+
+Standardization may be required.
+------------------------------
+9. Comparison with Existing Systems
+System SQL-side error routing Unified model
+Flink SQL (current) ❌ ❌
+Spark SQL ❌ partial
+Trino ❌ ❌
+Flink DataStream ✔ ✔ (but not SQL exposed)
+------------------------------
+10. Motivation Summary
+
+The goal is to bridge the gap between:
+
+   - DataStream-level expressiveness (side outputs)
+   - SQL-level declarative usability
+
+This would enable:
+
+   - cleaner production pipelines
+   - better data quality isolation
+   - improved observability
+   - reduced need to drop into DataStream API for error handling
+
+------------------------------
+11. Open Questions for the Community
+
+I’d appreciate feedback on:
+
+   1. Is ON ERROR too broad for initial scope?
+   2. Should this be limited to parsing-level errors first?
+   3. What should the default delivery semantics of dirty streams be?
+   4. Should error classification be standardized at Flink core level or
+   connector level?
+   5. Would this overlap too much with existing TRY_* patterns?
+   6. Is Calcite the right place to extend this semantics?
+
+------------------------------
+12. Next Step (if direction is accepted)
+
+If there is alignment, potential follow-ups could be:
+
+   - Formal FLIP document (RFC stage)
+   - Calcite grammar extension
+   - Planner-level LogicalErrorHandlingNode
+   - Runtime ErrorAwareOperator prototype
+   - Benchmark on Kafka ingestion workloads
+
+------------------------------
+Closing
+
+I believe Flink SQL is missing a *first-class declarative error handling
+abstraction*, and this limits its usability in production data quality
+scenarios.
+
+This proposal is an attempt to explore whether we can bring *DataStream-style
+side output semantics into SQL in a clean and composable way*.
+
+Feedback on feasibility, design boundaries, and alternative approaches is
+very welcome.
+------------------------------</div></div>
+    <div class="trans">
+      <div class="trans-label">中文翻译 · Chinese translation</div>
+      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div></div>
+    </div>
+  </div>
+</div>
+<div class="email" id="m2">
+  <header>
+    <span class="from">Timo Walther &lt;twalthr@apache.org&gt;</span>
+    <span class="time">Mon, 27 Apr 2026 14:21:11 +0200</span>
+    <span class="subj">Re: [DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</span>
+    <span class="mid">&lt;c0p4qtynxz4z0hzl8mhl811jw1tj5q4w&gt;</span>
+  </header>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Feat,
+
+more declarative error handling makes a lot of sense. In our Cloud 
+product at Confluent, we have already implemented error handling for 
+deserialization errors by adding an additional ProcessFunction closely 
+after the source with side outputs and a wrapping STATEMENT SET under 
+the hood.
+
+We are open to contribute this back if it make sense.
+
+However, our current solution only handles errors in the source/format. 
+Of course a global ON ERROR would be more beneficial, however, it is 
+unclear to me how to implement this in a scalable way. A side output has 
+costs (output and input network buffers on the sender and receiver 
+side), we cannot arbitrarily add side outputs to all operators of a SQL 
+pipeline. Given that even relatively easy SQL might be translates into 
+10+ operators, using side outputs might not scale.
+
+Also, sources currently don&#x27;t support side outputs. This is why we 
+decided for a ProcessFunction after the source for now.
+
+Also what is the schema of the Dead Letter Queue? At Confluent we 
+decided for BYTES columns from which data can be re-deserialized.
+
+Cheers,
+Timo
+
+
+On 24.04.26 13:49, FeatZhang wrote:</div><details class="quote-block"><summary>Quoted (245 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">Hi Flink devs,</span><span class="qd qd-empty"></span><span class="qd qd-1">I\u2019d like to start a discussion on a potential enhancement to Flink SQL</span><span class="qd qd-1">around *declarative error handling and side-output semantics*.</span><span class="qd qd-empty"></span><span class="qd qd-1">This is an early-stage proposal and I\u2019m mainly looking for feedback on</span><span class="qd qd-1">feasibility, scope, and design direction.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">1. Background</span><span class="qd qd-empty"></span><span class="qd qd-1">In production streaming systems built on Flink SQL, data quality issues are</span><span class="qd qd-1">a persistent challenge, especially in:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - Kafka ingestion pipelines</span><span class="qd qd-1">    - CDC streams</span><span class="qd qd-1">    - Log/event processing systems</span><span class="qd qd-1">    - Schema-evolving data sources</span><span class="qd qd-1">    - UDF-heavy transformation pipelines</span><span class="qd qd-empty"></span><span class="qd qd-1">Common failure modes include:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - malformed JSON / Avro records</span><span class="qd qd-1">    - type mismatches during casting</span><span class="qd qd-1">    - schema drift (missing/extra fields)</span><span class="qd qd-1">    - runtime UDF exceptions</span><span class="qd qd-1">    - partial parsing failures</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">2. Current Limitations</span><span class="qd qd-empty"></span><span class="qd qd-1">Today, Flink SQL provides only partial solutions:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - TRY_CAST / defensive expressions</span><span class="qd qd-1">    - json.ignore-parse-errors</span><span class="qd qd-1">    - null-based filtering</span><span class="qd qd-1">    - fallback to DataStream API</span><span class="qd qd-empty"></span><span class="qd qd-1">However, these approaches are fragmented and do not provide a unified</span><span class="qd qd-1">abstraction.</span><span class="qd qd-1">Key gaps: 2.1 No unified error handling model</span><span class="qd qd-empty"></span><span class="qd qd-1">Different failure modes require different mechanisms, with no consistent</span><span class="qd qd-1">cross-operator abstraction.</span><span class="qd qd-1">2.2 No SQL-level side output semantics</span><span class="qd qd-empty"></span><span class="qd qd-1">Unlike DataStream API (OutputTag), SQL cannot express:</span><span class="qd qd-empty"></span><span class="qd qd-1">route invalid records to a separate sink</span><span class="qd qd-empty"></span><span class="qd qd-1">2.3 No structured error observability</span><span class="qd qd-empty"></span><span class="qd qd-1">Even when errors are handled:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - no error type</span><span class="qd qd-1">    - no raw record preservation</span><span class="qd qd-1">    - no column-level context</span><span class="qd qd-1">    - no standardized routing mechanism</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">3. Proposal: ON ERROR Clause</span><span class="qd qd-empty"></span><span class="qd qd-1">We propose introducing an optional SQL clause:</span><span class="qd qd-empty"></span><span class="qd qd-1">INSERT INTO clean_sink</span><span class="qd qd-1">SELECT *</span><span class="qd qd-1">FROM source_table</span><span class="qd qd-1">ON ERROR INTO dirty_sink;</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">4. Semantics (Initial Proposal)</span><span class="qd qd-empty"></span><span class="qd qd-1">The execution semantics are:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - Records successfully processed \u2192 clean_sink</span><span class="qd qd-1">    - Records failing during:</span><span class="qd qd-1">       - parsing</span><span class="qd qd-1">       - expression evaluation</span><span class="qd qd-1">       - UDF execution</span><span class="qd qd-1">       - operator-level exceptions</span><span class="qd qd-empty"></span><span class="qd qd-1">\u2192 routed to dirty_sink</span><span class="qd qd-empty"></span><span class="qd qd-1">Importantly:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - main pipeline execution is NOT interrupted</span><span class="qd qd-1">    - error handling is non-fatal by default</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">5. Optional Extensions (For Discussion) 5.1 Error context propagation</span><span class="qd qd-empty"></span><span class="qd qd-1">ON ERROR INTO dirty_sink WITH CONTEXT;</span><span class="qd qd-empty"></span><span class="qd qd-1">This would allow enriching the dirty stream with:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - raw record</span><span class="qd qd-1">    - error message</span><span class="qd qd-1">    - error type</span><span class="qd qd-1">    - failing field (if available)</span><span class="qd qd-1">    - timestamp</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">5.2 Error classification routing</span><span class="qd qd-empty"></span><span class="qd qd-1">ON ERROR INTO (</span><span class="qd qd-1">   parse_error_sink,</span><span class="qd qd-1">   type_error_sink,</span><span class="qd qd-1">   udf_error_sink</span><span class="qd qd-1">);</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">5.3 Retry / fallback semantics (future extension)</span><span class="qd qd-empty"></span><span class="qd qd-1">ON ERROR</span><span class="qd qd-1">   RETRY 3 TIMES</span><span class="qd qd-1">   BACKOFF 2s</span><span class="qd qd-1">   THEN INTO dirty_sink;</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">6. Execution Model</span><span class="qd qd-empty"></span><span class="qd qd-1">Conceptually, this introduces a *dual-output operator semantics*:</span><span class="qd qd-empty"></span><span class="qd qd-1">record</span><span class="qd qd-1">   |</span><span class="qd qd-1">   v</span><span class="qd qd-1">+------------------------+</span><span class="qd qd-1">| ErrorAwareOperator     |</span><span class="qd qd-1">| (try/catch boundary)   |</span><span class="qd qd-1">+------------------------+</span><span class="qd qd-1">      |              |</span><span class="qd qd-1">      |              |</span><span class="qd qd-1">      v              v</span><span class="qd qd-1">  clean stream   dirty stream</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">7. Relation to Existing Flink Concepts</span><span class="qd qd-empty"></span><span class="qd qd-1">This proposal is essentially a SQL-level abstraction over existing runtime</span><span class="qd qd-1">capability:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - DataStream Side Output (OutputTag)</span><span class="qd qd-1">    - per-record try/catch execution</span><span class="qd qd-1">    - operator-level failure isolation</span><span class="qd qd-empty"></span><span class="qd qd-1">The key gap is *exposing this capability at SQL layer in a declarative form*</span><span class="qd qd-1">.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8. Design Considerations &amp; Risks</span><span class="qd qd-empty"></span><span class="qd qd-1">I want to explicitly call out a few open concerns:</span><span class="qd qd-1">8.1 Performance overhead</span><span class="qd qd-empty"></span><span class="qd qd-1">Introducing per-record exception boundaries may introduce:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - CPU overhead (try/catch)</span><span class="qd qd-1">    - potential JIT inhibition</span><span class="qd qd-empty"></span><span class="qd qd-1">We may need optimized execution strategies (e.g. selective instrumentation</span><span class="qd qd-1">or vectorized paths).</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8.2 Semantics of exactly-once</span><span class="qd qd-empty"></span><span class="qd qd-1">Open question:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - Should dirty stream be exactly-once, at-least-once, or best-effort?</span><span class="qd qd-1">    - Should it participate in checkpointing consistency?</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8.3 Scope definition</span><span class="qd qd-empty"></span><span class="qd qd-1">We need to clarify whether this applies to:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - INSERT INTO only (likely initial scope)</span><span class="qd qd-1">    - or SELECT / views / CTAS / materialized views</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8.4 Connector interaction</span><span class="qd qd-empty"></span><span class="qd qd-1">Error classification may differ across:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - Kafka / filesystem / CDC connectors</span><span class="qd qd-1">    - UDF-defined errors</span><span class="qd qd-1">    - format-level parsing errors</span><span class="qd qd-empty"></span><span class="qd qd-1">Standardization may be required.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">9. Comparison with Existing Systems</span><span class="qd qd-1">System SQL-side error routing Unified model</span><span class="qd qd-1">Flink SQL (current) \u274c \u274c</span><span class="qd qd-1">Spark SQL \u274c partial</span><span class="qd qd-1">Trino \u274c \u274c</span><span class="qd qd-1">Flink DataStream \u2714 \u2714 (but not SQL exposed)</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">10. Motivation Summary</span><span class="qd qd-empty"></span><span class="qd qd-1">The goal is to bridge the gap between:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - DataStream-level expressiveness (side outputs)</span><span class="qd qd-1">    - SQL-level declarative usability</span><span class="qd qd-empty"></span><span class="qd qd-1">This would enable:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - cleaner production pipelines</span><span class="qd qd-1">    - better data quality isolation</span><span class="qd qd-1">    - improved observability</span><span class="qd qd-1">    - reduced need to drop into DataStream API for error handling</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">11. Open Questions for the Community</span><span class="qd qd-empty"></span><span class="qd qd-1">I\u2019d appreciate feedback on:</span><span class="qd qd-empty"></span><span class="qd qd-1">    1. Is ON ERROR too broad for initial scope?</span><span class="qd qd-1">    2. Should this be limited to parsing-level errors first?</span><span class="qd qd-1">    3. What should the default delivery semantics of dirty streams be?</span><span class="qd qd-1">    4. Should error classification be standardized at Flink core level or</span><span class="qd qd-1">    connector level?</span><span class="qd qd-1">    5. Would this overlap too much with existing TRY_* patterns?</span><span class="qd qd-1">    6. Is Calcite the right place to extend this semantics?</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">12. Next Step (if direction is accepted)</span><span class="qd qd-empty"></span><span class="qd qd-1">If there is alignment, potential follow-ups could be:</span><span class="qd qd-empty"></span><span class="qd qd-1">    - Formal FLIP document (RFC stage)</span><span class="qd qd-1">    - Calcite grammar extension</span><span class="qd qd-1">    - Planner-level LogicalErrorHandlingNode</span><span class="qd qd-1">    - Runtime ErrorAwareOperator prototype</span><span class="qd qd-1">    - Benchmark on Kafka ingestion workloads</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">Closing</span><span class="qd qd-empty"></span><span class="qd qd-1">I believe Flink SQL is missing a *first-class declarative error handling</span><span class="qd qd-1">abstraction*, and this limits its usability in production data quality</span><span class="qd qd-1">scenarios.</span><span class="qd qd-empty"></span><span class="qd qd-1">This proposal is an attempt to explore whether we can bring *DataStream-style</span><span class="qd qd-1">side output semantics into SQL in a clean and composable way*.</span><span class="qd qd-empty"></span><span class="qd qd-1">Feedback on feasibility, design boundaries, and alternative approaches is</span><span class="qd qd-1">very welcome.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans">
+      <div class="trans-label">中文翻译 · Chinese translation</div>
+      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div>
+    </div>
+  </div>
+</div>
+<div class="email" id="m3">
+  <header>
+    <span class="from">Ryan van Huuksloot via dev &lt;dev@flink.apache.org&gt;</span>
+    <span class="time">Mon, 27 Apr 2026 10:03:46 -0400</span>
+    <span class="subj">Re: [DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</span>
+    <span class="mid">&lt;4zdsvmrg8qh0xkg7dx7sqynf2pcgzh7v&gt;</span>
+  </header>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Everyone,
+
+I wanted to comment that this feature would be really useful. I still have
+many questions about how we will implement it scalably.
+
+I&#x27;d have to read the spec for the Confluent solution but from your snippet
+Timo, it doesn&#x27;t sound like the right interface for OSS. You would know
+best though.
+However I understand the concerns with ON ERROR.
+
+Spitballing:
+- Is this something we can inject dynamically with a SQL hint?
+
+Regarding the schema, I favour Bytes.
+
+Thanks for driving this feature—it&#x27;s a pain point for us!
+
+Ryan van Huuksloot
+Staff Engineer, Infrastructure | Streaming Platform
+[image: Shopify]
+&lt;<a href="https://www.shopify.com/?utm_medium=salessignatures&amp;utm_source=hs_email&gt;" target="_blank" rel="noopener">https://www.shopify.com/?utm_medium=salessignatures&amp;utm_source=hs_email&gt;</a>
+
+
+On Mon, Apr 27, 2026 at 8:21 AM Timo Walther &lt;twalthr@apache.org&gt; wrote:</div><details class="quote-block"><summary>Quoted (29 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">Hi Feat,</span><span class="qd qd-empty"></span><span class="qd qd-1">more declarative error handling makes a lot of sense. In our Cloud</span><span class="qd qd-1">product at Confluent, we have already implemented error handling for</span><span class="qd qd-1">deserialization errors by adding an additional ProcessFunction closely</span><span class="qd qd-1">after the source with side outputs and a wrapping STATEMENT SET under</span><span class="qd qd-1">the hood.</span><span class="qd qd-empty"></span><span class="qd qd-1">We are open to contribute this back if it make sense.</span><span class="qd qd-empty"></span><span class="qd qd-1">However, our current solution only handles errors in the source/format.</span><span class="qd qd-1">Of course a global ON ERROR would be more beneficial, however, it is</span><span class="qd qd-1">unclear to me how to implement this in a scalable way. A side output has</span><span class="qd qd-1">costs (output and input network buffers on the sender and receiver</span><span class="qd qd-1">side), we cannot arbitrarily add side outputs to all operators of a SQL</span><span class="qd qd-1">pipeline. Given that even relatively easy SQL might be translates into</span><span class="qd qd-1">10+ operators, using side outputs might not scale.</span><span class="qd qd-empty"></span><span class="qd qd-1">Also, sources currently don&#x27;t support side outputs. This is why we</span><span class="qd qd-1">decided for a ProcessFunction after the source for now.</span><span class="qd qd-empty"></span><span class="qd qd-1">Also what is the schema of the Dead Letter Queue? At Confluent we</span><span class="qd qd-1">decided for BYTES columns from which data can be re-deserialized.</span><span class="qd qd-empty"></span><span class="qd qd-1">Cheers,</span><span class="qd qd-1">Timo</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">On 24.04.26 13:49, FeatZhang wrote:</span></div></details><details class="quote-block"><summary>Quoted (11 lines, depth 2)</summary><div class="quoted"><span class="qd qd-2">Hi Flink devs,</span><span class="qd qd-empty"></span><span class="qd qd-2">I’d like to start a discussion on a potential enhancement to Flink SQL</span><span class="qd qd-2">around *declarative error handling and side-output semantics*.</span><span class="qd qd-empty"></span><span class="qd qd-2">This is an early-stage proposal and I’m mainly looking for feedback on</span><span class="qd qd-2">feasibility, scope, and design direction.</span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">1. Background</span><span class="qd qd-empty"></span><span class="qd qd-2">In production streaming systems built on Flink SQL, data quality issues</span></div></details><details class="quote-block"><summary>Quoted (1 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">are</span></div></details><details class="quote-block"><summary>Quoted (127 lines, depth 2)</summary><div class="quoted"><span class="qd qd-2">a persistent challenge, especially in:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - Kafka ingestion pipelines</span><span class="qd qd-2">    - CDC streams</span><span class="qd qd-2">    - Log/event processing systems</span><span class="qd qd-2">    - Schema-evolving data sources</span><span class="qd qd-2">    - UDF-heavy transformation pipelines</span><span class="qd qd-empty"></span><span class="qd qd-2">Common failure modes include:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - malformed JSON / Avro records</span><span class="qd qd-2">    - type mismatches during casting</span><span class="qd qd-2">    - schema drift (missing/extra fields)</span><span class="qd qd-2">    - runtime UDF exceptions</span><span class="qd qd-2">    - partial parsing failures</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">2. Current Limitations</span><span class="qd qd-empty"></span><span class="qd qd-2">Today, Flink SQL provides only partial solutions:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - TRY_CAST / defensive expressions</span><span class="qd qd-2">    - json.ignore-parse-errors</span><span class="qd qd-2">    - null-based filtering</span><span class="qd qd-2">    - fallback to DataStream API</span><span class="qd qd-empty"></span><span class="qd qd-2">However, these approaches are fragmented and do not provide a unified</span><span class="qd qd-2">abstraction.</span><span class="qd qd-2">Key gaps: 2.1 No unified error handling model</span><span class="qd qd-empty"></span><span class="qd qd-2">Different failure modes require different mechanisms, with no consistent</span><span class="qd qd-2">cross-operator abstraction.</span><span class="qd qd-2">2.2 No SQL-level side output semantics</span><span class="qd qd-empty"></span><span class="qd qd-2">Unlike DataStream API (OutputTag), SQL cannot express:</span><span class="qd qd-empty"></span><span class="qd qd-2">route invalid records to a separate sink</span><span class="qd qd-empty"></span><span class="qd qd-2">2.3 No structured error observability</span><span class="qd qd-empty"></span><span class="qd qd-2">Even when errors are handled:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - no error type</span><span class="qd qd-2">    - no raw record preservation</span><span class="qd qd-2">    - no column-level context</span><span class="qd qd-2">    - no standardized routing mechanism</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">3. Proposal: ON ERROR Clause</span><span class="qd qd-empty"></span><span class="qd qd-2">We propose introducing an optional SQL clause:</span><span class="qd qd-empty"></span><span class="qd qd-2">INSERT INTO clean_sink</span><span class="qd qd-2">SELECT *</span><span class="qd qd-2">FROM source_table</span><span class="qd qd-2">ON ERROR INTO dirty_sink;</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">4. Semantics (Initial Proposal)</span><span class="qd qd-empty"></span><span class="qd qd-2">The execution semantics are:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - Records successfully processed → clean_sink</span><span class="qd qd-2">    - Records failing during:</span><span class="qd qd-2">       - parsing</span><span class="qd qd-2">       - expression evaluation</span><span class="qd qd-2">       - UDF execution</span><span class="qd qd-2">       - operator-level exceptions</span><span class="qd qd-empty"></span><span class="qd qd-2">→ routed to dirty_sink</span><span class="qd qd-empty"></span><span class="qd qd-2">Importantly:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - main pipeline execution is NOT interrupted</span><span class="qd qd-2">    - error handling is non-fatal by default</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">5. Optional Extensions (For Discussion) 5.1 Error context propagation</span><span class="qd qd-empty"></span><span class="qd qd-2">ON ERROR INTO dirty_sink WITH CONTEXT;</span><span class="qd qd-empty"></span><span class="qd qd-2">This would allow enriching the dirty stream with:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - raw record</span><span class="qd qd-2">    - error message</span><span class="qd qd-2">    - error type</span><span class="qd qd-2">    - failing field (if available)</span><span class="qd qd-2">    - timestamp</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">5.2 Error classification routing</span><span class="qd qd-empty"></span><span class="qd qd-2">ON ERROR INTO (</span><span class="qd qd-2">   parse_error_sink,</span><span class="qd qd-2">   type_error_sink,</span><span class="qd qd-2">   udf_error_sink</span><span class="qd qd-2">);</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">5.3 Retry / fallback semantics (future extension)</span><span class="qd qd-empty"></span><span class="qd qd-2">ON ERROR</span><span class="qd qd-2">   RETRY 3 TIMES</span><span class="qd qd-2">   BACKOFF 2s</span><span class="qd qd-2">   THEN INTO dirty_sink;</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">6. Execution Model</span><span class="qd qd-empty"></span><span class="qd qd-2">Conceptually, this introduces a *dual-output operator semantics*:</span><span class="qd qd-empty"></span><span class="qd qd-2">record</span><span class="qd qd-2">   |</span><span class="qd qd-2">   v</span><span class="qd qd-2">+------------------------+</span><span class="qd qd-2">| ErrorAwareOperator     |</span><span class="qd qd-2">| (try/catch boundary)   |</span><span class="qd qd-2">+------------------------+</span><span class="qd qd-2">      |              |</span><span class="qd qd-2">      |              |</span><span class="qd qd-2">      v              v</span><span class="qd qd-2">  clean stream   dirty stream</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">7. Relation to Existing Flink Concepts</span><span class="qd qd-empty"></span><span class="qd qd-2">This proposal is essentially a SQL-level abstraction over existing</span></div></details><details class="quote-block"><summary>Quoted (1 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">runtime</span></div></details><details class="quote-block"><summary>Quoted (7 lines, depth 2)</summary><div class="quoted"><span class="qd qd-2">capability:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - DataStream Side Output (OutputTag)</span><span class="qd qd-2">    - per-record try/catch execution</span><span class="qd qd-2">    - operator-level failure isolation</span><span class="qd qd-empty"></span><span class="qd qd-2">The key gap is *exposing this capability at SQL layer in a declarative</span></div></details><details class="quote-block"><summary>Quoted (1 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">form*</span></div></details><details class="quote-block"><summary>Quoted (13 lines, depth 2)</summary><div class="quoted"><span class="qd qd-2">.</span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">8. Design Considerations &amp; Risks</span><span class="qd qd-empty"></span><span class="qd qd-2">I want to explicitly call out a few open concerns:</span><span class="qd qd-2">8.1 Performance overhead</span><span class="qd qd-empty"></span><span class="qd qd-2">Introducing per-record exception boundaries may introduce:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - CPU overhead (try/catch)</span><span class="qd qd-2">    - potential JIT inhibition</span><span class="qd qd-empty"></span><span class="qd qd-2">We may need optimized execution strategies (e.g. selective</span></div></details><details class="quote-block"><summary>Quoted (1 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">instrumentation</span></div></details><details class="quote-block"><summary>Quoted (81 lines, depth 2)</summary><div class="quoted"><span class="qd qd-2">or vectorized paths).</span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">8.2 Semantics of exactly-once</span><span class="qd qd-empty"></span><span class="qd qd-2">Open question:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - Should dirty stream be exactly-once, at-least-once, or best-effort?</span><span class="qd qd-2">    - Should it participate in checkpointing consistency?</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">8.3 Scope definition</span><span class="qd qd-empty"></span><span class="qd qd-2">We need to clarify whether this applies to:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - INSERT INTO only (likely initial scope)</span><span class="qd qd-2">    - or SELECT / views / CTAS / materialized views</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">8.4 Connector interaction</span><span class="qd qd-empty"></span><span class="qd qd-2">Error classification may differ across:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - Kafka / filesystem / CDC connectors</span><span class="qd qd-2">    - UDF-defined errors</span><span class="qd qd-2">    - format-level parsing errors</span><span class="qd qd-empty"></span><span class="qd qd-2">Standardization may be required.</span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">9. Comparison with Existing Systems</span><span class="qd qd-2">System SQL-side error routing Unified model</span><span class="qd qd-2">Flink SQL (current) ❌ ❌</span><span class="qd qd-2">Spark SQL ❌ partial</span><span class="qd qd-2">Trino ❌ ❌</span><span class="qd qd-2">Flink DataStream ✔ ✔ (but not SQL exposed)</span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">10. Motivation Summary</span><span class="qd qd-empty"></span><span class="qd qd-2">The goal is to bridge the gap between:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - DataStream-level expressiveness (side outputs)</span><span class="qd qd-2">    - SQL-level declarative usability</span><span class="qd qd-empty"></span><span class="qd qd-2">This would enable:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - cleaner production pipelines</span><span class="qd qd-2">    - better data quality isolation</span><span class="qd qd-2">    - improved observability</span><span class="qd qd-2">    - reduced need to drop into DataStream API for error handling</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">11. Open Questions for the Community</span><span class="qd qd-empty"></span><span class="qd qd-2">I’d appreciate feedback on:</span><span class="qd qd-empty"></span><span class="qd qd-2">    1. Is ON ERROR too broad for initial scope?</span><span class="qd qd-2">    2. Should this be limited to parsing-level errors first?</span><span class="qd qd-2">    3. What should the default delivery semantics of dirty streams be?</span><span class="qd qd-2">    4. Should error classification be standardized at Flink core level or</span><span class="qd qd-2">    connector level?</span><span class="qd qd-2">    5. Would this overlap too much with existing TRY_* patterns?</span><span class="qd qd-2">    6. Is Calcite the right place to extend this semantics?</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">12. Next Step (if direction is accepted)</span><span class="qd qd-empty"></span><span class="qd qd-2">If there is alignment, potential follow-ups could be:</span><span class="qd qd-empty"></span><span class="qd qd-2">    - Formal FLIP document (RFC stage)</span><span class="qd qd-2">    - Calcite grammar extension</span><span class="qd qd-2">    - Planner-level LogicalErrorHandlingNode</span><span class="qd qd-2">    - Runtime ErrorAwareOperator prototype</span><span class="qd qd-2">    - Benchmark on Kafka ingestion workloads</span><span class="qd qd-empty"></span><span class="qd qd-2">------------------------------</span><span class="qd qd-2">Closing</span><span class="qd qd-empty"></span><span class="qd qd-2">I believe Flink SQL is missing a *first-class declarative error handling</span><span class="qd qd-2">abstraction*, and this limits its usability in production data quality</span><span class="qd qd-2">scenarios.</span><span class="qd qd-empty"></span><span class="qd qd-2">This proposal is an attempt to explore whether we can bring</span></div></details><details class="quote-block"><summary>Quoted (1 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">*DataStream-style</span></div></details><details class="quote-block"><summary>Quoted (6 lines, depth 2)</summary><div class="quoted"><span class="qd qd-2">side output semantics into SQL in a clean and composable way*.</span><span class="qd qd-empty"></span><span class="qd qd-2">Feedback on feasibility, design boundaries, and alternative approaches is</span><span class="qd qd-2">very welcome.</span><span class="qd qd-2">------------------------------</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>Quoted (2 lines, depth 1)</summary><div class="quoted"><span class="qd qd-empty"></span><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans">
+      <div class="trans-label">中文翻译 · Chinese translation</div>
+      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div>
+    </div>
+  </div>
+</div>
+<div class="email" id="m4">
+  <header>
+    <span class="from">Robin Moffatt via dev &lt;dev@flink.apache.org&gt;</span>
+    <span class="time">Fri, 01 May 2026 15:45:28 +0100</span>
+    <span class="subj">Re: [DISCUSS] Declarative Error Handling in Flink SQL via ON ERROR Clause</span>
+    <span class="mid">&lt;1x9l9l92vvh779k4cppw3ko8y1o0xyo8&gt;</span>
+  </header>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">From an end-user perspective, I think this sounds like a good idea and the
+ergonomics of the SQL feels right.
+I suspect the multiple sinks outlined in 5.2 could get unwieldy, and could
+be addressed by the WITH CONTEXT and subsequent filtering for routing.
+One thing I&#x27;d suggest is some kind of threshold, so that _some_ failed
+records would route to the sink, but if too many (either absolute or %)
+would fail the statement. I guess the SQL would be something like &quot;FAIL
+AFTER&quot; or something along those lines.
+
+Thanks, Robin.
+
+On Fri, 24 Apr 2026 at 12:49, FeatZhang &lt;featzhang@apache.org&gt; wrote:</div><details class="quote-block"><summary>Quoted (247 lines, depth 1)</summary><div class="quoted"><span class="qd qd-1">Hi Flink devs,</span><span class="qd qd-empty"></span><span class="qd qd-1">I’d like to start a discussion on a potential enhancement to Flink SQL</span><span class="qd qd-1">around *declarative error handling and side-output semantics*.</span><span class="qd qd-empty"></span><span class="qd qd-1">This is an early-stage proposal and I’m mainly looking for feedback on</span><span class="qd qd-1">feasibility, scope, and design direction.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">1. Background</span><span class="qd qd-empty"></span><span class="qd qd-1">In production streaming systems built on Flink SQL, data quality issues are</span><span class="qd qd-1">a persistent challenge, especially in:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Kafka ingestion pipelines</span><span class="qd qd-1">   - CDC streams</span><span class="qd qd-1">   - Log/event processing systems</span><span class="qd qd-1">   - Schema-evolving data sources</span><span class="qd qd-1">   - UDF-heavy transformation pipelines</span><span class="qd qd-empty"></span><span class="qd qd-1">Common failure modes include:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - malformed JSON / Avro records</span><span class="qd qd-1">   - type mismatches during casting</span><span class="qd qd-1">   - schema drift (missing/extra fields)</span><span class="qd qd-1">   - runtime UDF exceptions</span><span class="qd qd-1">   - partial parsing failures</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">2. Current Limitations</span><span class="qd qd-empty"></span><span class="qd qd-1">Today, Flink SQL provides only partial solutions:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - TRY_CAST / defensive expressions</span><span class="qd qd-1">   - json.ignore-parse-errors</span><span class="qd qd-1">   - null-based filtering</span><span class="qd qd-1">   - fallback to DataStream API</span><span class="qd qd-empty"></span><span class="qd qd-1">However, these approaches are fragmented and do not provide a unified</span><span class="qd qd-1">abstraction.</span><span class="qd qd-1">Key gaps: 2.1 No unified error handling model</span><span class="qd qd-empty"></span><span class="qd qd-1">Different failure modes require different mechanisms, with no consistent</span><span class="qd qd-1">cross-operator abstraction.</span><span class="qd qd-1">2.2 No SQL-level side output semantics</span><span class="qd qd-empty"></span><span class="qd qd-1">Unlike DataStream API (OutputTag), SQL cannot express:</span><span class="qd qd-empty"></span><span class="qd qd-1">route invalid records to a separate sink</span><span class="qd qd-empty"></span><span class="qd qd-1">2.3 No structured error observability</span><span class="qd qd-empty"></span><span class="qd qd-1">Even when errors are handled:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - no error type</span><span class="qd qd-1">   - no raw record preservation</span><span class="qd qd-1">   - no column-level context</span><span class="qd qd-1">   - no standardized routing mechanism</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">3. Proposal: ON ERROR Clause</span><span class="qd qd-empty"></span><span class="qd qd-1">We propose introducing an optional SQL clause:</span><span class="qd qd-empty"></span><span class="qd qd-1">INSERT INTO clean_sink</span><span class="qd qd-1">SELECT *</span><span class="qd qd-1">FROM source_table</span><span class="qd qd-1">ON ERROR INTO dirty_sink;</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">4. Semantics (Initial Proposal)</span><span class="qd qd-empty"></span><span class="qd qd-1">The execution semantics are:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Records successfully processed → clean_sink</span><span class="qd qd-1">   - Records failing during:</span><span class="qd qd-1">      - parsing</span><span class="qd qd-1">      - expression evaluation</span><span class="qd qd-1">      - UDF execution</span><span class="qd qd-1">      - operator-level exceptions</span><span class="qd qd-empty"></span><span class="qd qd-1">→ routed to dirty_sink</span><span class="qd qd-empty"></span><span class="qd qd-1">Importantly:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - main pipeline execution is NOT interrupted</span><span class="qd qd-1">   - error handling is non-fatal by default</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">5. Optional Extensions (For Discussion) 5.1 Error context propagation</span><span class="qd qd-empty"></span><span class="qd qd-1">ON ERROR INTO dirty_sink WITH CONTEXT;</span><span class="qd qd-empty"></span><span class="qd qd-1">This would allow enriching the dirty stream with:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - raw record</span><span class="qd qd-1">   - error message</span><span class="qd qd-1">   - error type</span><span class="qd qd-1">   - failing field (if available)</span><span class="qd qd-1">   - timestamp</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">5.2 Error classification routing</span><span class="qd qd-empty"></span><span class="qd qd-1">ON ERROR INTO (</span><span class="qd qd-1">  parse_error_sink,</span><span class="qd qd-1">  type_error_sink,</span><span class="qd qd-1">  udf_error_sink</span><span class="qd qd-1">);</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">5.3 Retry / fallback semantics (future extension)</span><span class="qd qd-empty"></span><span class="qd qd-1">ON ERROR</span><span class="qd qd-1">  RETRY 3 TIMES</span><span class="qd qd-1">  BACKOFF 2s</span><span class="qd qd-1">  THEN INTO dirty_sink;</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">6. Execution Model</span><span class="qd qd-empty"></span><span class="qd qd-1">Conceptually, this introduces a *dual-output operator semantics*:</span><span class="qd qd-empty"></span><span class="qd qd-1">record</span><span class="qd qd-1">  |</span><span class="qd qd-1">  v</span><span class="qd qd-1">+------------------------+</span><span class="qd qd-1">| ErrorAwareOperator     |</span><span class="qd qd-1">| (try/catch boundary)   |</span><span class="qd qd-1">+------------------------+</span><span class="qd qd-1">     |              |</span><span class="qd qd-1">     |              |</span><span class="qd qd-1">     v              v</span><span class="qd qd-1"> clean stream   dirty stream</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">7. Relation to Existing Flink Concepts</span><span class="qd qd-empty"></span><span class="qd qd-1">This proposal is essentially a SQL-level abstraction over existing runtime</span><span class="qd qd-1">capability:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - DataStream Side Output (OutputTag)</span><span class="qd qd-1">   - per-record try/catch execution</span><span class="qd qd-1">   - operator-level failure isolation</span><span class="qd qd-empty"></span><span class="qd qd-1">The key gap is *exposing this capability at SQL layer in a declarative</span><span class="qd qd-1">form*</span><span class="qd qd-1">.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8. Design Considerations &amp; Risks</span><span class="qd qd-empty"></span><span class="qd qd-1">I want to explicitly call out a few open concerns:</span><span class="qd qd-1">8.1 Performance overhead</span><span class="qd qd-empty"></span><span class="qd qd-1">Introducing per-record exception boundaries may introduce:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - CPU overhead (try/catch)</span><span class="qd qd-1">   - potential JIT inhibition</span><span class="qd qd-empty"></span><span class="qd qd-1">We may need optimized execution strategies (e.g. selective instrumentation</span><span class="qd qd-1">or vectorized paths).</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8.2 Semantics of exactly-once</span><span class="qd qd-empty"></span><span class="qd qd-1">Open question:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Should dirty stream be exactly-once, at-least-once, or best-effort?</span><span class="qd qd-1">   - Should it participate in checkpointing consistency?</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8.3 Scope definition</span><span class="qd qd-empty"></span><span class="qd qd-1">We need to clarify whether this applies to:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - INSERT INTO only (likely initial scope)</span><span class="qd qd-1">   - or SELECT / views / CTAS / materialized views</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">8.4 Connector interaction</span><span class="qd qd-empty"></span><span class="qd qd-1">Error classification may differ across:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Kafka / filesystem / CDC connectors</span><span class="qd qd-1">   - UDF-defined errors</span><span class="qd qd-1">   - format-level parsing errors</span><span class="qd qd-empty"></span><span class="qd qd-1">Standardization may be required.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">9. Comparison with Existing Systems</span><span class="qd qd-1">System SQL-side error routing Unified model</span><span class="qd qd-1">Flink SQL (current) ❌ ❌</span><span class="qd qd-1">Spark SQL ❌ partial</span><span class="qd qd-1">Trino ❌ ❌</span><span class="qd qd-1">Flink DataStream ✔ ✔ (but not SQL exposed)</span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">10. Motivation Summary</span><span class="qd qd-empty"></span><span class="qd qd-1">The goal is to bridge the gap between:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - DataStream-level expressiveness (side outputs)</span><span class="qd qd-1">   - SQL-level declarative usability</span><span class="qd qd-empty"></span><span class="qd qd-1">This would enable:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - cleaner production pipelines</span><span class="qd qd-1">   - better data quality isolation</span><span class="qd qd-1">   - improved observability</span><span class="qd qd-1">   - reduced need to drop into DataStream API for error handling</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">11. Open Questions for the Community</span><span class="qd qd-empty"></span><span class="qd qd-1">I’d appreciate feedback on:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. Is ON ERROR too broad for initial scope?</span><span class="qd qd-1">   2. Should this be limited to parsing-level errors first?</span><span class="qd qd-1">   3. What should the default delivery semantics of dirty streams be?</span><span class="qd qd-1">   4. Should error classification be standardized at Flink core level or</span><span class="qd qd-1">   connector level?</span><span class="qd qd-1">   5. Would this overlap too much with existing TRY_* patterns?</span><span class="qd qd-1">   6. Is Calcite the right place to extend this semantics?</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">12. Next Step (if direction is accepted)</span><span class="qd qd-empty"></span><span class="qd qd-1">If there is alignment, potential follow-ups could be:</span><span class="qd qd-empty"></span><span class="qd qd-1">   - Formal FLIP document (RFC stage)</span><span class="qd qd-1">   - Calcite grammar extension</span><span class="qd qd-1">   - Planner-level LogicalErrorHandlingNode</span><span class="qd qd-1">   - Runtime ErrorAwareOperator prototype</span><span class="qd qd-1">   - Benchmark on Kafka ingestion workloads</span><span class="qd qd-empty"></span><span class="qd qd-1">------------------------------</span><span class="qd qd-1">Closing</span><span class="qd qd-empty"></span><span class="qd qd-1">I believe Flink SQL is missing a *first-class declarative error handling</span><span class="qd qd-1">abstraction*, and this limits its usability in production data quality</span><span class="qd qd-1">scenarios.</span><span class="qd qd-empty"></span><span class="qd qd-1">This proposal is an attempt to explore whether we can bring</span><span class="qd qd-1">*DataStream-style</span><span class="qd qd-1">side output semantics into SQL in a clean and composable way*.</span><span class="qd qd-empty"></span><span class="qd qd-1">Feedback on feasibility, design boundaries, and alternative approaches is</span><span class="qd qd-1">very welcome.</span><span class="qd qd-1">------------------------------</span><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans">
+      <div class="trans-label">中文翻译 · Chinese translation</div>
+      <div class="trans-body body-font"><div class="text-block trans-pending"><em>pending translation</em></div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
