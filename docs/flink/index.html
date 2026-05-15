@@ -283,17 +283,46 @@ function escapeAttr(s){return escapeHtml(s)}
 function truncate(s,n){s=s||'';return s.length>n?s.slice(0,n-1)+'…':s}
 function needFollowUp(pr){return pr.status==='ci-failure'||pr.status==='changes-requested'}
 
+// ---- URL <-> activeFilter sync ----
+const VALID_TABS=['overview','action','pr','cr','discuss','roadmap'];
+const URL_FIELDS={tab:'type',prStatus:'prStatus',followUp:'followUp',crTopic:'crTopic',crSort:'crSort',helpSort:'helpSort',helpPriority:'helpPriority',helpStarter:'helpStarter',q:'searchKeyword'};
+function readFiltersFromURL(){
+    const sp=new URLSearchParams(location.search);
+    // Support hash shortcut: #discuss / #pr  (ignored if ?tab is given)
+    let tab=sp.get('tab');
+    if(!tab&&location.hash){const h=location.hash.replace(/^#/,'');if(VALID_TABS.includes(h))tab=h}
+    if(tab&&VALID_TABS.includes(tab))activeFilter.type=tab;
+    for(const [param,field] of Object.entries(URL_FIELDS)){
+        if(param==='tab')continue;
+        const v=sp.get(param);
+        if(v!==null&&v!==undefined)activeFilter[field]=v;
+    }
+}
+function syncFiltersToURL(){
+    const defaults={type:'overview',prStatus:'all',followUp:'all',searchKeyword:'',helpSort:'oldest',helpPriority:'all',helpStarter:'all',crTopic:'all',crSort:'updated'};
+    const sp=new URLSearchParams();
+    for(const [param,field] of Object.entries(URL_FIELDS)){
+        const v=activeFilter[field];
+        if(v!==undefined&&v!==''&&v!==defaults[field])sp.set(param,v);
+    }
+    const qs=sp.toString();
+    const newUrl=location.pathname+(qs?'?'+qs:'')+location.hash;
+    if(newUrl!==location.pathname+location.search+location.hash)history.replaceState(null,'',newUrl);
+}
+
 async function loadPRData(){
     const loading=document.getElementById('loading'),error=document.getElementById('error'),content=document.getElementById('content');
     try{
         const r=await fetch('todo-data.json?t='+Date.now());
         if(!r.ok)throw new Error(`HTTP ${r.status}: ${r.statusText}`);
         globalData=await r.json();
+        readFiltersFromURL();
         applyFilter();
         loading.style.display='none';
         content.style.display='block';
     }catch(e){loading.style.display='none';error.style.display='block';error.textContent='Failed to load contribution data: '+e.message}
 }
+window.addEventListener('popstate',()=>{if(globalData){readFiltersFromURL();applyFilter()}});
 
 function computeStats(data){
     const allPRs=(data.repositories||[]).flatMap(r=>r.pullRequests.map(p=>({...p,repo:r.name})));
@@ -505,6 +534,7 @@ function applyFilter(){
     html+=renderFooter(globalData.lastUpdated);
     content.innerHTML=html;
     bindEvents();
+    syncFiltersToURL();
     const si=document.getElementById('pr-search');
     if(si&&activeFilter.searchKeyword){si.focus();si.setSelectionRange(si.value.length,si.value.length)}
 }
