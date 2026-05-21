@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>[DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --bg:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--border-soft:#e4e7eb;
+  --accent:#1f6feb;--accent-soft:#ddf4ff;--card:#fff;--header-bg:#f6f8fa;
+  --quote-bg:#f6f8fa;--quote-fg:#6e7781;--trans-bg:#fbfdff;--tag-bg:#f3f4f6;--hover:#f0f3f6;
+}
+body.dark{
+  --bg:#0d1117;--fg:#c9d1d9;--muted:#8b949e;--border:#30363d;--border-soft:#21262d;
+  --accent:#58a6ff;--accent-soft:#1f3a5f;--card:#0d1117;--header-bg:#161b22;
+  --quote-bg:#0b0e13;--quote-fg:#8b949e;--trans-bg:#0f1622;--tag-bg:#161b22;--hover:#161b22;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.6;margin:0;padding:24px 32px 64px;max-width:none}
+h1{border-bottom:2px solid var(--accent);padding-bottom:8px;font-size:22px;margin:0 0 8px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:18px}
+.meta code{background:var(--tag-bg);padding:2px 6px;border-radius:3px}
+.meta a{color:var(--accent);text-decoration:none}
+.meta a:hover{text-decoration:underline}
+
+.toolbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px}
+.toolbar button,.toolbar a.btn{background:var(--header-bg);border:1px solid var(--border);padding:5px 12px;border-radius:5px;cursor:pointer;color:var(--fg);font-size:12px;text-decoration:none;display:inline-block}
+.toolbar button:hover,.toolbar a.btn:hover{background:var(--hover);border-color:var(--accent);color:var(--accent)}
+.toolbar .stat{color:var(--muted);font-size:12px;margin-left:auto}
+
+.toc{background:var(--header-bg);border:1px solid var(--border);border-radius:6px;padding:12px 18px;margin-bottom:24px}
+.toc strong{display:block;margin-bottom:8px;font-size:13px}
+.toc-list{list-style:none;padding-left:0;margin:0}
+.toc-list li{padding:3px 0;border-bottom:1px dashed var(--border-soft);font-size:13px}
+.toc-list li:last-child{border-bottom:none}
+.toc-list a{color:var(--accent);text-decoration:none}
+.toc-list a:hover{text-decoration:underline}
+.toc-list .lvl{display:inline-block;color:var(--muted);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px}
+
+.summary-card{background:linear-gradient(135deg,rgba(31,111,235,.06),rgba(130,80,223,.04));border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:18px;font-size:13px}
+.summary-card h2{font-size:13px;margin:0 0 6px;color:var(--accent)}
+.summary-card ul{margin:6px 0 0 18px;padding:0;color:var(--fg)}
+.summary-card li{margin:2px 0}
+.summary-card a{color:var(--accent)}
+
+.email{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;margin:18px 0;padding:0;background:var(--card);scroll-margin-top:64px;transition:box-shadow .35s ease}
+.email.flash{box-shadow:0 0 0 3px var(--accent-soft)}
+.email-header{background:var(--header-bg);padding:12px 18px;border-bottom:1px solid var(--border);border-radius:5px 5px 0 0;position:relative}
+.email-header .top-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.email-header .num{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;font-weight:bold;font-size:13px;flex-shrink:0}
+.email-header .from{font-weight:600;color:var(--fg)}
+.email-header .time{color:var(--muted);font-size:12px}
+.email-header .reply-to{margin-top:6px;font-size:12px;color:var(--muted)}
+.email-header .reply-to a{color:var(--accent);text-decoration:none}
+.email-header .reply-to a:hover{text-decoration:underline}
+.email-header .subject{margin-top:6px;font-size:13px;color:var(--fg);font-weight:500}
+.email-header .mid{color:var(--muted);font-size:11px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;word-break:break-all;margin-top:4px}
+.anchor-link{position:absolute;top:10px;right:14px;color:var(--muted);font-size:14px;text-decoration:none}
+.anchor-link:hover{color:var(--accent)}
+
+.body-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;padding:14px 20px}
+.orig{min-width:0}
+.trans{min-width:0;border-left:1px dashed var(--border);padding-left:18px;position:relative;background:var(--trans-bg);border-radius:0 4px 4px 0;padding:8px 12px 8px 18px}
+.trans::before{content:"中文翻译";position:absolute;top:-9px;left:12px;background:var(--card);color:var(--accent);font-size:10px;font-weight:600;padding:0 6px;letter-spacing:.08em;border-radius:3px}
+body.hide-trans .body-grid{grid-template-columns:1fr}
+body.hide-trans .trans{display:none}
+@media (max-width:860px){.body-grid{grid-template-columns:1fr}.trans{border-left:none;border-top:1px dashed var(--border);padding-left:0;padding-top:18px;margin-top:6px}.trans::before{top:2px;left:0}}
+
+.body-font{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
+.trans .body-font{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:13.5px;line-height:1.7}
+.text-block{margin:0 0 8px;white-space:pre-wrap;word-wrap:break-word;line-height:1.55}
+.text-block:last-child{margin-bottom:0}
+.text-block a{color:var(--accent)}
+.trans-pending{color:var(--muted);font-style:italic;font-size:12px}
+.trans-quote-placeholder{margin:6px 0;min-height:1.4em;opacity:0}
+
+details.quote-block{margin:8px 0;border:1px solid var(--border-soft);border-radius:5px;background:var(--quote-bg)}
+details.quote-block>summary{cursor:pointer;padding:6px 12px;font-size:12px;color:var(--muted);list-style:none;user-select:none;outline:none;border-radius:5px}
+details.quote-block>summary::-webkit-details-marker{display:none}
+details.quote-block>summary::before{content:"▶";display:inline-block;margin-right:6px;transition:transform .15s ease;font-size:10px}
+details.quote-block[open]>summary::before{transform:rotate(90deg)}
+details.quote-block>summary:hover{background:var(--hover)}
+details.quote-block .qpreview{font-style:italic;opacity:.75;margin-left:8px}
+details.quote-block .quoted{padding:8px 12px;border-top:1px solid var(--border-soft);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;color:var(--quote-fg);word-wrap:break-word}
+.qd{display:block;white-space:pre-wrap;word-wrap:break-word;min-height:1em}
+.qd-empty{min-height:.5em;border-left-color:transparent !important}
+.qd-1{border-left:3px solid #c8d1da;padding-left:8px}
+.qd-2{border-left:3px solid #d8b4fe;padding-left:8px;margin-left:12px}
+.qd-3{border-left:3px solid #fdba74;padding-left:8px;margin-left:24px}
+.qd-4{border-left:3px solid #86efac;padding-left:8px;margin-left:36px}
+.qd-5{border-left:3px solid #fda4af;padding-left:8px;margin-left:48px}
+
+a{color:var(--accent)}
+a:hover{text-decoration:underline}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border-soft);color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<h1>[DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</h1>
+<div class="meta">
+  Mailing list: <code>dev@flink.apache.org</code> &nbsp;|&nbsp;
+  Thread ID: <code>54qv9tg7o1kwlg6f2v1r88pkyk0cynb3</code> &nbsp;|&nbsp;
+  Source: <a href="https://lists.apache.org/thread/54qv9tg7o1kwlg6f2v1r88pkyk0cynb3" target="_blank" rel="noreferrer">lists.apache.org</a> &nbsp;|&nbsp;
+  Total messages: 7
+</div>
+<div class="toolbar">
+  <button onclick="toggleAll(true)">展开所有引用</button>
+  <button onclick="toggleAll(false)">折叠所有引用</button>
+  <button onclick="document.body.classList.toggle('hide-trans')">显示/隐藏中文翻译</button>
+  <button onclick="document.body.classList.toggle('dark')">深色 / 浅色</button>
+  <a class="btn" href="https://lists.apache.org/thread/54qv9tg7o1kwlg6f2v1r88pkyk0cynb3" target="_blank" rel="noreferrer">↗ lists.apache.org</a>
+  <a class="btn" href="../index.html">← Back to dashboard</a>
+  <span class="stat" id="stat">7 emails · 36 quotes · translated (7 emails)</span>
+</div>
+<div class="toc">
+  <strong>📋 Index（按时间顺序，缩进表示回复层级）</strong>
+  <ul class="toc-list"><li><span class="lvl"></span><a href="#m1"><strong>#1</strong> zihao chen &lt;is...@gmail.com&gt; &mdash; Tue, 07 Apr 2026 15:13:42 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m2"><strong>#2</strong> Feng Jin &lt;ji...@gmail.com&gt; &mdash; Fri, 08 May 2026 10:16:57 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m3"><strong>#3</strong> zihao chen &lt;is...@gmail.com&gt; &mdash; Fri, 08 May 2026 16:33:15 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m4"><strong>#4</strong> 魏祚 &lt;we...@163.com&gt; &mdash; Tue, 19 May 2026 16:24:00 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m5"><strong>#5</strong> zihao chen &lt;is...@gmail.com&gt; &mdash; Tue, 19 May 2026 20:39:42 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m6"><strong>#6</strong> rocxing &lt;ro...@foxmail.com&gt; &mdash; Wed, 20 May 2026 21:31:53 +0800</a></li><li><span class="lvl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ </span><a href="#m7"><strong>#7</strong> Martijn Visser &lt;ma...@apache.org&gt; &mdash; Wed, 20 May 2026 18:04:54 +0100</a></li></ul>
+</div>
+<div class="summary-card">
+  <h2>Mailing-list thread archive</h2>
+  <ul>
+    <li><b>Subject</b>: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</li>
+    <li><b>Archive</b>: 7 emails · 36 quote blocks · translated (7 emails)</li>
+    <li><b>Source</b>: <a href="https://lists.apache.org/thread/54qv9tg7o1kwlg6f2v1r88pkyk0cynb3" target="_blank" rel="noreferrer">https://lists.apache.org/thread/54qv9tg7o1kwlg6f2v1r88pkyk0cynb3</a></li>
+    <li><b>Translation file</b>: <code>54qv9tg7o1kwlg6f2v1r88pkyk0cynb3.translation.json</code></li>
+  </ul>
+</div>
+<div class="email" id="m1">
+  <div class="email-header">
+    <a class="anchor-link" href="#m1" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">1</span>
+      <span class="from">zihao chen &lt;ischenzihao@gmail.com&gt;</span>
+      <span class="time">Tue, 07 Apr 2026 15:13:42 +0800</span>
+    </div>
+    
+    <div class="subject">Subject: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;54qv9tg7o1kwlg6f2v1r88pkyk0cynb3&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi all,
+
+I would like to start a discussion on *FLIP-XXX: Support Window Stagger in
+FlinkSQL and introduce KEY_BASED deterministic stagger*.
+
+Currently, Flink provides WindowStagger to distribute window trigger time
+and reduce burst load (see FLINK-12855: Stagger
+TumblingProcessingTimeWindow processing to distribute workload
+&lt;<a href="https://issues.apache.org/jira/browse/FLINK-12855&gt;)." target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855&gt;).</a> However, there are
+two limitations in production usage:
+
+   1. WindowStagger is not supported in Flink SQL TVF tumbling windows
+   2. Existing stagger strategies (e.g., RANDOM, NATURAL) are
+   non-deterministic and may assign records to different windows after
+   recovery, leading to inconsistent results
+
+This FLIP proposes:
+
+   1. Add WindowStagger *support in Flink SQL TUMBLE TVF*
+   2. Introduce a new deterministic stagger strategy: *KEY_BASED*
+      - The stagger offset is computed from the key
+      - Ensures consistent window assignment before and after recovery
+
+Example syntax:
+
+TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, &#x27;RANDOM&#x27;)
+
+TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, INTERVAL &#x27;5&#x27;
+MINUTE, &#x27;RANDOM&#x27;)
+
+The detailed designs are described in the FLIP document:
+
+<a href="https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7" target="_blank" rel="noopener">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7</a>
+
+Looking forward to your feedback.
+
+
+Best regards,
+
+Zihao Chen</div></div>
+    <div class="trans"><div class="body-font"><div class="text-block">大家好，
+
+我想发起一个关于 *FLIP-XXX：在 Flink SQL 中支持 Window Stagger，并引入 KEY_BASED 确定性 stagger* 的讨论。
+
+目前 Flink 提供了 WindowStagger 来打散窗口触发时间、缓解突发负载（参见 FLINK-12855：Stagger TumblingProcessingTimeWindow processing to distribute workload &lt;<a href="https://issues.apache.org/jira/browse/FLINK-12855&gt;）。但在生产使用中存在两个限制：" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855&gt;）。但在生产使用中存在两个限制：</a>
+
+   1. WindowStagger 在 Flink SQL 的 TVF tumbling window 中尚未支持；
+   2. 现有 stagger 策略（例如 RANDOM、NATURAL）是非确定性的，故障恢复后可能将同一条记录划分到不同的窗口，导致结果不一致。
+
+本 FLIP 提议：
+
+   1. 在 Flink SQL TUMBLE TVF 中增加 *WindowStagger 支持*；
+   2. 引入一种新的确定性 stagger 策略：*KEY_BASED*
+      - stagger 偏移量根据 key 计算得到；
+      - 保证故障恢复前后窗口划分一致。
+
+示例语法：
+
+TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, &#x27;RANDOM&#x27;)
+
+TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, INTERVAL &#x27;5&#x27; MINUTE, &#x27;RANDOM&#x27;)
+
+详细设计见 FLIP 文档：
+
+<a href="https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7" target="_blank" rel="noopener">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7</a>
+
+期待大家的反馈。
+
+
+Best regards,
+
+Zihao Chen</div></div></div>
+  </div>
+</div>
+<div class="email" id="m2">
+  <div class="email-header">
+    <a class="anchor-link" href="#m2" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">2</span>
+      <span class="from">Feng Jin &lt;jinfeng1995@gmail.com&gt;</span>
+      <span class="time">Fri, 08 May 2026 10:16:57 +0800</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m1">#1</a></div>
+    <div class="subject">Subject: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;j1k97trh4p9mg53klf12jrp3of64yo81&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Zihao,
+
+Thanks for the proposal.
+
+I would like to clarify one semantic point first. My understanding is that
+WindowStagger shifts the window boundaries, rather than only delaying when
+the
+window is fired.
+
+For example, with a 10-minute TUMBLE window and a 2-minute stagger, the
+windows
+would become [..., 23:52-00:02), [00:02-00:12), ... instead of the globally
+aligned [00:00-00:10), [00:10-00:20), ...
+
+If this is correct, KEY_BASED stagger would mean that different keys may
+have
+different window_start/window_end values. This seems to affect the
+observable SQL
+TUMBLE semantics, instead of being only a trigger-time load-smoothing
+optimization.
+
+Could you clarify whether this is the intended behavior?
+
+Best,
+Feng
+
+
+
+On Tue, Apr 7, 2026 at 3:14 PM zihao chen &lt;ischenzihao@gmail.com&gt; wrote:</div><details class="quote-block"><summary>📎 Quoted · 42 lines · depth 1 <span class="qpreview">Hi all,</span></summary><div class="quoted"><span class="qd qd-1">Hi all,</span><span class="qd qd-empty"></span><span class="qd qd-1">I would like to start a discussion on *FLIP-XXX: Support Window Stagger in</span><span class="qd qd-1">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span><span class="qd qd-empty"></span><span class="qd qd-1">Currently, Flink provides WindowStagger to distribute window trigger time</span><span class="qd qd-1">and reduce burst load (see FLINK-12855: Stagger</span><span class="qd qd-1">TumblingProcessingTimeWindow processing to distribute workload</span><span class="qd qd-1">&lt;<a href="https://issues.apache.org/jira/browse/FLINK-12855&gt;)." target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855&gt;).</a> However, there are</span><span class="qd qd-1">two limitations in production usage:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. WindowStagger is not supported in Flink SQL TVF tumbling windows</span><span class="qd qd-1">   2. Existing stagger strategies (e.g., RANDOM, NATURAL) are</span><span class="qd qd-1">   non-deterministic and may assign records to different windows after</span><span class="qd qd-1">   recovery, leading to inconsistent results</span><span class="qd qd-empty"></span><span class="qd qd-1">This FLIP proposes:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1. Add WindowStagger *support in Flink SQL TUMBLE TVF*</span><span class="qd qd-1">   2. Introduce a new deterministic stagger strategy: *KEY_BASED*</span><span class="qd qd-1">      - The stagger offset is computed from the key</span><span class="qd qd-1">      - Ensures consistent window assignment before and after recovery</span><span class="qd qd-empty"></span><span class="qd qd-1">Example syntax:</span><span class="qd qd-empty"></span><span class="qd qd-1">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-1">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, INTERVAL &#x27;5&#x27;</span><span class="qd qd-1">MINUTE, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-1">The detailed designs are described in the FLIP document:</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1"><a href="https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7" target="_blank" rel="noopener">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7</a></span><span class="qd qd-empty"></span><span class="qd qd-1">Looking forward to your feedback.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Best regards,</span><span class="qd qd-empty"></span><span class="qd qd-1">Zihao Chen</span><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block">Hi Zihao，
+
+感谢这份提案。
+
+我想先澄清一个语义问题。我的理解是：WindowStagger 会平移窗口边界，而不仅仅是延迟窗口的触发时刻。
+
+举例来说，对于一个 10 分钟的 TUMBLE 窗口、stagger 为 2 分钟时，窗口会变成 [..., 23:52-00:02), [00:02-00:12), ...，而不是全局对齐的 [00:00-00:10), [00:10-00:20), ...。
+
+如果上述理解正确，那么 KEY_BASED stagger 就意味着不同 key 可能拥有不同的 window_start / window_end。这看起来已经影响了 SQL TUMBLE 的可观测语义，而不仅仅是触发时间上的负载平滑优化。
+
+能否澄清一下这是否是预期行为？
+
+Best,
+Feng
+
+
+
+On Tue, Apr 7, 2026 at 3:14 PM zihao chen &lt;ischenzihao@gmail.com&gt; wrote:</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
+  </div>
+</div>
+<div class="email" id="m3">
+  <div class="email-header">
+    <a class="anchor-link" href="#m3" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">3</span>
+      <span class="from">zihao chen &lt;ischenzihao@gmail.com&gt;</span>
+      <span class="time">Fri, 08 May 2026 16:33:15 +0800</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m2">#2</a></div>
+    <div class="subject">Subject: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;j18755vsro6458rpkz6qwfy3zodlfx5p&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Feng,
+
+Thanks a lot for raising this point.
+
+
+Yes, your understanding is correct. WindowStagger shifts not
+only the firing time, but also the window boundaries themselves.
+
+For example, with a 10-minute tumbling window and a 2-minute
+stagger offset, the windows become:
+
+   -
+
+   ..., [23:52-00:02), [00:02-00:12), ...
+
+instead of globally aligned windows:
+
+   -
+
+   ..., [00:00-00:10), [00:10-00:20), ...
+
+With KEY_BASED stagger, different keys may therefore have
+different window_start / window_end values.
+
+
+However, we believe this still preserves the semantics of
+tumbling windows.
+
+The core semantics of tumbling windows are:
+
+   -
+
+   fixed-size windows
+   -
+
+   non-overlapping windows
+   -
+
+   each record belongs to exactly one window
+
+KEY_BASED stagger does not change these properties. It only
+changes the alignment strategy from globally aligned boundaries
+to deterministic per-key boundaries.
+
+This is conceptually similar to the existing global offset
+support in TUMBLE TVF:
+
+   -
+
+   global offset:
+   shifts all tumbling window boundaries together
+   -
+
+   stagger offset:
+   further distributes boundaries across tasks/keys
+
+Both preserve tumbling window semantics.
+
+In addition, WindowStagger itself was already introduced by
+FLINK-12855 [1]. This FLIP mainly:
+
+   1.
+
+   adds SQL support for WindowStagger
+   2.
+
+   introduces a deterministic stagger type (KEY_BASED)
+
+The motivation for KEY_BASED is that existing RANDOM/NATURAL
+stagger strategies are non-deterministic across recovery,
+which may assign the same record to different windows before
+and after restart.
+
+KEY_BASED keeps the load distribution benefit while making
+window assignment deterministic.
+
+
+[1] <a href="https://issues.apache.org/jira/browse/FLINK-12855" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855</a>
+
+
+Best,
+Zihao
+
+Feng Jin &lt;jinfeng1995@gmail.com&gt; 于2026年5月8日周五 10:17写道：</div><details class="quote-block"><summary>📎 Quoted · 30 lines · depth 1 <span class="qpreview">Hi Zihao,</span></summary><div class="quoted"><span class="qd qd-1">Hi Zihao,</span><span class="qd qd-empty"></span><span class="qd qd-1">Thanks for the proposal.</span><span class="qd qd-empty"></span><span class="qd qd-1">I would like to clarify one semantic point first. My understanding is that</span><span class="qd qd-1">WindowStagger shifts the window boundaries, rather than only delaying when</span><span class="qd qd-1">the</span><span class="qd qd-1">window is fired.</span><span class="qd qd-empty"></span><span class="qd qd-1">For example, with a 10-minute TUMBLE window and a 2-minute stagger, the</span><span class="qd qd-1">windows</span><span class="qd qd-1">would become [..., 23:52-00:02), [00:02-00:12), ... instead of the globally</span><span class="qd qd-1">aligned [00:00-00:10), [00:10-00:20), ...</span><span class="qd qd-empty"></span><span class="qd qd-1">If this is correct, KEY_BASED stagger would mean that different keys may</span><span class="qd qd-1">have</span><span class="qd qd-1">different window_start/window_end values. This seems to affect the</span><span class="qd qd-1">observable SQL</span><span class="qd qd-1">TUMBLE semantics, instead of being only a trigger-time load-smoothing</span><span class="qd qd-1">optimization.</span><span class="qd qd-empty"></span><span class="qd qd-1">Could you clarify whether this is the intended behavior?</span><span class="qd qd-empty"></span><span class="qd qd-1">Best,</span><span class="qd qd-1">Feng</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">On Tue, Apr 7, 2026 at 3:14 PM zihao chen &lt;ischenzihao@gmail.com&gt; wrote:</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 3 lines · depth 2 <span class="qpreview">Hi all,</span></summary><div class="quoted"><span class="qd qd-2">Hi all,</span><span class="qd qd-empty"></span><span class="qd qd-2">I would like to start a discussion on *FLIP-XXX: Support Window Stagger</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">in</span></summary><div class="quoted"><span class="qd qd-1">in</span></div></details><details class="quote-block"><summary>📎 Quoted · 31 lines · depth 2 <span class="qpreview">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span></summary><div class="quoted"><span class="qd qd-2">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span><span class="qd qd-empty"></span><span class="qd qd-2">Currently, Flink provides WindowStagger to distribute window trigger time</span><span class="qd qd-2">and reduce burst load (see FLINK-12855: Stagger</span><span class="qd qd-2">TumblingProcessingTimeWindow processing to distribute workload</span><span class="qd qd-2">&lt;<a href="https://issues.apache.org/jira/browse/FLINK-12855&gt;)." target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855&gt;).</a> However, there are</span><span class="qd qd-2">two limitations in production usage:</span><span class="qd qd-empty"></span><span class="qd qd-2">   1. WindowStagger is not supported in Flink SQL TVF tumbling windows</span><span class="qd qd-2">   2. Existing stagger strategies (e.g., RANDOM, NATURAL) are</span><span class="qd qd-2">   non-deterministic and may assign records to different windows after</span><span class="qd qd-2">   recovery, leading to inconsistent results</span><span class="qd qd-empty"></span><span class="qd qd-2">This FLIP proposes:</span><span class="qd qd-empty"></span><span class="qd qd-2">   1. Add WindowStagger *support in Flink SQL TUMBLE TVF*</span><span class="qd qd-2">   2. Introduce a new deterministic stagger strategy: *KEY_BASED*</span><span class="qd qd-2">      - The stagger offset is computed from the key</span><span class="qd qd-2">      - Ensures consistent window assignment before and after recovery</span><span class="qd qd-empty"></span><span class="qd qd-2">Example syntax:</span><span class="qd qd-empty"></span><span class="qd qd-2">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-2">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, INTERVAL &#x27;5&#x27;</span><span class="qd qd-2">MINUTE, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-2">The detailed designs are described in the FLIP document:</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW…</span></summary><div class="quoted"><span class="qd qd-1"><a href="https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7" target="_blank" rel="noopener">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7</a></span></div></details><details class="quote-block"><summary>📎 Quoted · 8 lines · depth 2 <span class="qpreview">Looking forward to your feedback.</span></summary><div class="quoted"><span class="qd qd-empty"></span><span class="qd qd-2">Looking forward to your feedback.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-2">Best regards,</span><span class="qd qd-empty"></span><span class="qd qd-2">Zihao Chen</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1</summary><div class="quoted"><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block">Hi Feng，
+
+非常感谢你提出这个问题。
+
+
+是的，你的理解是正确的。WindowStagger 平移的不仅是触发时间，也包括窗口边界本身。
+
+例如，对于一个 10 分钟的 tumbling window 和 2 分钟的 stagger 偏移，窗口会变成：
+
+   -
+
+   ..., [23:52-00:02), [00:02-00:12), ...
+
+而不是全局对齐的窗口：
+
+   -
+
+   ..., [00:00-00:10), [00:10-00:20), ...
+
+在 KEY_BASED stagger 下，不同 key 因此可能拥有不同的 window_start / window_end。
+
+
+不过我们认为这仍然保持了 tumbling window 的语义。
+
+tumbling window 的核心语义是：
+
+   -
+
+   固定大小的窗口
+   -
+
+   窗口之间不重叠
+   -
+
+   每条记录恰好归属于一个窗口
+
+KEY_BASED stagger 并未改变以上性质。它只是把窗口对齐策略从「全局对齐边界」改为「按 key 确定性地对齐边界」。
+
+这在概念上类似于 TUMBLE TVF 已有的全局 offset 支持：
+
+   -
+
+   global offset：
+   一起平移所有 tumbling window 的边界
+   -
+
+   stagger offset：
+   进一步把边界打散到不同 task / key 上
+
+两者都保持了 tumbling window 的语义。
+
+另外，WindowStagger 本身已经在 FLINK-12855 [1] 中引入。本 FLIP 主要做的是：
+
+   1.
+
+   为 WindowStagger 增加 SQL 支持
+   2.
+
+   引入一种确定性的 stagger 类型（KEY_BASED）
+
+提出 KEY_BASED 的动机是：现有的 RANDOM/NATURAL stagger 策略在故障恢复前后是非确定性的，可能在重启前后把同一条记录分配到不同的窗口里。
+
+KEY_BASED 既保留了负载分散的好处，又使窗口分配具有确定性。
+
+
+[1] <a href="https://issues.apache.org/jira/browse/FLINK-12855" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855</a>
+
+
+Best,
+Zihao
+
+Feng Jin &lt;jinfeng1995@gmail.com&gt; 于2026年5月8日周五 10:17写道：</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
+  </div>
+</div>
+<div class="email" id="m4">
+  <div class="email-header">
+    <a class="anchor-link" href="#m4" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">4</span>
+      <span class="from">魏祚 &lt;weizuo0727@163.com&gt;</span>
+      <span class="time">Tue, 19 May 2026 16:24:00 +0800</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m3">#3</a></div>
+    <div class="subject">Subject: Re:Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;lpx325d8gb7mtbwm98yk8hd6sxsflnjs&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Zihao,
+
+I have reviewed the proposal, and I believe this is a very valuable and practical improvement for production scenarios. 
+However I have a question : Is the current design compatible with non-keyed streams? and can it guarantee deterministic window assignment for non-keyed stream scenarios?
+
+Best regards,
+
+Zuo Wei
+
+
+----- Original Message -----
+From: &quot;zihao chen&quot; &lt;ischenzihao@gmail.com&gt;
+To: dev@flink.apache.org
+Sent: Fri, 8 May 2026 16:33:15 +0800
+Subject: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger
+
+Hi Feng,
+
+Thanks a lot for raising this point.
+
+
+Yes, your understanding is correct. WindowStagger shifts not
+only the firing time, but also the window boundaries themselves.
+
+For example, with a 10-minute tumbling window and a 2-minute
+stagger offset, the windows become:
+
+   -
+
+   ..., [23:52-00:02), [00:02-00:12), ...
+
+instead of globally aligned windows:
+
+   -
+
+   ..., [00:00-00:10), [00:10-00:20), ...
+
+With KEY_BASED stagger, different keys may therefore have
+different window_start / window_end values.
+
+
+However, we believe this still preserves the semantics of
+tumbling windows.
+
+The core semantics of tumbling windows are:
+
+   -
+
+   fixed-size windows
+   -
+
+   non-overlapping windows
+   -
+
+   each record belongs to exactly one window
+
+KEY_BASED stagger does not change these properties. It only
+changes the alignment strategy from globally aligned boundaries
+to deterministic per-key boundaries.
+
+This is conceptually similar to the existing global offset
+support in TUMBLE TVF:
+
+   -
+
+   global offset:
+   shifts all tumbling window boundaries together
+   -
+
+   stagger offset:
+   further distributes boundaries across tasks/keys
+
+Both preserve tumbling window semantics.
+
+In addition, WindowStagger itself was already introduced by
+FLINK-12855 [1]. This FLIP mainly:
+
+   1.
+
+   adds SQL support for WindowStagger
+   2.
+
+   introduces a deterministic stagger type (KEY_BASED)
+
+The motivation for KEY_BASED is that existing RANDOM/NATURAL
+stagger strategies are non-deterministic across recovery,
+which may assign the same record to different windows before
+and after restart.
+
+KEY_BASED keeps the load distribution benefit while making
+window assignment deterministic.
+
+
+[1] <a href="https://issues.apache.org/jira/browse/FLINK-12855" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855</a>
+
+
+Best,
+Zihao
+
+Feng Jin &lt;jinfeng1995@gmail.com&gt; 于2026年5月8日周五 10:17写道：</div><details class="quote-block"><summary>📎 Quoted · 30 lines · depth 1 <span class="qpreview">Hi Zihao,</span></summary><div class="quoted"><span class="qd qd-1">Hi Zihao,</span><span class="qd qd-empty"></span><span class="qd qd-1">Thanks for the proposal.</span><span class="qd qd-empty"></span><span class="qd qd-1">I would like to clarify one semantic point first. My understanding is that</span><span class="qd qd-1">WindowStagger shifts the window boundaries, rather than only delaying when</span><span class="qd qd-1">the</span><span class="qd qd-1">window is fired.</span><span class="qd qd-empty"></span><span class="qd qd-1">For example, with a 10-minute TUMBLE window and a 2-minute stagger, the</span><span class="qd qd-1">windows</span><span class="qd qd-1">would become [..., 23:52-00:02), [00:02-00:12), ... instead of the globally</span><span class="qd qd-1">aligned [00:00-00:10), [00:10-00:20), ...</span><span class="qd qd-empty"></span><span class="qd qd-1">If this is correct, KEY_BASED stagger would mean that different keys may</span><span class="qd qd-1">have</span><span class="qd qd-1">different window_start/window_end values. This seems to affect the</span><span class="qd qd-1">observable SQL</span><span class="qd qd-1">TUMBLE semantics, instead of being only a trigger-time load-smoothing</span><span class="qd qd-1">optimization.</span><span class="qd qd-empty"></span><span class="qd qd-1">Could you clarify whether this is the intended behavior?</span><span class="qd qd-empty"></span><span class="qd qd-1">Best,</span><span class="qd qd-1">Feng</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">On Tue, Apr 7, 2026 at 3:14 PM zihao chen &lt;ischenzihao@gmail.com&gt; wrote:</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 3 lines · depth 2 <span class="qpreview">Hi all,</span></summary><div class="quoted"><span class="qd qd-2">Hi all,</span><span class="qd qd-empty"></span><span class="qd qd-2">I would like to start a discussion on *FLIP-XXX: Support Window Stagger</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">in</span></summary><div class="quoted"><span class="qd qd-1">in</span></div></details><details class="quote-block"><summary>📎 Quoted · 31 lines · depth 2 <span class="qpreview">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span></summary><div class="quoted"><span class="qd qd-2">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span><span class="qd qd-empty"></span><span class="qd qd-2">Currently, Flink provides WindowStagger to distribute window trigger time</span><span class="qd qd-2">and reduce burst load (see FLINK-12855: Stagger</span><span class="qd qd-2">TumblingProcessingTimeWindow processing to distribute workload</span><span class="qd qd-2">&lt;<a href="https://issues.apache.org/jira/browse/FLINK-12855&gt;)." target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855&gt;).</a> However, there are</span><span class="qd qd-2">two limitations in production usage:</span><span class="qd qd-empty"></span><span class="qd qd-2">   1. WindowStagger is not supported in Flink SQL TVF tumbling windows</span><span class="qd qd-2">   2. Existing stagger strategies (e.g., RANDOM, NATURAL) are</span><span class="qd qd-2">   non-deterministic and may assign records to different windows after</span><span class="qd qd-2">   recovery, leading to inconsistent results</span><span class="qd qd-empty"></span><span class="qd qd-2">This FLIP proposes:</span><span class="qd qd-empty"></span><span class="qd qd-2">   1. Add WindowStagger *support in Flink SQL TUMBLE TVF*</span><span class="qd qd-2">   2. Introduce a new deterministic stagger strategy: *KEY_BASED*</span><span class="qd qd-2">      - The stagger offset is computed from the key</span><span class="qd qd-2">      - Ensures consistent window assignment before and after recovery</span><span class="qd qd-empty"></span><span class="qd qd-2">Example syntax:</span><span class="qd qd-empty"></span><span class="qd qd-2">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-2">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, INTERVAL &#x27;5&#x27;</span><span class="qd qd-2">MINUTE, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-2">The detailed designs are described in the FLIP document:</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW…</span></summary><div class="quoted"><span class="qd qd-1"><a href="https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7" target="_blank" rel="noopener">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7</a></span></div></details><details class="quote-block"><summary>📎 Quoted · 8 lines · depth 2 <span class="qpreview">Looking forward to your feedback.</span></summary><div class="quoted"><span class="qd qd-empty"></span><span class="qd qd-2">Looking forward to your feedback.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-2">Best regards,</span><span class="qd qd-empty"></span><span class="qd qd-2">Zihao Chen</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1</summary><div class="quoted"><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block">Hi Zihao，
+
+我看完了这份提案，觉得这是一个对生产场景非常有价值、也很实用的改进。
+不过我有一个问题：当前的设计是否兼容 non-keyed stream？在 non-keyed stream 场景下能否保证窗口分配的确定性？
+
+Best regards,
+
+Zuo Wei
+
+
+----- 以下为引用上一封邮件，译文略 -----
+From: &quot;zihao chen&quot; &lt;ischenzihao@gmail.com&gt;
+To: dev@flink.apache.org
+Sent: Fri, 8 May 2026 16:33:15 +0800
+Subject: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger
+
+（上一封 #3 的内容已在对应邮件翻译过，此处为发件人客户端原文复制，不再重复翻译）</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
+  </div>
+</div>
+<div class="email" id="m5">
+  <div class="email-header">
+    <a class="anchor-link" href="#m5" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">5</span>
+      <span class="from">zihao chen &lt;ischenzihao@gmail.com&gt;</span>
+      <span class="time">Tue, 19 May 2026 20:39:42 +0800</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m4">#4</a></div>
+    <div class="subject">Subject: Re: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;dj2nxwhxql6llfj4vn8z9qddv9ots2bs&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Zuo,
+
+
+Thank you for the review and the feedback!
+
+
+Regarding your questions about non-keyed streams, here are a few
+
+clarifications on the current scope and design:
+
+   -
+
+   *Target Scenario:*
+
+The Window Stagger feature is specifically designed for tumbling
+time windows on *keyed streams*.
+
+
+   -
+
+   *Tumbling Window Behavior in Non-keyed Streams:*
+
+For non-keyed streams, the window operator forces a parallelism of 1,
+meaning all elements are processed sequentially within a single subtask.
+Consequently, there is no risk of massive, concurrent window alignment
+spikes across multiple parallel subtasks, which eliminates the need to
+stagger the window trigger times.
+
+
+
+* - Deterministic Window Assignment in Non-keyed Streams: *
+
+Since this proposal doesn&#x27;t alter the built-in logic for non-keyed windows,
+the deterministic window assignment remains fully aligned with native Flink
+behavior that is guaranteed under Event Time.
+
+
+If you foresee specific production scenarios where non-keyed stream window
+staggering is required, please feel free to share them, and we can
+absolutely
+set up a separate discussion to explore potential tailored solutions.
+
+
+Best,
+
+Zihao
+
+魏祚 &lt;weizuo0727@163.com&gt; 于2026年5月19日周二 16:24写道：</div><details class="quote-block"><summary>📎 Quoted · 105 lines · depth 1 <span class="qpreview">Hi Zihao,</span></summary><div class="quoted"><span class="qd qd-1">Hi Zihao,</span><span class="qd qd-empty"></span><span class="qd qd-1">I have reviewed the proposal, and I believe this is a very valuable and</span><span class="qd qd-1">practical improvement for production scenarios.</span><span class="qd qd-1">However I have a question : Is the current design compatible with</span><span class="qd qd-1">non-keyed streams? and can it guarantee deterministic window assignment for</span><span class="qd qd-1">non-keyed stream scenarios?</span><span class="qd qd-empty"></span><span class="qd qd-1">Best regards,</span><span class="qd qd-empty"></span><span class="qd qd-1">Zuo Wei</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">----- Original Message -----</span><span class="qd qd-1">From: &quot;zihao chen&quot; &lt;ischenzihao@gmail.com&gt;</span><span class="qd qd-1">To: dev@flink.apache.org</span><span class="qd qd-1">Sent: Fri, 8 May 2026 16:33:15 +0800</span><span class="qd qd-1">Subject: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and</span><span class="qd qd-1">introduce KEY_BASED deterministic stagger</span><span class="qd qd-empty"></span><span class="qd qd-1">Hi Feng,</span><span class="qd qd-empty"></span><span class="qd qd-1">Thanks a lot for raising this point.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Yes, your understanding is correct. WindowStagger shifts not</span><span class="qd qd-1">only the firing time, but also the window boundaries themselves.</span><span class="qd qd-empty"></span><span class="qd qd-1">For example, with a 10-minute tumbling window and a 2-minute</span><span class="qd qd-1">stagger offset, the windows become:</span><span class="qd qd-empty"></span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   ..., [23:52-00:02), [00:02-00:12), ...</span><span class="qd qd-empty"></span><span class="qd qd-1">instead of globally aligned windows:</span><span class="qd qd-empty"></span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   ..., [00:00-00:10), [00:10-00:20), ...</span><span class="qd qd-empty"></span><span class="qd qd-1">With KEY_BASED stagger, different keys may therefore have</span><span class="qd qd-1">different window_start / window_end values.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">However, we believe this still preserves the semantics of</span><span class="qd qd-1">tumbling windows.</span><span class="qd qd-empty"></span><span class="qd qd-1">The core semantics of tumbling windows are:</span><span class="qd qd-empty"></span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   fixed-size windows</span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   non-overlapping windows</span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   each record belongs to exactly one window</span><span class="qd qd-empty"></span><span class="qd qd-1">KEY_BASED stagger does not change these properties. It only</span><span class="qd qd-1">changes the alignment strategy from globally aligned boundaries</span><span class="qd qd-1">to deterministic per-key boundaries.</span><span class="qd qd-empty"></span><span class="qd qd-1">This is conceptually similar to the existing global offset</span><span class="qd qd-1">support in TUMBLE TVF:</span><span class="qd qd-empty"></span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   global offset:</span><span class="qd qd-1">   shifts all tumbling window boundaries together</span><span class="qd qd-1">   -</span><span class="qd qd-empty"></span><span class="qd qd-1">   stagger offset:</span><span class="qd qd-1">   further distributes boundaries across tasks/keys</span><span class="qd qd-empty"></span><span class="qd qd-1">Both preserve tumbling window semantics.</span><span class="qd qd-empty"></span><span class="qd qd-1">In addition, WindowStagger itself was already introduced by</span><span class="qd qd-1">FLINK-12855 [1]. This FLIP mainly:</span><span class="qd qd-empty"></span><span class="qd qd-1">   1.</span><span class="qd qd-empty"></span><span class="qd qd-1">   adds SQL support for WindowStagger</span><span class="qd qd-1">   2.</span><span class="qd qd-empty"></span><span class="qd qd-1">   introduces a deterministic stagger type (KEY_BASED)</span><span class="qd qd-empty"></span><span class="qd qd-1">The motivation for KEY_BASED is that existing RANDOM/NATURAL</span><span class="qd qd-1">stagger strategies are non-deterministic across recovery,</span><span class="qd qd-1">which may assign the same record to different windows before</span><span class="qd qd-1">and after restart.</span><span class="qd qd-empty"></span><span class="qd qd-1">KEY_BASED keeps the load distribution benefit while making</span><span class="qd qd-1">window assignment deterministic.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">[1] <a href="https://issues.apache.org/jira/browse/FLINK-12855" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855</a></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Best,</span><span class="qd qd-1">Zihao</span><span class="qd qd-empty"></span><span class="qd qd-1">Feng Jin &lt;jinfeng1995@gmail.com&gt; 于2026年5月8日周五 10:17写道：</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 5 lines · depth 2 <span class="qpreview">Hi Zihao,</span></summary><div class="quoted"><span class="qd qd-2">Hi Zihao,</span><span class="qd qd-empty"></span><span class="qd qd-2">Thanks for the proposal.</span><span class="qd qd-empty"></span><span class="qd qd-2">I would like to clarify one semantic point first. My understanding is</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">that</span></summary><div class="quoted"><span class="qd qd-1">that</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 2 <span class="qpreview">WindowStagger shifts the window boundaries, rather than only delaying</span></summary><div class="quoted"><span class="qd qd-2">WindowStagger shifts the window boundaries, rather than only delaying</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">when</span></summary><div class="quoted"><span class="qd qd-1">when</span></div></details><details class="quote-block"><summary>📎 Quoted · 6 lines · depth 2 <span class="qpreview">the</span></summary><div class="quoted"><span class="qd qd-2">the</span><span class="qd qd-2">window is fired.</span><span class="qd qd-empty"></span><span class="qd qd-2">For example, with a 10-minute TUMBLE window and a 2-minute stagger, the</span><span class="qd qd-2">windows</span><span class="qd qd-2">would become [..., 23:52-00:02), [00:02-00:12), ... instead of the</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">globally</span></summary><div class="quoted"><span class="qd qd-1">globally</span></div></details><details class="quote-block"><summary>📎 Quoted · 18 lines · depth 2 <span class="qpreview">aligned [00:00-00:10), [00:10-00:20), ...</span></summary><div class="quoted"><span class="qd qd-2">aligned [00:00-00:10), [00:10-00:20), ...</span><span class="qd qd-empty"></span><span class="qd qd-2">If this is correct, KEY_BASED stagger would mean that different keys may</span><span class="qd qd-2">have</span><span class="qd qd-2">different window_start/window_end values. This seems to affect the</span><span class="qd qd-2">observable SQL</span><span class="qd qd-2">TUMBLE semantics, instead of being only a trigger-time load-smoothing</span><span class="qd qd-2">optimization.</span><span class="qd qd-empty"></span><span class="qd qd-2">Could you clarify whether this is the intended behavior?</span><span class="qd qd-empty"></span><span class="qd qd-2">Best,</span><span class="qd qd-2">Feng</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-2">On Tue, Apr 7, 2026 at 3:14 PM zihao chen &lt;ischenzihao@gmail.com&gt; wrote:</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 3 lines · depth 3 <span class="qpreview">Hi all,</span></summary><div class="quoted"><span class="qd qd-3">Hi all,</span><span class="qd qd-empty"></span><span class="qd qd-3">I would like to start a discussion on *FLIP-XXX: Support Window Stagger</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 2 <span class="qpreview">in</span></summary><div class="quoted"><span class="qd qd-2">in</span></div></details><details class="quote-block"><summary>📎 Quoted · 3 lines · depth 3 <span class="qpreview">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span></summary><div class="quoted"><span class="qd qd-3">FlinkSQL and introduce KEY_BASED deterministic stagger*.</span><span class="qd qd-empty"></span><span class="qd qd-3">Currently, Flink provides WindowStagger to distribute window trigger</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">time</span></summary><div class="quoted"><span class="qd qd-1">time</span></div></details><details class="quote-block"><summary>📎 Quoted · 3 lines · depth 3 <span class="qpreview">and reduce burst load (see FLINK-12855: Stagger</span></summary><div class="quoted"><span class="qd qd-3">and reduce burst load (see FLINK-12855: Stagger</span><span class="qd qd-3">TumblingProcessingTimeWindow processing to distribute workload</span><span class="qd qd-3">&lt;<a href="https://issues.apache.org/jira/browse/FLINK-12855&gt;)." target="_blank" rel="noopener">https://issues.apache.org/jira/browse/FLINK-12855&gt;).</a> However, there</span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">are</span></summary><div class="quoted"><span class="qd qd-1">are</span></div></details><details class="quote-block"><summary>📎 Quoted · 25 lines · depth 3 <span class="qpreview">two limitations in production usage:</span></summary><div class="quoted"><span class="qd qd-3">two limitations in production usage:</span><span class="qd qd-empty"></span><span class="qd qd-3">   1. WindowStagger is not supported in Flink SQL TVF tumbling windows</span><span class="qd qd-3">   2. Existing stagger strategies (e.g., RANDOM, NATURAL) are</span><span class="qd qd-3">   non-deterministic and may assign records to different windows after</span><span class="qd qd-3">   recovery, leading to inconsistent results</span><span class="qd qd-empty"></span><span class="qd qd-3">This FLIP proposes:</span><span class="qd qd-empty"></span><span class="qd qd-3">   1. Add WindowStagger *support in Flink SQL TUMBLE TVF*</span><span class="qd qd-3">   2. Introduce a new deterministic stagger strategy: *KEY_BASED*</span><span class="qd qd-3">      - The stagger offset is computed from the key</span><span class="qd qd-3">      - Ensures consistent window assignment before and after recovery</span><span class="qd qd-empty"></span><span class="qd qd-3">Example syntax:</span><span class="qd qd-empty"></span><span class="qd qd-3">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-3">TUMBLE(TABLE t, DESCRIPTOR(rowtime), INTERVAL &#x27;1&#x27; HOUR, INTERVAL &#x27;5&#x27;</span><span class="qd qd-3">MINUTE, &#x27;RANDOM&#x27;)</span><span class="qd qd-empty"></span><span class="qd qd-3">The detailed designs are described in the FLIP document:</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 2</summary><div class="quoted"><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1 <span class="qpreview">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW…</span></summary><div class="quoted"><span class="qd qd-1"><a href="https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7" target="_blank" rel="noopener">https://docs.google.com/document/d/12NX_s-2HI1C9qjw4two0OHeYfX8YBMiBsq1X6lCfiW0/edit?tab=t.0#heading=h.alqmv4gpvbz7</a></span></div></details><details class="quote-block"><summary>📎 Quoted · 8 lines · depth 3 <span class="qpreview">Looking forward to your feedback.</span></summary><div class="quoted"><span class="qd qd-empty"></span><span class="qd qd-3">Looking forward to your feedback.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-3">Best regards,</span><span class="qd qd-empty"></span><span class="qd qd-3">Zihao Chen</span><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 2</summary><div class="quoted"><span class="qd qd-empty"></span></div></details><details class="quote-block"><summary>📎 Quoted · 1 lines · depth 1</summary><div class="quoted"><span class="qd qd-empty"></span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block">Hi Zuo，
+
+
+感谢 review 和反馈！
+
+
+关于你提到的 non-keyed stream 的问题，下面对当前的设计范围做几点澄清：
+
+   -
+
+   *目标场景：*
+
+Window Stagger 这个特性是专门面向 *keyed stream* 上的 tumbling time window 设计的。
+
+
+   -
+
+   *Tumbling window 在 non-keyed stream 中的行为：*
+
+对于 non-keyed stream，window operator 的并行度会被强制为 1，意味着所有元素都在同一个 subtask 中按序处理。因此并不存在跨多个并行 subtask 的窗口对齐瞬时尖峰风险，也就不需要打散窗口触发时间。
+
+
+
+* - non-keyed stream 中的确定性窗口分配： *
+
+由于本提案没有改动 non-keyed window 的内置逻辑，non-keyed 场景下的窗口分配仍然完全沿用 Flink 原生行为，并在 Event Time 下保持确定性。
+
+
+如果你预见到一些必须在 non-keyed stream 上做 window stagger 的具体生产场景，欢迎随时分享，我们完全可以另起一个讨论来探索针对性的方案。
+
+
+Best,
+
+Zihao
+
+魏祚 &lt;weizuo0727@163.com&gt; 于2026年5月19日周二 16:24写道：</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
+  </div>
+</div>
+<div class="email" id="m6">
+  <div class="email-header">
+    <a class="anchor-link" href="#m6" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">6</span>
+      <span class="from">rocxing &lt;rocxing@foxmail.com&gt;</span>
+      <span class="time">Wed, 20 May 2026 21:31:53 +0800</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m1">#1</a></div>
+    <div class="subject">Subject: 回复：[DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;xw3mkythllddg4jcowcb9orb8gfbvs0g&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Zihao and all,
+
+
+Thanks a lot for this practical proposal.
+This is a valuable feature for Flink SQL users, and we have also encountered exactly the same pain points in our production environments.
+Furthermore, the KEY_BASED deterministic stagger strategy is a good way to eliminate non-determinism problems.
+
+
+Best regards,
+Pengxiang Wang</div></div>
+    <div class="trans"><div class="body-font"><div class="text-block">Hi Zihao 及各位，
+
+
+感谢这份非常实用的提案。
+对 Flink SQL 用户来说这是一个有价值的特性，我们在生产环境中也遇到了完全相同的痛点。
+另外，KEY_BASED 这种确定性 stagger 策略也是消除非确定性问题的好办法。
+
+
+Best regards,
+Pengxiang Wang</div></div></div>
+  </div>
+</div>
+<div class="email" id="m7">
+  <div class="email-header">
+    <a class="anchor-link" href="#m7" title="permalink">#</a>
+    <div class="top-line">
+      <span class="num">7</span>
+      <span class="from">Martijn Visser &lt;martijnvisser@apache.org&gt;</span>
+      <span class="time">Wed, 20 May 2026 18:04:54 +0100</span>
+    </div>
+    <div class="reply-to">↩ In reply to <a href="#m6">#6</a></div>
+    <div class="subject">Subject: Re: [DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger</div>
+    <div class="mid">Message-ID: &lt;4f3or019m952glf80sj9n5w7zgx7jf85&gt;</div>
+  </div>
+  <div class="body-grid">
+    <div class="orig body-font"><div class="text-block">Hi Zihao,
+
+Thanks for the FLIP. I am worried that the proposal is mixing physical
+concerns (the downstream bursts of data) into logical semantics. I
+think a more natural escape hatch are hints. I also think that
+KEY_BASED is not really a physical optimization anyway, since it
+shifts window_start / window_end values in the output and therefore
+changes the result set. That makes it a poor fit for both a TVF
+argument and a hint, and probably a better fit for a PTF where the
+user explicitly owns the boundary assignment function.
+
+Looking forward to your thoughts.
+
+Best regards,
+
+Martijn
+
+Op wo 20 mei 2026 om 14:32 schreef rocxing &lt;rocxing@foxmail.com&gt;:</div><details class="quote-block"><summary>📎 Quoted · 11 lines · depth 1 <span class="qpreview">Hi Zihao and all,</span></summary><div class="quoted"><span class="qd qd-empty"></span><span class="qd qd-1">Hi Zihao and all,</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Thanks a lot for this practical proposal.</span><span class="qd qd-1">This is a valuable feature for Flink SQL users, and we have also encountered exactly the same pain points in our production environments.</span><span class="qd qd-1">Furthermore, the KEY_BASED deterministic stagger strategy is a good way to eliminate non-determinism problems.</span><span class="qd qd-empty"></span><span class="qd qd-empty"></span><span class="qd qd-1">Best regards,</span><span class="qd qd-1">Pengxiang Wang</span></div></details></div>
+    <div class="trans"><div class="body-font"><div class="text-block">Hi Zihao，
+
+感谢这份 FLIP。我担心的是，这个提案把物理层关注点（下游的数据突发）混入了逻辑语义里。我认为更自然的「逃生通道」是 hint。另外，我也认为 KEY_BASED 其实并不算物理优化，因为它会改变输出中的 window_start / window_end 值，因而改变了结果集。这使它既不适合作为 TVF 的参数，也不太适合作为 hint，反而更适合做成 PTF —— 由用户显式拥有「边界分配函数」的所有权。
+
+期待你的想法。
+
+Best regards,
+
+Martijn
+
+Op wo 20 mei 2026 om 14:32 schreef rocxing &lt;rocxing@foxmail.com&gt;:</div><div class="trans-quote-placeholder" aria-hidden="true">&nbsp;</div></div></div>
+  </div>
+</div>
+<div class="footer">
+  Generated by <code>dissuss/_build.py</code> from
+  <a href="https://lists.apache.org/thread/54qv9tg7o1kwlg6f2v1r88pkyk0cynb3" target="_blank" rel="noreferrer">lists.apache.org</a>
+  · Quoted content collapsed by default · Reply relationships shown via "↩ In reply to" links
+</div>
+<script>
+function toggleAll(open){document.querySelectorAll('details.quote-block').forEach(function(d){d.open=open})}
+window.addEventListener('hashchange',function(){
+  var id=location.hash.slice(1);if(!id)return;
+  var el=document.getElementById(id);if(!el)return;
+  el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1200);
+});
+// flash on initial load if URL has hash
+window.addEventListener('DOMContentLoaded',function(){
+  if(location.hash){
+    var el=document.getElementById(location.hash.slice(1));
+    if(el){el.classList.add('flash');setTimeout(function(){el.classList.remove('flash')},1200)}
+  }
+});
+</script>
+</body>
+</html>

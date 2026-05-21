@@ -1494,6 +1494,13 @@
   ],
   "discussions": [
     {
+      "subject": "[DISCUSS] FLIP-XXX: Support Window Stagger in FlinkSQL and introduce KEY_BASED deterministic stagger",
+      "url": "https://lists.apache.org/thread/54qv9tg7o1kwlg6f2v1r88pkyk0cynb3",
+      "date": "2026-05-21",
+      "replies": 6,
+      "role": "participant"
+    },
+    {
       "subject": "[DISCUSS] FLIP-XXX: Support Watermark Definition in SQL Views",
       "url": "https://lists.apache.org/thread/oonylk4h8dnsom40g8rr5k52zf3tz64v",
       "date": "2026-05-11",
